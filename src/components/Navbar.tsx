@@ -32,15 +32,15 @@ const Navbar = () => {
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'py-3 glass-panel bg-opacity-90' : 'py-5 bg-transparent'
+        isScrolled ? 'py-3 glass-panel-square bg-opacity-90' : 'py-5 bg-transparent'
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
           <div className="relative w-10 h-10 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-idol-gold opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 border-2 border-idol-gold opacity-80 group-hover:opacity-100 transition-opacity"></div>
             <Camera className="w-6 h-6 text-idol-gold group-hover:scale-110 transition-transform" />
-            <div className="absolute top-0 left-0 w-full h-full rounded-full bg-idol-gold/20 opacity-0 group-hover:opacity-100 animate-pulse-slight transition-opacity"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-idol-gold/20 opacity-0 group-hover:opacity-100 animate-pulse-slight transition-opacity"></div>
           </div>
           <span className="text-xl font-montserrat font-semibold tracking-tight">
             IdolBooth<span className="text-idol-gold">.com</span>
@@ -54,7 +54,7 @@ const Navbar = () => {
           <Link to="/photo-booth" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-booth' ? 'text-idol-gold' : ''}`}>
             Photo Booth
           </Link>
-          <Link to="/" className="idol-button text-sm py-2">
+          <Link to="/" className="idol-button-square text-sm py-2">
             Try Now
           </Link>
         </nav>
@@ -79,7 +79,7 @@ const Navbar = () => {
             <Link to="/photo-booth" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-booth' ? 'text-idol-gold' : 'text-white'}`}>
               Photo Booth
             </Link>
-            <Link to="/photo-booth" className="idol-button mt-4">
+            <Link to="/photo-booth" className="idol-button-square mt-4">
               Try Now
             </Link>
           </nav>

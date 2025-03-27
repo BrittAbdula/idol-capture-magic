@@ -105,8 +105,17 @@
     @apply bg-white/80 backdrop-blur-md shadow-glass border border-white/20 rounded-lg;
   }
   
+  .glass-panel-square {
+    @apply bg-white/80 backdrop-blur-md shadow-glass border border-white/20;
+  }
+  
   .idol-button {
     @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
+           hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
+  }
+  
+  .idol-button-square {
+    @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 transition-all duration-300 
            hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
   
@@ -115,8 +124,17 @@
            hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
   
+  .idol-button-outline-square {
+    @apply border-2 border-idol-gold text-idol-gold font-montserrat font-semibold py-3 px-6 transition-all duration-300 
+           hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
+  }
+  
   .neo-panel {
     @apply bg-idol-gray rounded-xl shadow-neo p-6;
+  }
+  
+  .neo-panel-square {
+    @apply bg-idol-gray shadow-neo p-6;
   }
   
   .animate-on-scroll {
