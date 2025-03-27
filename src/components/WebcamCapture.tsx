@@ -1,8 +1,7 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { Toggle, ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface WebcamCaptureProps {
   onCapture: (image: string) => void;
@@ -53,20 +52,16 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // Draw the video frame to the canvas
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas to data URL
         const imageDataURL = canvas.toDataURL('image/jpeg');
         onCapture(imageDataURL);
         
-        // Show flash effect
         setIsCapturing(true);
         setTimeout(() => setIsCapturing(false), 300);
         
@@ -110,12 +105,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
 
   return (
     <div className="relative overflow-hidden bg-black">
-      {/* Flash effect */}
       {isCapturing && (
         <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
       )}
       
-      {/* Video */}
       <div className="relative">
         <video 
           ref={videoRef}
@@ -126,7 +119,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         />
         <canvas ref={canvasRef} className="hidden" />
         
-        {/* Countdown overlay */}
         {countdownValue && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
             <span className="text-7xl font-bold text-white animate-pulse-slight">
@@ -136,7 +128,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         )}
       </div>
       
-      {/* Filter controls */}
       <div className="absolute bottom-20 left-0 right-0 p-2 flex justify-center">
         <div className="bg-black/50 backdrop-blur-sm p-2">
           <ToggleGroup type="single" value={activeFilter} onValueChange={(value) => value && setActiveFilter(value as FilterType)}>
@@ -162,7 +153,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         </div>
       </div>
       
-      {/* Controls */}
       <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
         <div className="flex gap-4">
           <button 
