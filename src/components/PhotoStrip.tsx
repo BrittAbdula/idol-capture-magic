@@ -6,9 +6,10 @@ import { toast } from 'sonner';
 interface PhotoStripProps {
   images: string[];
   filter: string;
+  showControls?: boolean;
 }
 
-const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
+const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = true }) => {
   const getFilterClassName = () => {
     switch (filter) {
       case 'Warm': return 'sepia-[0.3] brightness-105';
@@ -111,7 +112,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
         </div>
       )}
       
-      {images.length > 0 && (
+      {showControls && images.length > 0 && (
         <div className="mt-4 flex justify-center gap-2">
           <button 
             onClick={handleDownload}

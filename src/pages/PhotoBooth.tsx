@@ -145,7 +145,7 @@ const PhotoBooth = () => {
               </div>
               
               <div className="w-full max-w-4xl">
-                <PhotoStrip images={photoStripImages} filter={filter} />
+                <PhotoStrip images={photoStripImages} filter={filter} showControls={false} />
               </div>
             </div>
           </div>
