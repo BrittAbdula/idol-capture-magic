@@ -2,10 +2,13 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { Toggle, ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface WebcamCaptureProps {
   onCapture: (image: string) => void;
 }
+
+type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
 
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -13,6 +16,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('Normal');
 
   const startWebcam = useCallback(async () => {
     try {
@@ -93,8 +97,19 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     };
   }, [startWebcam, stopWebcam]);
 
+  const getFilterClassName = () => {
+    switch (activeFilter) {
+      case 'Warm': return 'sepia-[0.3] brightness-105';
+      case 'Cool': return 'brightness-110 contrast-110 saturate-125 hue-rotate-[-10deg]';
+      case 'Vintage': return 'sepia-[0.5] brightness-90 contrast-110';
+      case 'B&W': return 'grayscale';
+      case 'Dramatic': return 'contrast-125 brightness-90';
+      default: return '';
+    }
+  };
+
   return (
-    <div className="relative overflow-hidden rounded-lg bg-black">
+    <div className="relative overflow-hidden bg-black">
       {/* Flash effect */}
       {isCapturing && (
         <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
@@ -107,7 +122,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ${getFilterClassName()}`}
         />
         <canvas ref={canvasRef} className="hidden" />
         
@@ -121,13 +136,39 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         )}
       </div>
       
+      {/* Filter controls */}
+      <div className="absolute bottom-20 left-0 right-0 p-2 flex justify-center">
+        <div className="bg-black/50 backdrop-blur-sm p-2">
+          <ToggleGroup type="single" value={activeFilter} onValueChange={(value) => value && setActiveFilter(value as FilterType)}>
+            <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+              Normal
+            </ToggleGroupItem>
+            <ToggleGroupItem value="Warm" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+              Warm
+            </ToggleGroupItem>
+            <ToggleGroupItem value="Cool" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+              Cool
+            </ToggleGroupItem>
+            <ToggleGroupItem value="Vintage" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+              Vintage
+            </ToggleGroupItem>
+            <ToggleGroupItem value="B&W" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+              B&W
+            </ToggleGroupItem>
+            <ToggleGroupItem value="Dramatic" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+              Dramatic
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </div>
+      
       {/* Controls */}
       <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
         <div className="flex gap-4">
           <button 
             onClick={startCountdown}
             disabled={!isStreaming || countdownValue !== null}
-            className="w-16 h-16 rounded-full bg-idol-gold flex items-center justify-center transition-all 
+            className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
                       hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Camera className="w-6 h-6 text-black" />
@@ -138,7 +179,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
               stopWebcam();
               setTimeout(startWebcam, 300);
             }}
-            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center transition-all 
+            className="w-10 h-10 bg-white/20 flex items-center justify-center transition-all 
                       hover:bg-white/30 active:scale-95"
           >
             <RefreshCw className="w-5 h-5 text-white" />
