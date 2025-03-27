@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -104,32 +105,60 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   };
 
   return (
-    <div className="relative overflow-hidden bg-black">
-      {isCapturing && (
-        <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
-      )}
-      
-      <div className="relative">
-        <video 
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className={`w-full h-full object-cover ${getFilterClassName()}`}
-        />
-        <canvas ref={canvasRef} className="hidden" />
-        
-        {countdownValue && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-            <span className="text-7xl font-bold text-white animate-pulse-slight">
-              {countdownValue}
-            </span>
-          </div>
+    <div className="flex flex-col overflow-hidden">
+      <div className="relative bg-black">
+        {isCapturing && (
+          <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
         )}
+        
+        <div className="relative">
+          <video 
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`w-full h-full object-cover ${getFilterClassName()}`}
+          />
+          <canvas ref={canvasRef} className="hidden" />
+          
+          {countdownValue && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+              <span className="text-7xl font-bold text-white animate-pulse-slight">
+                {countdownValue}
+              </span>
+            </div>
+          )}
+        </div>
+        
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
+          <div className="flex gap-4">
+            <button 
+              onClick={startCountdown}
+              disabled={!isStreaming || countdownValue !== null}
+              className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
+                        hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Camera className="w-6 h-6 text-black" />
+            </button>
+            
+            <button 
+              onClick={() => {
+                stopWebcam();
+                setTimeout(startWebcam, 300);
+              }}
+              className="w-10 h-10 bg-white/20 flex items-center justify-center transition-all 
+                        hover:bg-white/30 active:scale-95"
+            >
+              <RefreshCw className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
       </div>
       
-      <div className="absolute bottom-20 left-0 right-0 p-2 flex justify-center">
-        <div className="bg-black/50 backdrop-blur-sm p-2">
+      {/* Filter controls - now below the video stream */}
+      <div className="p-3 bg-gray-100 dark:bg-gray-800">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 text-center">Photo Filters</p>
+        <div className="flex justify-center">
           <ToggleGroup type="single" value={activeFilter} onValueChange={(value) => value && setActiveFilter(value as FilterType)}>
             <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
               Normal
@@ -150,30 +179,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
               Dramatic
             </ToggleGroupItem>
           </ToggleGroup>
-        </div>
-      </div>
-      
-      <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-        <div className="flex gap-4">
-          <button 
-            onClick={startCountdown}
-            disabled={!isStreaming || countdownValue !== null}
-            className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
-                      hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Camera className="w-6 h-6 text-black" />
-          </button>
-          
-          <button 
-            onClick={() => {
-              stopWebcam();
-              setTimeout(startWebcam, 300);
-            }}
-            className="w-10 h-10 bg-white/20 flex items-center justify-center transition-all 
-                      hover:bg-white/30 active:scale-95"
-          >
-            <RefreshCw className="w-5 h-5 text-white" />
-          </button>
         </div>
       </div>
     </div>
