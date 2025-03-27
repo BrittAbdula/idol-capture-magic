@@ -7,15 +7,9 @@ interface PhotoStripProps {
   images: string[];
   filter: string;
   showControls?: boolean;
-  timestamp?: string;
 }
 
-const PhotoStrip: React.FC<PhotoStripProps> = ({ 
-  images, 
-  filter, 
-  showControls = true,
-  timestamp = new Date().toLocaleString()
-}) => {
+const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = true }) => {
   const getFilterClassName = () => {
     switch (filter) {
       case 'Warm': return 'sepia-[0.3] brightness-105';
@@ -92,7 +86,9 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.filter = 'none'; // Reset filter for text
         ctx.fillStyle = '#333333';
         ctx.font = '12px monospace';
-        ctx.fillText(timestamp, stripPadding + 10, y + imgHeight + 15);
+        const timestamp = new Date().toLocaleTimeString();
+        const date = new Date().toLocaleDateString();
+        ctx.fillText(`${date} ${timestamp}`, stripPadding + 10, y + imgHeight + 15);
         
         // Restore filter for next image
         if (filter !== 'Normal') {
@@ -173,7 +169,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                   />
                 </div>
                 <div className="pt-2 text-xs text-gray-600 font-mono">
-                  {timestamp}
+                  {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                 </div>
                 {index < images.length - 1 && (
                   <div className="w-full border-t border-dashed border-gray-300 my-4"></div>

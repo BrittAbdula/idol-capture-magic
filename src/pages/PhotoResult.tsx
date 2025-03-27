@@ -15,7 +15,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [images, setImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
-  const [timestamp] = useState<string>(new Date().toLocaleString());
   
   useEffect(() => {
     // Check if we have images in the state
@@ -63,12 +62,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       // Draw image
       ctx.drawImage(img, 20, 20, img.width, img.height);
       
-      // Add timestamp at the bottom
-      ctx.fillStyle = '#000000';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(timestamp, canvas.width / 2, canvas.height - 30);
-      
       // Convert to data URL and download
       const link = document.createElement('a');
       link.download = `photo_booth_${Date.now()}.jpg`;
@@ -85,53 +78,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     navigate('/photo-booth');
   };
 
-  // Render polaroid photos with the first one centered and others expanding right to left
-  const renderPolaroidPhotos = () => {
-    if (images.length === 0) return null;
-    
-    const photoWidth = 220; // Width of each photo container in pixels
-    const gap = 16; // Gap between photos in pixels
-    
-    return (
-      <div className="flex justify-center mt-4 mb-8 relative overflow-hidden" style={{ minHeight: '300px' }}>
-        <div className="flex flex-row-reverse justify-center items-center gap-4 transition-all duration-300">
-          {images.map((image, index) => {
-            // Whether this image is selected
-            const isSelected = selectedImage === image;
-            
-            // Calculate the z-index for overlapping effect (higher for more recent photos)
-            const zIndex = images.length - index;
-            
-            return (
-              <div 
-                key={index}
-                className={`polaroid-frame bg-white shadow-lg p-3 pb-8 transform transition-all duration-300 cursor-pointer ${isSelected ? 'scale-110 z-50' : 'scale-100 hover:scale-105'}`}
-                style={{ 
-                  maxWidth: '220px',
-                  backgroundColor: isSelected ? selectedColor : '#FFFFFF',
-                  zIndex,
-                  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                }}
-                onClick={() => setSelectedImage(image)}
-              >
-                <div className="bg-white p-1 overflow-hidden">
-                  <img 
-                    src={image} 
-                    alt={`Photo ${index + 1}`} 
-                    className="w-full h-auto" 
-                  />
-                </div>
-                <div className="pt-3 pb-1 text-center text-xs text-gray-600">
-                  {timestamp}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -145,7 +91,27 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left column - Photo display */}
             <div className="flex flex-col items-center">
-              {renderPolaroidPhotos()}
+              {selectedImage && (
+                <div 
+                  className="polaroid-frame shadow-lg transition-all mb-4"
+                  style={{ 
+                    backgroundColor: selectedColor,
+                    padding: '20px',
+                    maxWidth: '90%'
+                  }}
+                >
+                  <div className="bg-white p-2">
+                    <img 
+                      src={selectedImage} 
+                      alt="Selected photo" 
+                      className="w-full h-auto" 
+                    />
+                  </div>
+                  <div className="pt-3 pb-1 text-center text-sm">
+                    {new Date().toLocaleDateString()}
+                  </div>
+                </div>
+              )}
               
               {images.length > 1 && (
                 <Pagination>
