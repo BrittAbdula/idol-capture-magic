@@ -82,6 +82,40 @@ const PhotoBooth = () => {
     setCaptureMethod('webcam');
   };
   
+  // Render polaroid photo display
+  const renderPolaroidPhotos = () => {
+    if (photoStripImages.length === 0) {
+      return (
+        <div className="text-center text-gray-400 p-4">
+          <p>Take photos to see them here</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        {photoStripImages.map((image, index) => (
+          <div 
+            key={index} 
+            className="polaroid-frame bg-white shadow-lg p-2 pb-6 transform transition-transform hover:rotate-1"
+            style={{ maxWidth: '180px' }}
+          >
+            <div className={`mb-2 overflow-hidden`}>
+              <img 
+                src={image} 
+                alt={`Photo ${index + 1}`} 
+                className="w-full h-auto" 
+              />
+            </div>
+            <div className="text-center text-xs text-gray-600">
+              Photo {index + 1}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
   // Render step content
   const renderStepContent = () => {
     switch (step) {
@@ -155,7 +189,7 @@ const PhotoBooth = () => {
               </div>
               
               <div className="w-full max-w-4xl">
-                <PhotoStrip images={photoStripImages} filter={filter} showControls={false} />
+                {renderPolaroidPhotos()}
               </div>
             </div>
           </div>
