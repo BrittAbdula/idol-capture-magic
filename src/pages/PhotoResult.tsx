@@ -23,12 +23,13 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
-  const [photoGap, setPhotoGap] = useState<number>(20);
+  const [photoGap, setPhotoGap] = useState<number>(50);  // Changed default to 50
   const [showDate, setShowDate] = useState<boolean>(true);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
+  const dialogContentRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     // Check if we have images in the state
@@ -135,7 +136,8 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       if (customText) {
         const textY = stripHeight - (showDate ? 90 * scale : 40 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-        ctx.font = `bold ${24 * scale}px sans-serif`;
+        // Increase text size based on scale
+        ctx.font = `bold ${Math.max(24, 28 * scale)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(customText, stripWidth / 2, textY);
       }
@@ -143,7 +145,8 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       // Add date
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
-        ctx.font = `${16 * scale}px monospace`;
+        // Increase date text size
+        ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
         ctx.textAlign = 'center';
         const dateText = new Date().toLocaleDateString();
         ctx.fillText(dateText, stripWidth / 2, stripHeight - 40 * scale);
@@ -151,7 +154,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       
       // Add IdolBooth logo
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-      ctx.font = `bold ${16 * scale}px sans-serif`;
+      ctx.font = `bold ${Math.max(16, 18 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 15 * scale);
     });
@@ -189,26 +192,25 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const handleDownload = () => {
     if (!canvasRef.current) return;
     
-    // Create a download link for the canvas
-    const link = document.createElement('a');
-    link.download = `photo_strip_${Date.now()}.jpg`;
-    link.href = canvasRef.current.toDataURL('image/jpeg');
-    link.click();
+    // Generate a full-size version for download
+    generatePhotoStrip(canvasRef.current, 1);
     
-    toast.success("Photo strip downloaded successfully!");
+    // Wait a bit to ensure the canvas is fully rendered
+    setTimeout(() => {
+      // Create a download link for the canvas
+      const link = document.createElement('a');
+      link.download = `photo_strip_${Date.now()}.jpg`;
+      link.href = canvasRef.current!.toDataURL('image/jpeg', 0.95);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Photo strip downloaded successfully!");
+    }, 200);
   };
 
   const handleRetake = () => {
     navigate('/photo-booth');
-  };
-
-  const handleAddCustomColor = () => {
-    if (!customColorInput.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
-      toast.error("Please enter a valid hex color code.");
-      return;
-    }
-    
-    setSelectedColor(customColorInput);
   };
 
   return (
@@ -238,12 +240,12 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                       </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] p-0 overflow-auto">
-                    <div className="p-6 bg-white flex justify-center">
+                  <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] p-0" ref={dialogContentRef}>
+                    <div className="p-6 bg-white flex justify-center h-full">
                       <ScrollArea className="w-full max-h-[80vh]">
                         <canvas 
                           ref={canvasRef} 
-                          className="max-w-full shadow-lg mx-auto"
+                          className="max-w-full shadow-lg mx-auto block"
                         />
                       </ScrollArea>
                     </div>
@@ -275,27 +277,32 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                     />
                   ))}
                   
-                  {/* Custom color picker */}
+                  {/* Custom color picker - now updates instantly */}
                   <div className="flex items-center gap-2 mt-4 w-full">
                     <input
                       type="color"
                       value={customColorInput}
-                      onChange={(e) => setCustomColorInput(e.target.value)}
+                      onChange={(e) => {
+                        const color = e.target.value;
+                        setCustomColorInput(color);
+                        setSelectedColor(color); // Apply instantly
+                      }}
                       className="w-10 h-10 p-0 border-0 rounded-full cursor-pointer"
                     />
                     <input
                       type="text"
                       value={customColorInput}
-                      onChange={(e) => setCustomColorInput(e.target.value)}
+                      onChange={(e) => {
+                        const color = e.target.value;
+                        setCustomColorInput(color);
+                        // Only apply if it's a valid hex color
+                        if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
+                          setSelectedColor(color);
+                        }
+                      }}
                       placeholder="#RRGGBB"
                       className="w-24 px-2 py-1 border rounded-md text-sm"
                     />
-                    <button
-                      onClick={handleAddCustomColor}
-                      className="px-3 py-1 bg-idol-gold text-black rounded-md text-sm hover:bg-opacity-90 transition-colors"
-                    >
-                      Apply
-                    </button>
                   </div>
                 </div>
               </div>
@@ -314,7 +321,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                     <Slider
                       value={[photoGap]}
                       min={5}
-                      max={50}
+                      max={100}
                       step={1}
                       onValueChange={(value) => setPhotoGap(value[0])}
                     />
