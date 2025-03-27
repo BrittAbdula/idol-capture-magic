@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, FlipHorizontal, Maximize, Minimize, Grid } from 'lucide-react';
+import { Camera, FlipHorizontal, Maximize, Minimize, Grid3X3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
@@ -261,8 +261,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < 4);
 
   return (
-    <div className="flex flex-col overflow-hidden" ref={containerRef}>
-      <div className="relative bg-black">
+    <div className="flex flex-col overflow-hidden rounded-lg shadow-lg" ref={containerRef}>
+      {/* TOP SECTION - Video Stream */}
+      <div className="relative bg-black mb-4">
         {isCapturing && (
           <div className="absolute inset-0 bg-white opacity-30 z-10 animate-flash" />
         )}
@@ -292,17 +293,17 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             }}
           />
           
-          {/* Grid overlay - only visible when showGrid is true */}
+          {/* Grid overlay with thicker lines */}
           {showGrid && (
             <div 
-              className="absolute inset-0 pointer-events-none m-auto grid-overlay"
+              className="absolute inset-0 pointer-events-none m-auto"
               style={{ 
                 aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
                 width: aspectRatio === '3:2' ? 'auto' : '100%',
                 height: aspectRatio === '3:2' ? '100%' : 'auto',
                 maxWidth: '100%',
                 maxHeight: '100%',
-                backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)',
+                backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
                 backgroundSize: '33.33% 33.33%',
                 backgroundPosition: 'center',
               }}
@@ -348,7 +349,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 }
               </button>
               
-              {/* Aspect ratio button (top left) - new cycled button */}
+              {/* Aspect ratio button (top left) - cycle button */}
               <button
                 onClick={cycleAspectRatio}
                 className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -356,34 +357,36 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 <span className="text-xs font-bold text-white">{aspectRatio}</span>
               </button>
               
-              {/* Grid toggle button (bottom left) - new button */}
+              {/* Grid toggle button (bottom left) */}
               <button 
                 onClick={toggleGrid}
                 className="absolute bottom-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
               >
-                <Grid className={`w-5 h-5 ${showGrid ? 'text-idol-gold' : 'text-white'}`} />
+                <Grid3X3 className={`w-5 h-5 ${showGrid ? 'text-idol-gold' : 'text-white'}`} />
               </button>
             </>
           )}
         </div>
-        
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-          {!inCaptureMode && (
-            <div className="flex gap-4">
-              <button 
-                onClick={startPhotoSession}
-                disabled={!isStreaming}
-                className="w-16 h-16 bg-idol-gold flex items-center justify-center rounded-full transition-all 
-                          hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Camera className="w-6 h-6 text-black" />
-              </button>
-            </div>
-          )}
-        </div>
       </div>
       
-      <div className="p-3 bg-transparent">
+      {/* MIDDLE SECTION - Capture Button */}
+      <div className="py-4 flex justify-center">
+        {!inCaptureMode && (
+          <div className="flex gap-4">
+            <button 
+              onClick={startPhotoSession}
+              disabled={!isStreaming}
+              className="w-16 h-16 bg-idol-gold flex items-center justify-center rounded-full transition-all 
+                        hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Camera className="w-6 h-6 text-black" />
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* BOTTOM SECTION - Filters */}
+      <div className="p-3 bg-transparent mt-2 mb-4">
         <div className="flex justify-center">
           <ToggleGroup 
             type="single" 
