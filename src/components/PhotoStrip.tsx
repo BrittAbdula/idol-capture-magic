@@ -48,7 +48,17 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
       
       // Apply the filter effect if needed
       if (filter !== 'Normal') {
-        ctx.filter = getComputedStyle(document.querySelector(`.${getFilterClassName()}`) || document.body).filter;
+        // Fix: Don't try to get computed style from a class selector
+        // Just apply the filter manually based on filter type
+        let filterStyle = '';
+        switch (filter) {
+          case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
+          case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
+          case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
+          case 'B&W': filterStyle = 'grayscale(1)'; break;
+          case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
+        }
+        ctx.filter = filterStyle;
       }
       
       // Draw each image on the canvas
@@ -90,12 +100,12 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
       </div>
       
       {images.length > 0 && (
-        <div className="p-4 bg-gray-100 dark:bg-gray-800 flex justify-center gap-4">
+        <div className="p-2 bg-gray-100 dark:bg-gray-800 flex justify-center gap-2">
           <button 
             onClick={handleDownload}
-            className="flex items-center gap-2 px-4 py-2 bg-idol-gold text-black rounded-md hover:bg-opacity-90 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 text-xs bg-idol-gold text-black rounded-md hover:bg-opacity-90 transition-colors"
           >
-            <Download size={16} />
+            <Download size={14} />
             <span>Download</span>
           </button>
           
@@ -104,9 +114,9 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
               navigator.clipboard.writeText("Check out my photo strip from IdolBooth!");
               toast.success("Sharing message copied to clipboard!");
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
           >
-            <Share2 size={16} />
+            <Share2 size={14} />
             <span>Share</span>
           </button>
         </div>

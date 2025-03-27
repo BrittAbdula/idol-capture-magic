@@ -63,25 +63,32 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         const imageDataURL = canvas.toDataURL('image/jpeg');
+        const newCapturedImages = [...capturedImages, imageDataURL];
         
-        setCapturedImages(prev => [...prev, imageDataURL]);
+        setCapturedImages(newCapturedImages);
         setPhotoCount(prevCount => prevCount + 1);
+        
+        // Update the parent component with the images taken so far
+        onCapture(newCapturedImages);
         
         setIsCapturing(true);
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
-  }, []);
+  }, [capturedImages, onCapture]);
 
   // Effect to handle completing the photo strip
   useEffect(() => {
     if (photoCount === 4) {
-      onCapture(capturedImages);
       toast.success("Photo strip complete!");
       
-      // Reset for next session
-      setPhotoCount(0);
-      setCapturedImages([]);
+      // Wait before resetting for next session
+      const resetTimer = setTimeout(() => {
+        setPhotoCount(0);
+        setCapturedImages([]);
+      }, 3000);
+      
+      return () => clearTimeout(resetTimer);
     } else if (photoCount > 0 && photoCount < 4) {
       // Continue taking photos for the strip
       const timer = setTimeout(() => {
@@ -90,7 +97,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       
       return () => clearTimeout(timer);
     }
-  }, [photoCount, capturedImages, onCapture]);
+  }, [photoCount]);
 
   const startCountdown = useCallback(() => {
     setCountdownValue(3);
@@ -112,9 +119,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     setCapturedImages([]);
     setPhotoCount(0);
     
+    // Reset parent component photo strip
+    onCapture([]);
+    
     // Start the first countdown
     startCountdown();
-  }, [startCountdown]);
+  }, [startCountdown, onCapture]);
 
   useEffect(() => {
     startWebcam();
@@ -172,7 +182,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           <div className="flex gap-4">
             <button 
               onClick={startPhotoSession}
-              disabled={!isStreaming || countdownValue !== null || photoCount > 0}
+              disabled={!isStreaming || countdownValue !== null || (photoCount > 0 && photoCount < 4)}
               className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
                         hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
