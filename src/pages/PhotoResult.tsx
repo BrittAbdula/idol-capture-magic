@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X } from 'lucide-react';
@@ -8,7 +7,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogClose,
+  DialogTrigger 
+} from "@/components/ui/dialog";
 
 interface PhotoResultProps {}
 
@@ -29,21 +35,17 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [isGeneratingDownload, setIsGeneratingDownload] = useState<boolean>(false);
   
   useEffect(() => {
-    // Check if we have images in the state
     if (location.state?.images) {
       setImages(location.state.images);
       
-      // Set aspect ratio if provided in state
       if (location.state.aspectRatio) {
         setAspectRatio(location.state.aspectRatio);
       }
     } else {
-      // Redirect back to photo booth if no images
       navigate('/photo-booth');
     }
   }, [location, navigate]);
 
-  // Regenerate the strip when the dialog is opened to ensure it's displayed properly
   useEffect(() => {
     if (dialogOpen && canvasRef.current) {
       generatePhotoStrip(canvasRef.current, 1);
@@ -58,21 +60,12 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
   ];
 
-  // Detect if color is dark (for text contrast)
   const isDarkColor = (hexColor: string): boolean => {
-    // Remove # if present
     const hex = hexColor.replace('#', '');
-    
-    // Convert hex to RGB
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
-    
-    // Calculate luminance (perceived brightness)
-    // Using the formula: (0.299*R + 0.587*G + 0.114*B)
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
-    // If luminance is less than 0.5, color is considered dark
     return luminance < 0.5;
   };
 
@@ -84,7 +77,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     
     if (!ctx) return;
     
-    // Load all images first
     const loadImages = images.map(src => {
       return new Promise<HTMLImageElement>((resolve) => {
         const img = new Image();
@@ -96,42 +88,33 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     Promise.all(loadImages).then(loadedImages => {
       if (loadedImages.length === 0) return;
       
-      // Get dimensions from first image
       const imgWidth = loadedImages[0].width * scale;
       const imgHeight = loadedImages[0].height * scale;
       
-      // Calculate strip dimensions based on aspect ratio
       const padding = photoGap * scale;
       const stripPadding = 40 * scale;
       
-      // Calculate strip width based on image aspect ratio
       let stripWidth = imgWidth + (stripPadding * 2);
       
-      // For vertical photos (9:16), make the strip proportionally wider
       if (aspectRatio === '9:16' || aspectRatio === '3:2') {
         stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (stripPadding * 2);
       }
       
-      // Calculate total height for all images
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
                           (padding * (loadedImages.length - 1));
       
-      // Add extra space for text and date
       const textSpace = customText ? 120 * scale : 0;
       const dateSpace = showDate ? 80 * scale : 0;
       const extraSpace = textSpace + dateSpace + (stripPadding * 2);
       
       const stripHeight = totalImagesHeight + extraSpace;
       
-      // Set canvas size
       canvas.width = stripWidth;
       canvas.height = stripHeight;
       
-      // Fill with selected background color
       ctx.fillStyle = selectedColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Add strip frame effect (dashed borders)
       ctx.setLineDash([8 * scale, 8 * scale]);
       ctx.beginPath();
       ctx.moveTo(0, 15 * scale);
@@ -139,24 +122,19 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       ctx.strokeStyle = isDarkColor(selectedColor) ? '#FFFFFF50' : '#00000050';
       ctx.stroke();
       
-      // Draw photos
       loadedImages.forEach((img, index) => {
         const y = stripPadding + (index * (imgHeight + padding));
         
-        // Draw white border around image
         const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
         
-        // Calculate the x position to center the image if needed
         const xPos = (stripWidth - imgWidth) / 2 - borderWidth;
         
         ctx.fillRect(xPos, y - borderWidth, 
                    imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
         
-        // Draw the image centered in the strip
         ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
         
-        // Add perforations between photos (except after the last one)
         if (index < loadedImages.length - 1) {
           ctx.setLineDash([5 * scale, 5 * scale]);
           ctx.beginPath();
@@ -167,27 +145,22 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         }
       });
       
-      // Add custom text
       if (customText) {
         const textY = stripHeight - (showDate ? 130 * scale : 60 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-        // Increase text size based on scale
         ctx.font = `bold ${Math.max(24, 28 * scale)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(customText, stripWidth / 2, textY);
       }
       
-      // Add date
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
-        // Increase date text size
         ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
         ctx.textAlign = 'center';
         const dateText = new Date().toLocaleDateString();
         ctx.fillText(dateText, stripWidth / 2, stripHeight - 80 * scale);
       }
       
-      // Add IdolBooth logo
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
       ctx.font = `bold ${Math.max(16, 18 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
@@ -195,10 +168,8 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     });
   };
 
-  // Generate the thumbnail on initial render and when settings change
   useEffect(() => {
     if (thumbnailCanvasRef.current) {
-      // Use a smaller scale for thumbnail to ensure it fits on screen
       const scale = isMobile ? 0.3 : 0.4;
       generatePhotoStrip(thumbnailCanvasRef.current, scale);
     }
@@ -207,16 +178,12 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const handleDownload = () => {
     setIsGeneratingDownload(true);
     
-    // Create a temporary canvas for downloading at full resolution
     const tempCanvas = document.createElement('canvas');
     
-    // Generate a full-size version for download
     generatePhotoStrip(tempCanvas, 1);
     
-    // Wait to ensure the canvas is fully rendered
     setTimeout(() => {
       try {
-        // Create a download link for the canvas
         const link = document.createElement('a');
         link.download = `photo_strip_${Date.now()}.jpg`;
         link.href = tempCanvas.toDataURL('image/jpeg', 0.95);
@@ -249,10 +216,8 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
           </h1>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left column - Photo strip display */}
             <div className="flex flex-col items-center">
               <div className="mb-4 relative mx-auto">
-                {/* Thumbnail version for display, sized to fit on one screen */}
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
                     <div className="relative cursor-pointer group">
@@ -265,6 +230,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                       </div>
                     </div>
                   </DialogTrigger>
+                  
                   <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] overflow-hidden">
                     <DialogHeader>
                       <DialogTitle className="sr-only">Photo Strip Preview</DialogTitle>
@@ -294,7 +260,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
               )}
             </div>
             
-            {/* Right column - Customization options */}
             <div className="flex flex-col">
               <div className="glass-panel p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4 font-montserrat">
@@ -311,7 +276,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                     />
                   ))}
                   
-                  {/* Custom color picker - now updates instantly */}
                   <div className="flex items-center gap-2 mt-4 w-full">
                     <input
                       type="color"
@@ -319,7 +283,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                       onChange={(e) => {
                         const color = e.target.value;
                         setCustomColorInput(color);
-                        setSelectedColor(color); // Apply instantly
+                        setSelectedColor(color);
                       }}
                       className="w-10 h-10 p-0 border-0 rounded-full cursor-pointer"
                     />
@@ -329,7 +293,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                       onChange={(e) => {
                         const color = e.target.value;
                         setCustomColorInput(color);
-                        // Only apply if it's a valid hex color
                         if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
                           setSelectedColor(color);
                         }
