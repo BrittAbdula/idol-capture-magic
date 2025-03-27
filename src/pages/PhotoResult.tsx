@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
@@ -16,6 +18,7 @@ interface PhotoResultProps {}
 const PhotoResult: React.FC<PhotoResultProps> = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [images, setImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
@@ -76,11 +79,17 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const padding = photoGap * scale;
       const stripPadding = 40 * scale;
       const stripWidth = imgWidth + (stripPadding * 2);
-      const stripHeight = (imgHeight * loadedImages.length) + 
-                          (padding * (loadedImages.length - 1)) + 
-                          (stripPadding * 2) + 
-                          (customText ? 60 * scale : 0) + 
-                          (showDate ? 40 * scale : 0);
+      
+      // Calculate total height but make sure it fits in viewport
+      const totalImagesHeight = (imgHeight * loadedImages.length) + 
+                          (padding * (loadedImages.length - 1));
+      
+      // Add extra space for text and date
+      const extraSpace = (customText ? 60 * scale : 0) + 
+                         (showDate ? 40 * scale : 0) + 
+                         (stripPadding * 2);
+      
+      const stripHeight = totalImagesHeight + extraSpace;
       
       // Set canvas size
       canvas.width = stripWidth;
@@ -171,9 +180,11 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       generatePhotoStrip(canvasRef.current, 1);
     }
     if (thumbnailCanvasRef.current) {
-      generatePhotoStrip(thumbnailCanvasRef.current, 0.5);
+      // Use a smaller scale for thumbnail to ensure it fits on screen
+      const scale = isMobile ? 0.3 : 0.4;
+      generatePhotoStrip(thumbnailCanvasRef.current, scale);
     }
-  }, [images, selectedColor, customText, photoGap, showDate]);
+  }, [images, selectedColor, customText, photoGap, showDate, isMobile]);
 
   const handleDownload = () => {
     if (!canvasRef.current) return;
@@ -213,14 +224,14 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left column - Photo strip display */}
             <div className="flex flex-col items-center">
-              <div className="mb-4 overflow-auto max-h-[70vh]">
-                {/* Thumbnail version for display */}
+              <div className="mb-4 relative mx-auto">
+                {/* Thumbnail version for display, sized to fit on one screen */}
                 <Dialog>
                   <DialogTrigger>
                     <div className="relative cursor-pointer group">
                       <canvas 
                         ref={thumbnailCanvasRef} 
-                        className="max-w-full shadow-lg transition-all duration-300 group-hover:shadow-xl"
+                        className="max-h-[60vh] shadow-lg transition-all duration-300 group-hover:shadow-xl"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 bg-black/20 rounded-lg group-hover:opacity-100 transition-all duration-300">
                         <Maximize2 className="text-white w-10 h-10" />
@@ -229,10 +240,12 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] p-0 overflow-auto">
                     <div className="p-6 bg-white flex justify-center">
-                      <canvas 
-                        ref={canvasRef} 
-                        className="max-w-full max-h-[80vh] shadow-lg"
-                      />
+                      <ScrollArea className="w-full max-h-[80vh]">
+                        <canvas 
+                          ref={canvasRef} 
+                          className="max-w-full shadow-lg mx-auto"
+                        />
+                      </ScrollArea>
                     </div>
                   </DialogContent>
                 </Dialog>
