@@ -126,84 +126,63 @@ const PhotoBooth = () => {
         
       case 2:
         return (
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              {/* Left side: Photo strip preview */}
-              <div className="md:col-span-3 order-2 md:order-1">
-                <div className="text-center mb-3">
-                  <h2 className="text-xl font-bold font-montserrat">Your Strip</h2>
-                </div>
-                <div className="glass-panel p-2 h-[400px]">
-                  <PhotoStrip 
-                    images={photoStripImages} 
-                    filter={filter} 
-                    frameColor={frameColor}
-                    sticker={selectedSticker}
-                  />
-                </div>
-              </div>
-              
-              {/* Middle: Webcam/Camera */}
-              <div className="md:col-span-5 order-1 md:order-2">
-                <div className="text-center mb-3">
-                  <h1 className="text-2xl font-bold font-montserrat">Take Your Photos</h1>
-                  <p className="text-sm text-gray-600 mb-2">
-                    We'll take 4 photos for your strip
-                  </p>
-                </div>
-                
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold font-montserrat">Take Your Photos</h1>
+              <p className="text-sm text-gray-600 mb-2">
+                We'll take 4 photos for your strip
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Main Camera Column */}
+              <div className="md:col-span-8">
                 {showWebcam ? (
-                  <div className="relative">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm">
                     <WebcamCapture onCapture={handlePhotoStripCapture} />
                     
-                    <div className="mt-2 flex justify-center">
+                    <div className="mt-4 flex justify-center">
                       <button 
                         onClick={() => setShowWebcam(false)}
-                        className="idol-button-outline text-sm py-1"
+                        className="text-sm text-gray-500 flex items-center"
                       >
                         <Upload className="w-4 h-4 mr-1" />
-                        Upload Photos
+                        Upload Photos Instead
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm">
                     <PhotoUpload
                       onUpload={handleUserPhotoUpload}
                       label="Upload Your Photos"
                     />
                     
-                    <div className="flex justify-center">
+                    <div className="mt-4 flex justify-center">
                       <button 
                         onClick={() => setShowWebcam(true)}
-                        className="idol-button-outline text-sm py-1"
+                        className="text-sm text-gray-500 flex items-center"
                       >
                         <Camera className="w-4 h-4 mr-1" />
-                        Use Webcam
+                        Use Webcam Instead
                       </button>
                     </div>
                   </div>
                 )}
               </div>
               
-              {/* Right side: Options & customization */}
-              <div className="md:col-span-4 order-3">
-                <div className="space-y-6">
-                  {/* Frame color options */}
-                  <div className="glass-panel p-4">
-                    <h3 className="text-lg font-semibold mb-3 font-montserrat">Frame Color</h3>
-                    <FrameColorSelector 
-                      selectedColor={frameColor} 
-                      onSelectColor={handleFrameColorSelect} 
-                    />
+              {/* Preview Column */}
+              <div className="md:col-span-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm h-full">
+                  <div className="text-center mb-3">
+                    <h2 className="text-sm font-medium text-gray-600">Preview</h2>
                   </div>
-                  
-                  {/* Stickers options */}
-                  <div className="glass-panel p-4">
-                    <h3 className="text-lg font-semibold mb-3 font-montserrat">Stickers</h3>
-                    <StickersSelector 
-                      selectedSticker={selectedSticker} 
-                      onSelectSticker={handleStickerSelect} 
+                  <div className="h-[300px]">
+                    <PhotoStrip 
+                      images={photoStripImages} 
+                      filter={filter} 
+                      frameColor={frameColor}
+                      sticker={selectedSticker}
                     />
                   </div>
                 </div>
@@ -215,12 +194,16 @@ const PhotoBooth = () => {
       case 3:
         return (
           <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold font-montserrat">Perfect Your Strip</h1>
+              <p className="text-sm text-gray-600 mb-2">
+                Add the finishing touches
+              </p>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Left side: Photo strip preview */}
               <div className="md:col-span-3 order-2 md:order-1">
-                <div className="text-center mb-3">
-                  <h2 className="text-xl font-bold font-montserrat">Your Strip</h2>
-                </div>
                 <div className="glass-panel p-2 h-[400px]">
                   <PhotoStrip 
                     images={photoStripImages} 
@@ -233,13 +216,6 @@ const PhotoBooth = () => {
               
               {/* Middle: Final options */}
               <div className="md:col-span-5 order-1 md:order-2">
-                <div className="text-center mb-3">
-                  <h1 className="text-2xl font-bold font-montserrat">Perfect Your Strip</h1>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Add the finishing touches
-                  </p>
-                </div>
-                
                 <div className="glass-panel p-4 mb-4">
                   <h3 className="text-lg font-semibold mb-3 font-montserrat">Choose a Filter</h3>
                   <PhotoFilters onSelectFilter={handleFilterSelect} selectedFilter={filter} />
