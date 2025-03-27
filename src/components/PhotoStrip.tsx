@@ -22,7 +22,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
   };
 
   const handleDownload = () => {
-    // Create a canvas element to combine the images into a strip
+    // Create a canvas element to combine the images into a single receipt-like strip
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -40,17 +40,32 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
     Promise.all(loadImages).then(loadedImages => {
       if (loadedImages.length === 0) return;
       
-      // Set canvas size - vertical strip format
+      // Set canvas size - vertical receipt-like strip format
       const imgWidth = loadedImages[0].width;
       const imgHeight = loadedImages[0].height;
       
-      canvas.width = imgWidth;
-      canvas.height = imgHeight * loadedImages.length;
+      // Add some padding between photos and at the edges
+      const padding = 20;
+      const stripPadding = 30;
+      
+      canvas.width = imgWidth + (stripPadding * 2);
+      canvas.height = (imgHeight * loadedImages.length) + (padding * (loadedImages.length - 1)) + (stripPadding * 2);
+      
+      // Fill with white background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw dotted perforation lines at top
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(0, 15);
+      ctx.lineTo(canvas.width, 15);
+      ctx.strokeStyle = '#AAAAAA';
+      ctx.stroke();
       
       // Apply the filter effect if needed
       if (filter !== 'Normal') {
-        // Fix: Don't try to get computed style from a class selector
-        // Just apply the filter manually based on filter type
+        // Apply the filter manually based on filter type
         let filterStyle = '';
         switch (filter) {
           case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
@@ -64,8 +79,55 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
       
       // Draw each image on the canvas
       loadedImages.forEach((img, index) => {
-        ctx.drawImage(img, 0, index * imgHeight, imgWidth, imgHeight);
+        const y = stripPadding + (index * (imgHeight + padding));
+        ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
+        
+        // Add timestamp under each photo
+        ctx.filter = 'none'; // Reset filter for text
+        ctx.fillStyle = '#333333';
+        ctx.font = '12px monospace';
+        const timestamp = new Date().toLocaleTimeString();
+        const date = new Date().toLocaleDateString();
+        ctx.fillText(`${date} ${timestamp}`, stripPadding + 10, y + imgHeight + 15);
+        
+        // Restore filter for next image
+        if (filter !== 'Normal') {
+          let filterStyle = '';
+          switch (filter) {
+            case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
+            case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
+            case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
+            case 'B&W': filterStyle = 'grayscale(1)'; break;
+            case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
+          }
+          ctx.filter = filterStyle;
+        }
+        
+        // Draw perforation line between photos (except after the last one)
+        if (index < loadedImages.length - 1) {
+          ctx.filter = 'none'; // Reset filter for dotted line
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(0, y + imgHeight + padding/2);
+          ctx.lineTo(canvas.width, y + imgHeight + padding/2);
+          ctx.strokeStyle = '#AAAAAA';
+          ctx.stroke();
+        }
       });
+      
+      // Draw dotted perforation line at bottom
+      ctx.filter = 'none';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height - 15);
+      ctx.lineTo(canvas.width, canvas.height - 15);
+      ctx.strokeStyle = '#AAAAAA';
+      ctx.stroke();
+      
+      // Add footer at the bottom of the receipt
+      ctx.fillStyle = '#333333';
+      ctx.font = '10px monospace';
+      ctx.fillText('Thank you for using IdolBooth!', stripPadding + 10, canvas.height - 25);
       
       // Convert to data URL and download
       const link = document.createElement('a');
@@ -84,31 +146,40 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
     <div className="flex flex-col items-center">
       {images.length === 0 ? (
         <div className="text-center text-gray-400 p-4">
-          <p>Take photos to see your Polaroids here</p>
+          <p>Take photos to see your photo strip here</p>
         </div>
       ) : (
-        <div className="flex flex-wrap justify-center gap-4 mt-4">
-          {images.map((image, index) => (
-            <div 
-              key={index} 
-              className="polaroid-frame bg-white shadow-md p-2 pb-8 transform rotate-[-2deg] hover:rotate-0 transition-transform"
-              style={{ 
-                maxWidth: '180px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
-              }}
-            >
-              <div className={`${getFilterClassName()} overflow-hidden`}>
-                <img 
-                  src={image} 
-                  alt={`Photo ${index + 1}`} 
-                  className="w-full mx-auto block" 
-                />
+        <div className="flex flex-col items-center mt-4 max-w-full overflow-auto">
+          <div 
+            className="receipt-strip bg-white shadow-md p-5 pb-10"
+            style={{ 
+              maxWidth: '280px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              borderTop: '1px dashed #aaa',
+              borderBottom: '1px dashed #aaa'
+            }}
+          >
+            {images.map((image, index) => (
+              <div key={index} className="mb-4">
+                <div className={`${getFilterClassName()} overflow-hidden`}>
+                  <img 
+                    src={image} 
+                    alt={`Photo ${index + 1}`} 
+                    className="w-full mx-auto block" 
+                  />
+                </div>
+                <div className="pt-2 text-xs text-gray-600 font-mono">
+                  {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                </div>
+                {index < images.length - 1 && (
+                  <div className="w-full border-t border-dashed border-gray-300 my-4"></div>
+                )}
               </div>
-              <div className="pt-2 text-center text-xs text-gray-600">
-                {new Date().toLocaleDateString()}
-              </div>
+            ))}
+            <div className="text-center text-xs text-gray-500 font-mono mt-2">
+              Thank you for using IdolBooth!
             </div>
-          ))}
+          </div>
         </div>
       )}
       
