@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -19,6 +20,7 @@ const PhotoBooth = () => {
   const [filter, setFilter] = useState('Normal');
   const [captureMethod, setCaptureMethod] = useState<'webcam' | 'upload'>('webcam');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const navigate = useNavigate();
   
   // Handle idol photo upload
@@ -37,14 +39,19 @@ const PhotoBooth = () => {
   };
   
   // Handle user photo capture from webcam
-  const handlePhotoStripCapture = (images: string[]) => {
+  const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
     setPhotoStripImages(images);
+    if (selectedAspectRatio) {
+      setAspectRatio(selectedAspectRatio);
+    }
+    
     if (images.length === 4) {
-      // Navigate to results page with the images and filter
+      // Navigate to results page with the images, filter and aspect ratio
       navigate('/photo-booth/result', { 
         state: { 
           images,
-          filter 
+          filter,
+          aspectRatio: selectedAspectRatio || aspectRatio
         } 
       });
     }
@@ -61,7 +68,8 @@ const PhotoBooth = () => {
       navigate('/photo-booth/result', { 
         state: { 
           images,
-          filter
+          filter,
+          aspectRatio
         } 
       });
     } catch (error) {

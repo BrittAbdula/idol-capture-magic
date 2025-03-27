@@ -12,6 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface PhotoResultProps {}
 
@@ -27,6 +28,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [showDate, setShowDate] = useState<boolean>(true);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
@@ -38,6 +40,11 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       setImages(location.state.images);
       if (location.state.images.length > 0) {
         setSelectedImage(location.state.images[0]);
+      }
+      
+      // Set aspect ratio if provided in state
+      if (location.state.aspectRatio) {
+        setAspectRatio(location.state.aspectRatio);
       }
     } else {
       // Redirect back to photo booth if no images
@@ -77,18 +84,25 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const imgWidth = loadedImages[0].width * scale;
       const imgHeight = loadedImages[0].height * scale;
       
-      // Calculate strip dimensions
+      // Calculate strip dimensions based on aspect ratio
       const padding = photoGap * scale;
       const stripPadding = 40 * scale;
-      const stripWidth = imgWidth + (stripPadding * 2);
       
-      // Calculate total height but make sure it fits in viewport
+      // Calculate strip width based on image aspect ratio
+      let stripWidth = imgWidth + (stripPadding * 2);
+      
+      // For vertical photos (9:16), make the strip proportionally wider
+      if (aspectRatio === '9:16') {
+        stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (stripPadding * 2);
+      }
+      
+      // Calculate total height for all images
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
                           (padding * (loadedImages.length - 1));
       
       // Add extra space for text and date - INCREASED space here to fix overlap
-      const textSpace = customText ? Math.max(100, 100 * scale) : 0;
-      const dateSpace = showDate ? Math.max(60, 60 * scale) : 0;
+      const textSpace = customText ? Math.max(100, 120 * scale) : 0;
+      const dateSpace = showDate ? Math.max(60, 80 * scale) : 0;
       const extraSpace = textSpace + dateSpace + (stripPadding * 2);
       
       const stripHeight = totalImagesHeight + extraSpace;
@@ -116,11 +130,15 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         // Draw white border around image
         const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(stripPadding - borderWidth, y - borderWidth, 
+        
+        // Calculate the x position to center the image if needed
+        const xPos = (stripWidth - imgWidth) / 2 - borderWidth;
+        
+        ctx.fillRect(xPos, y - borderWidth, 
                    imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
         
-        // Draw the image
-        ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
+        // Draw the image centered in the strip
+        ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
         
         // Add perforations between photos (except after the last one)
         if (index < loadedImages.length - 1) {
@@ -135,7 +153,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       
       // Add custom text - increased Y position to prevent overlap
       if (customText) {
-        const textY = stripHeight - (showDate ? 110 * scale : 50 * scale);
+        const textY = stripHeight - (showDate ? 130 * scale : 60 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
         // Increase text size based on scale
         ctx.font = `bold ${Math.max(24, 28 * scale)}px sans-serif`;
@@ -150,14 +168,14 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
         ctx.textAlign = 'center';
         const dateText = new Date().toLocaleDateString();
-        ctx.fillText(dateText, stripWidth / 2, stripHeight - 60 * scale);
+        ctx.fillText(dateText, stripWidth / 2, stripHeight - 80 * scale);
       }
       
       // Add IdolBooth logo
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
       ctx.font = `bold ${Math.max(16, 18 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 25 * scale);
+      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 35 * scale);
     });
   };
   
@@ -186,7 +204,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const scale = isMobile ? 0.3 : 0.4;
       generatePhotoStrip(thumbnailCanvasRef.current, scale);
     }
-  }, [images, selectedColor, customText, photoGap, showDate, isMobile]);
+  }, [images, selectedColor, customText, photoGap, showDate, isMobile, aspectRatio]);
 
   // Generate the full-size canvas when the dialog is opened
   useEffect(() => {
@@ -194,17 +212,11 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       // Generate full-size version for the dialog
       generatePhotoStrip(canvasRef.current, 1);
     }
-  }, [dialogOpen, images, selectedColor, customText, photoGap, showDate]);
+  }, [dialogOpen, images, selectedColor, customText, photoGap, showDate, aspectRatio]);
 
   const handleDownload = () => {
     // Create a temporary canvas for downloading at full resolution
     const tempCanvas = document.createElement('canvas');
-    const ctx = tempCanvas.getContext('2d');
-    
-    if (!ctx) {
-      toast.error("Could not create download canvas");
-      return;
-    }
     
     // Generate a full-size version for download
     generatePhotoStrip(tempCanvas, 1);
@@ -225,7 +237,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         console.error("Download error:", error);
         toast.error("Failed to download photo strip");
       }
-    }, 200);
+    }, 500);  // Increased timeout to ensure canvas rendering is complete
   };
 
   const handleRetake = () => {

@@ -1,13 +1,15 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, FlipHorizontal, Maximize, Minimize } from 'lucide-react';
+import { Camera, FlipHorizontal, Maximize, Minimize, AspectRatio } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface WebcamCaptureProps {
-  onCapture: (images: string[]) => void;
+  onCapture: (images: string[], aspectRatio?: string) => void;
 }
 
 type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
+type AspectRatioType = '4:3' | '1:1' | '9:16';
 
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -21,6 +23,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const [photoCount, setPhotoCount] = useState(0);
   const [mirrored, setMirrored] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatioType>('4:3');
 
   const startWebcam = useCallback(async () => {
     try {
@@ -57,8 +60,29 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Set canvas dimensions based on selected aspect ratio
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      if (aspectRatio === '1:1') {
+        // For square, use the smaller dimension for both width and height
+        const size = Math.min(width, height);
+        offsetX = (width - size) / 2;
+        offsetY = (height - size) / 2;
+        width = size;
+        height = size;
+      } else if (aspectRatio === '9:16') {
+        // For vertical 9:16, calculate the width based on the height
+        const newWidth = (height * 9) / 16;
+        offsetX = (width - newWidth) / 2;
+        width = newWidth;
+      }
+      // 4:3 is the default video ratio, so no changes needed
+      
+      canvas.width = width;
+      canvas.height = height;
       
       const ctx = canvas.getContext('2d');
       if (ctx) {
@@ -67,7 +91,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           ctx.scale(-1, 1);
         }
         
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Draw the cropped portion of the video based on aspect ratio
+        ctx.drawImage(
+          video, 
+          offsetX, offsetY, width, height, // Source rectangle
+          0, 0, width, height              // Destination rectangle
+        );
         
         if (activeFilter !== 'Normal') {
           switch (activeFilter) {
@@ -94,7 +123,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           } else {
             ctx.resetTransform();
           }
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          // Redraw the cropped portion with the filter applied
+          ctx.drawImage(
+            video, 
+            offsetX, offsetY, width, height, // Source rectangle
+            0, 0, width, height              // Destination rectangle
+          );
         }
         
         const imageDataURL = canvas.toDataURL('image/jpeg');
@@ -103,13 +137,13 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         setCapturedImages(newCapturedImages);
         setPhotoCount(prevCount => prevCount + 1);
         
-        onCapture(newCapturedImages);
+        onCapture(newCapturedImages, aspectRatio);
         
         setIsCapturing(true);
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
-  }, [capturedImages, onCapture, mirrored, activeFilter]);
+  }, [capturedImages, onCapture, mirrored, activeFilter, aspectRatio]);
 
   useEffect(() => {
     if (photoCount === 4) {
@@ -141,9 +175,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const startPhotoSession = useCallback(() => {
     setCapturedImages([]);
     setPhotoCount(0);
-    onCapture([]);
+    onCapture([], aspectRatio);
     startCountdown();
-  }, [startCountdown, onCapture]);
+  }, [startCountdown, onCapture, aspectRatio]);
 
   const toggleMirror = useCallback(() => {
     setMirrored(prev => !prev);
@@ -208,12 +242,29 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             autoPlay
             playsInline
             muted
-            className={`w-full aspect-[4/3] object-cover ${getFilterClassName()}`}
+            className={`w-full object-cover ${getFilterClassName()}`}
             style={{ 
               maxHeight: '560px',
-              transform: mirrored ? 'scaleX(-1)' : 'none'
+              transform: mirrored ? 'scaleX(-1)' : 'none',
+              aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '9/16'
             }}
           />
+          
+          {/* Crop guide overlay */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{ 
+              boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
+              aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '9/16',
+              margin: 'auto'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white"></div>
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-white"></div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-white"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-white"></div>
+          </div>
+          
           <canvas ref={canvasRef} className="hidden" />
           
           {countdownValue && (
@@ -236,7 +287,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             <>
               <button 
                 onClick={toggleMirror}
-                className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
+                className="absolute top-3 right-14 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
               >
                 <FlipHorizontal className="w-5 h-5 text-white" />
               </button>
@@ -250,6 +301,25 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                   <Maximize className="w-5 h-5 text-white" />
                 }
               </button>
+              
+              <div className="absolute top-3 left-3 bg-black/30 rounded-full p-1">
+                <ToggleGroup 
+                  type="single" 
+                  value={aspectRatio} 
+                  onValueChange={(value) => value && setAspectRatio(value as AspectRatioType)}
+                  className="bg-transparent"
+                >
+                  <ToggleGroupItem value="4:3" className="text-xs px-2 py-1 rounded-l-full data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
+                    4:3
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="1:1" className="text-xs px-2 py-1 data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
+                    1:1
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="9:16" className="text-xs px-2 py-1 rounded-r-full data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
+                    9:16
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </>
           )}
         </div>
