@@ -80,27 +80,39 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {images.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            <p>Take photos to see your strip here</p>
-          </div>
-        ) : (
-          <div className={`flex-1 overflow-auto ${getFilterClassName()}`}>
-            <div className="flex flex-col gap-1">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <img src={image} alt={`Photo ${index + 1}`} className="w-full max-w-[180px] mx-auto" />
-                </div>
-              ))}
+    <div className="flex flex-col items-center">
+      {images.length === 0 ? (
+        <div className="text-center text-gray-400 p-4">
+          <p>Take photos to see your Polaroids here</p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap justify-center gap-4 mt-4">
+          {images.map((image, index) => (
+            <div 
+              key={index} 
+              className="polaroid-frame bg-white shadow-md p-2 pb-8 transform rotate-[-2deg] hover:rotate-0 transition-transform"
+              style={{ 
+                maxWidth: '180px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
+              }}
+            >
+              <div className={`${getFilterClassName()} overflow-hidden`}>
+                <img 
+                  src={image} 
+                  alt={`Photo ${index + 1}`} 
+                  className="w-full mx-auto block" 
+                />
+              </div>
+              <div className="pt-2 text-center text-xs text-gray-600">
+                {new Date().toLocaleDateString()}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
       
       {images.length > 0 && (
-        <div className="p-2 flex justify-center gap-2">
+        <div className="mt-4 flex justify-center gap-2">
           <button 
             onClick={handleDownload}
             className="flex items-center gap-1 px-2 py-1 text-xs bg-idol-gold text-black rounded-md hover:bg-opacity-90 transition-colors"

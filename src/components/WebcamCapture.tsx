@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -68,7 +67,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         setCapturedImages(newCapturedImages);
         setPhotoCount(prevCount => prevCount + 1);
         
-        // Update the parent component with the images taken so far
         onCapture(newCapturedImages);
         
         setIsCapturing(true);
@@ -77,12 +75,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     }
   }, [capturedImages, onCapture]);
 
-  // Effect to handle completing the photo strip
   useEffect(() => {
     if (photoCount === 4) {
       toast.success("Photo strip complete!");
       
-      // Wait before resetting for next session
       const resetTimer = setTimeout(() => {
         setPhotoCount(0);
         setCapturedImages([]);
@@ -90,10 +86,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       
       return () => clearTimeout(resetTimer);
     } else if (photoCount > 0 && photoCount < 4) {
-      // Continue taking photos for the strip
       const timer = setTimeout(() => {
         startCountdown();
-      }, 1500); // 1.5 second pause between photos
+      }, 1500);
       
       return () => clearTimeout(timer);
     }
@@ -115,14 +110,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   }, [captureImage]);
 
   const startPhotoSession = useCallback(() => {
-    // Reset any existing photos
     setCapturedImages([]);
     setPhotoCount(0);
-    
-    // Reset parent component photo strip
     onCapture([]);
-    
-    // Start the first countdown
     startCountdown();
   }, [startCountdown, onCapture]);
 
@@ -157,7 +147,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover ${getFilterClassName()}`}
+            className={`w-full aspect-[4/3] object-cover ${getFilterClassName()}`}
+            style={{ maxHeight: '500px' }}
           />
           <canvas ref={canvasRef} className="hidden" />
           
@@ -183,7 +174,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             <button 
               onClick={startPhotoSession}
               disabled={!isStreaming || countdownValue !== null || (photoCount > 0 && photoCount < 4)}
-              className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
+              className="w-16 h-16 bg-idol-gold flex items-center justify-center rounded-full transition-all 
                         hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Camera className="w-6 h-6 text-black" />
@@ -194,7 +185,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 stopWebcam();
                 setTimeout(startWebcam, 300);
               }}
-              className="w-10 h-10 bg-white/20 flex items-center justify-center transition-all 
+              className="w-10 h-10 bg-white/20 flex items-center justify-center rounded-full transition-all 
                         hover:bg-white/30 active:scale-95"
             >
               <RefreshCw className="w-5 h-5 text-white" />
@@ -203,9 +194,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         </div>
       </div>
       
-      {/* Filter controls - now below the video stream */}
-      <div className="p-3 bg-gray-100 dark:bg-gray-800">
-        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 text-center">Photo Filters</p>
+      <div className="p-3 bg-transparent">
         <div className="flex justify-center">
           <ToggleGroup type="single" value={activeFilter} onValueChange={(value) => value && setActiveFilter(value as FilterType)}>
             <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">

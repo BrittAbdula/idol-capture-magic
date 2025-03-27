@@ -110,19 +110,24 @@ const PhotoBooth = () => {
       case 2:
         return (
           <div className="max-w-full mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-              {/* Promo/Intro section - 2 columns */}
-              <div className="md:col-span-2">
-                <div className="glass-panel p-4 mb-4 h-full">
-                  <h2 className="text-xl font-bold mb-2 font-montserrat">Photo Booth</h2>
-                  <p className="text-gray-600 mb-4">
-                    Capture your perfect moment! Take 4 photos in sequence to create your custom photo strip.
-                  </p>
-                  
+            <div className="flex flex-col items-center">
+              <div className="w-full max-w-xl mx-auto mb-6">
+                {showWebcam ? (
+                  <div className="overflow-hidden rounded-lg shadow-md">
+                    <WebcamCapture onCapture={handlePhotoStripCapture} />
+                  </div>
+                ) : (
+                  <PhotoUpload
+                    onUpload={handleUserPhotoUpload}
+                    label="Upload Your Photos"
+                  />
+                )}
+                
+                <div className="mt-4 flex justify-center gap-4">
                   {showWebcam ? (
                     <button 
                       onClick={() => setShowWebcam(false)}
-                      className="idol-button-outline w-full mb-2"
+                      className="idol-button-outline"
                     >
                       <Upload className="w-5 h-5 mr-2" />
                       Upload Photos Instead
@@ -130,7 +135,7 @@ const PhotoBooth = () => {
                   ) : (
                     <button 
                       onClick={() => setShowWebcam(true)}
-                      className="idol-button-outline w-full mb-2"
+                      className="idol-button-outline"
                     >
                       <Camera className="w-5 h-5 mr-2" />
                       Use Webcam Instead
@@ -139,27 +144,8 @@ const PhotoBooth = () => {
                 </div>
               </div>
               
-              {/* Webcam section - 3 columns, centered */}
-              <div className="md:col-span-3 flex justify-center">
-                <div className="w-full max-w-md">
-                  {showWebcam ? (
-                    <div className="overflow-hidden rounded-lg shadow-md">
-                      <WebcamCapture onCapture={handlePhotoStripCapture} />
-                    </div>
-                  ) : (
-                    <PhotoUpload
-                      onUpload={handleUserPhotoUpload}
-                      label="Upload Your Photos"
-                    />
-                  )}
-                </div>
-              </div>
-              
-              {/* Photo Strip Preview - 2 columns */}
-              <div className="md:col-span-2 h-[480px]">
-                <div className="h-full">
-                  <PhotoStrip images={photoStripImages} filter={filter} />
-                </div>
+              <div className="w-full max-w-4xl">
+                <PhotoStrip images={photoStripImages} filter={filter} />
               </div>
             </div>
           </div>
@@ -168,9 +154,8 @@ const PhotoBooth = () => {
       case 3:
         return (
           <div className="max-w-full mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-              {/* Left Panel - Filters and Controls */}
-              <div className="md:col-span-2">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/4">
                 <div className="glass-panel p-4 mb-4">
                   <h3 className="text-xl font-semibold mb-3 font-montserrat">Choose a Filter</h3>
                   <PhotoFilters onSelectFilter={handleFilterSelect} selectedFilter={filter} />
@@ -202,23 +187,8 @@ const PhotoBooth = () => {
                 </div>
               </div>
               
-              {/* Photo Preview - 3 columns, centered */}
-              <div className="md:col-span-3 flex justify-center">
-                <div className="w-full max-w-md overflow-hidden rounded-lg shadow-md">
-                  {/* This would be the photo preview with filters applied */}
-                  {photoStripImages.length > 0 && (
-                    <img 
-                      src={photoStripImages[0]} 
-                      alt="Preview" 
-                      className={`w-full ${getFilterClassName(filter)}`} 
-                    />
-                  )}
-                </div>
-              </div>
-              
-              {/* Photo Strip Preview - 2 columns */}
-              <div className="md:col-span-2 h-[480px]">
-                <div className="h-full">
+              <div className="md:w-3/4 flex justify-center">
+                <div className="w-full">
                   <PhotoStrip images={photoStripImages} filter={filter} />
                 </div>
               </div>
