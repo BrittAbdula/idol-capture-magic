@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +38,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +92,42 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-open-sans overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-montserrat font-semibold;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-md shadow-glass border border-white/20 rounded-lg;
+  }
+  
+  .idol-button {
+    @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
+           hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
+  }
+  
+  .idol-button-outline {
+    @apply border-2 border-idol-gold text-idol-gold font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
+           hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
+  }
+  
+  .neo-panel {
+    @apply bg-idol-gray rounded-xl shadow-neo p-6;
+  }
+  
+  .animate-on-scroll {
+    @apply opacity-0 translate-y-8 transition-all duration-700 ease-out;
+  }
+  
+  .animate-on-scroll.show {
+    @apply opacity-100 translate-y-0;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-[1.02];
   }
 }
