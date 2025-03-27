@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import WebcamCapture from '../components/WebcamCapture';
 import PhotoUpload from '../components/PhotoUpload';
 import PhotoFrame from '../components/PhotoFrame';
+import PhotoStrip from '../components/PhotoStrip';
 import PhotoFilters from '../components/PhotoFilters';
 import { extractSubject, applyFilter } from '../lib/imageProcessing';
 
@@ -14,8 +15,7 @@ const PhotoBooth = () => {
   // State for photo booth
   const [step, setStep] = useState(1);
   const [idolPhoto, setIdolPhoto] = useState<string | null>(null);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
-  const [combinedPhoto, setCombinedPhoto] = useState<string | null>(null);
+  const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
   const [filter, setFilter] = useState('Normal');
   const [showWebcam, setShowWebcam] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -37,9 +37,11 @@ const PhotoBooth = () => {
   };
   
   // Handle user photo capture from webcam
-  const handleWebcamCapture = (imageSrc: string) => {
-    setUserPhoto(imageSrc);
-    setStep(3);
+  const handlePhotoStripCapture = (images: string[]) => {
+    setPhotoStripImages(images);
+    if (images.length > 0) {
+      setStep(3);
+    }
   };
   
   // Handle user photo upload
@@ -47,7 +49,8 @@ const PhotoBooth = () => {
     try {
       setIsProcessing(true);
       const imageUrl = URL.createObjectURL(file);
-      setUserPhoto(imageUrl);
+      // For now, we'll just duplicate the image 4 times to create a strip
+      setPhotoStripImages(Array(4).fill(imageUrl));
       setStep(3);
     } catch (error) {
       console.error("Error processing user photo:", error);
@@ -57,46 +60,18 @@ const PhotoBooth = () => {
     }
   };
   
-  // When both photos are available, combine them
-  useEffect(() => {
-    if (idolPhoto && userPhoto) {
-      // In a full implementation, this would intelligently combine the photos
-      // For now, we'll just use the user photo as the combined photo
-      setCombinedPhoto(userPhoto);
-    }
-  }, [idolPhoto, userPhoto]);
-  
   // Handle filter selection
   const handleFilterSelect = (filterName: string) => {
     setFilter(filterName);
-    if (combinedPhoto) {
-      // Apply the selected filter to the combined photo
-      applyFilter(combinedPhoto, filterName);
-    }
   };
   
   // Reset the photo booth
   const handleReset = () => {
     setIdolPhoto(null);
-    setUserPhoto(null);
-    setCombinedPhoto(null);
+    setPhotoStripImages([]);
     setFilter('Normal');
     setStep(1);
     setShowWebcam(true);
-  };
-  
-  // Get filter class name
-  const getFilterClassName = () => {
-    switch (filter) {
-      case 'Warm': return 'sepia-[0.3] brightness-105';
-      case 'Cool': return 'brightness-110 contrast-110 saturate-125 hue-rotate-[-10deg]';
-      case 'Vintage': return 'sepia-[0.5] brightness-90 contrast-110';
-      case 'B&W': return 'grayscale';
-      case 'Dramatic': return 'contrast-125 brightness-90';
-      case 'Vivid': return 'saturate-150 contrast-110 brightness-105';
-      case 'Muted': return 'saturate-50 brightness-110';
-      default: return '';
-    }
   };
   
   // Render step content
@@ -137,100 +112,111 @@ const PhotoBooth = () => {
         
       case 2:
         return (
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold mb-4 font-montserrat">Take Your Photo</h1>
-              <p className="text-gray-600">
-                Use your webcam to take a photo or upload an existing one.
+          <div className="max-w-full mx-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold mb-4 font-montserrat">Take Your Photos</h1>
+              <p className="text-gray-600 mb-2">
+                We'll take 4 photos in sequence to create your photo strip.
               </p>
             </div>
             
-            <div className="flex flex-col gap-8">
-              {showWebcam ? (
-                <div className="relative">
-                  <WebcamCapture onCapture={handleWebcamCapture} />
-                  
-                  <div className="mt-4 flex justify-center">
-                    <button 
-                      onClick={() => setShowWebcam(false)}
-                      className="idol-button-outline"
-                    >
-                      <Upload className="w-5 h-5 mr-2" />
-                      Upload Photo Instead
-                    </button>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {/* Webcam section - 3 columns on medium screens */}
+              <div className="md:col-span-3">
+                {showWebcam ? (
+                  <div className="relative">
+                    <WebcamCapture onCapture={handlePhotoStripCapture} />
+                    
+                    <div className="mt-4 flex justify-center">
+                      <button 
+                        onClick={() => setShowWebcam(false)}
+                        className="idol-button-outline"
+                      >
+                        <Upload className="w-5 h-5 mr-2" />
+                        Upload Photos Instead
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  <PhotoUpload
-                    onUpload={handleUserPhotoUpload}
-                    label="Upload Your Photo"
-                  />
-                  
-                  <div className="flex justify-center mt-2">
-                    <button 
-                      onClick={() => setShowWebcam(true)}
-                      className="idol-button-outline"
-                    >
-                      <Camera className="w-5 h-5 mr-2" />
-                      Use Webcam Instead
-                    </button>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <PhotoUpload
+                      onUpload={handleUserPhotoUpload}
+                      label="Upload Your Photos"
+                    />
+                    
+                    <div className="flex justify-center mt-2">
+                      <button 
+                        onClick={() => setShowWebcam(true)}
+                        className="idol-button-outline"
+                      >
+                        <Camera className="w-5 h-5 mr-2" />
+                        Use Webcam Instead
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
+              
+              {/* Photo Strip Preview - 2 columns on medium screens */}
+              <div className="md:col-span-2 h-[600px]">
+                <div className="glass-panel p-4 h-full">
+                  <h3 className="text-xl font-semibold mb-4 font-montserrat text-center">Your Photo Strip</h3>
+                  <PhotoStrip images={photoStripImages} filter={filter} />
                 </div>
-              )}
+              </div>
             </div>
           </div>
         );
         
       case 3:
         return (
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold mb-4 font-montserrat">Your Perfect Photo</h1>
+          <div className="max-w-full mx-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold mb-4 font-montserrat">Your Perfect Photo Strip</h1>
               <p className="text-gray-600">
                 Select a filter and download your photo strip.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {combinedPhoto && (
-                <div className="flex flex-col">
-                  <div className="overflow-hidden rounded-lg bg-black flex items-center justify-center">
-                    <div className={getFilterClassName()}>
-                      <img 
-                        src={combinedPhoto} 
-                        alt="Combined photo" 
-                        className="max-w-full h-auto"
-                      />
-                    </div>
-                  </div>
-                  
-                  <PhotoFilters
-                    onSelectFilter={handleFilterSelect}
-                    selectedFilter={filter}
-                  />
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {/* Left Panel - Filters and Controls */}
+              <div className="md:col-span-3">
+                <div className="glass-panel p-6 mb-4">
+                  <h3 className="text-xl font-semibold mb-4 font-montserrat">Choose a Filter</h3>
+                  <PhotoFilters onSelectFilter={handleFilterSelect} selectedFilter={filter} />
                 </div>
-              )}
-              
-              <div className="glass-panel p-6 flex flex-col">
-                <h3 className="text-xl font-semibold mb-4 font-montserrat">Your Photo Strip</h3>
-                <p className="text-gray-600 mb-6">
-                  Here's your final photo strip. You can download it or share it with friends.
-                </p>
                 
-                <div className="flex-1 flex flex-col gap-4 justify-center">
-                  <button className="idol-button flex items-center justify-center">
-                    <Download className="w-5 h-5 mr-2" />
-                    Download Photo
-                  </button>
+                <div className="glass-panel p-6 flex flex-col">
+                  <h3 className="text-xl font-semibold mb-4 font-montserrat">What's Next?</h3>
+                  <p className="text-gray-600 mb-6">
+                    You can download your photo strip or create a new one.
+                  </p>
                   
-                  <button 
-                    onClick={handleReset}
-                    className="idol-button-outline flex items-center justify-center"
-                  >
-                    <Trash2 className="w-5 h-5 mr-2" />
-                    Start Over
-                  </button>
+                  <div className="flex-1 flex flex-col gap-4 justify-center">
+                    <button 
+                      onClick={() => setStep(2)}
+                      className="idol-button flex items-center justify-center"
+                    >
+                      <Camera className="w-5 h-5 mr-2" />
+                      Take New Photos
+                    </button>
+                    
+                    <button 
+                      onClick={handleReset}
+                      className="idol-button-outline flex items-center justify-center"
+                    >
+                      <Trash2 className="w-5 h-5 mr-2" />
+                      Start Over
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Photo Strip Preview - 2 columns */}
+              <div className="md:col-span-2 h-[600px]">
+                <div className="glass-panel p-4 h-full">
+                  <h3 className="text-xl font-semibold mb-4 font-montserrat text-center">Your Photo Strip</h3>
+                  <PhotoStrip images={photoStripImages} filter={filter} />
                 </div>
               </div>
             </div>
@@ -273,10 +259,12 @@ const PhotoBooth = () => {
         </div>
         
         <button
-          onClick={() => step < 3 && step !== 2 && setStep(step + 1)}
-          disabled={step === 3 || step === 2}
+          onClick={() => step < 3 && photoStripImages.length > 0 && setStep(step + 1)}
+          disabled={step === 3 || (step === 2 && photoStripImages.length === 0)}
           className={`flex items-center gap-1 ${
-            step === 3 || step === 2 ? 'text-gray-400 cursor-not-allowed' : 'text-black hover:text-idol-gold'
+            step === 3 || (step === 2 && photoStripImages.length === 0) 
+              ? 'text-gray-400 cursor-not-allowed' 
+              : 'text-black hover:text-idol-gold'
           }`}
         >
           <span>Next</span>

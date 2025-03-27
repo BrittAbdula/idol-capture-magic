@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface WebcamCaptureProps {
-  onCapture: (image: string) => void;
+  onCapture: (images: string[]) => void;
 }
 
 type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
@@ -17,6 +17,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('Normal');
+  const [capturedImages, setCapturedImages] = useState<string[]>([]);
+  const [photoCount, setPhotoCount] = useState(0);
 
   const startWebcam = useCallback(async () => {
     try {
@@ -61,15 +63,34 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         const imageDataURL = canvas.toDataURL('image/jpeg');
-        onCapture(imageDataURL);
+        
+        setCapturedImages(prev => [...prev, imageDataURL]);
+        setPhotoCount(prevCount => prevCount + 1);
         
         setIsCapturing(true);
         setTimeout(() => setIsCapturing(false), 300);
-        
-        toast.success("Photo captured!");
       }
     }
-  }, [onCapture]);
+  }, []);
+
+  // Effect to handle completing the photo strip
+  useEffect(() => {
+    if (photoCount === 4) {
+      onCapture(capturedImages);
+      toast.success("Photo strip complete!");
+      
+      // Reset for next session
+      setPhotoCount(0);
+      setCapturedImages([]);
+    } else if (photoCount > 0 && photoCount < 4) {
+      // Continue taking photos for the strip
+      const timer = setTimeout(() => {
+        startCountdown();
+      }, 1500); // 1.5 second pause between photos
+      
+      return () => clearTimeout(timer);
+    }
+  }, [photoCount, capturedImages, onCapture]);
 
   const startCountdown = useCallback(() => {
     setCountdownValue(3);
@@ -85,6 +106,15 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       });
     }, 1000);
   }, [captureImage]);
+
+  const startPhotoSession = useCallback(() => {
+    // Reset any existing photos
+    setCapturedImages([]);
+    setPhotoCount(0);
+    
+    // Start the first countdown
+    startCountdown();
+  }, [startCountdown]);
 
   useEffect(() => {
     startWebcam();
@@ -128,13 +158,21 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
               </span>
             </div>
           )}
+          
+          {photoCount > 0 && photoCount < 4 && !countdownValue && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+              <span className="text-xl font-bold text-white">
+                Photo {photoCount} of 4 taken
+              </span>
+            </div>
+          )}
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
           <div className="flex gap-4">
             <button 
-              onClick={startCountdown}
-              disabled={!isStreaming || countdownValue !== null}
+              onClick={startPhotoSession}
+              disabled={!isStreaming || countdownValue !== null || photoCount > 0}
               className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
                         hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
