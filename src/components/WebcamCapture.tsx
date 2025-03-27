@@ -1,8 +1,9 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, FlipHorizontal, Maximize, Minimize } from 'lucide-react';
+import { Camera, FlipHorizontal, Maximize, Minimize, Grid } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Button } from "@/components/ui/button";
 
 interface WebcamCaptureProps {
   onCapture: (images: string[], aspectRatio?: string) => void;
@@ -24,6 +25,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const [mirrored, setMirrored] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<AspectRatioType>('4:3');
+  const [showGrid, setShowGrid] = useState(false);
 
   const startWebcam = useCallback(async () => {
     try {
@@ -210,6 +212,20 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     };
   }, [startWebcam, stopWebcam]);
 
+  // New handler for cycling through aspect ratios
+  const cycleAspectRatio = useCallback(() => {
+    setAspectRatio(prev => {
+      if (prev === '4:3') return '1:1';
+      if (prev === '1:1') return '3:2';
+      return '4:3';
+    });
+  }, []);
+
+  // Toggle grid visibility
+  const toggleGrid = useCallback(() => {
+    setShowGrid(prev => !prev);
+  }, []);
+
   const getContainerStyle = () => {
     let containerStyle: React.CSSProperties = {
       position: 'relative',
@@ -263,6 +279,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             }}
           />
           
+          {/* Aspect ratio crop guide - removed corner frames */}
           <div 
             className="absolute inset-0 pointer-events-none m-auto"
             style={{ 
@@ -273,12 +290,24 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
               maxWidth: '100%',
               maxHeight: '100%',
             }}
-          >
-            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white"></div>
-            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-white"></div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-white"></div>
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-white"></div>
-          </div>
+          />
+          
+          {/* Grid overlay - only visible when showGrid is true */}
+          {showGrid && (
+            <div 
+              className="absolute inset-0 pointer-events-none m-auto grid-overlay"
+              style={{ 
+                aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
+                width: aspectRatio === '3:2' ? 'auto' : '100%',
+                height: aspectRatio === '3:2' ? '100%' : 'auto',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)',
+                backgroundSize: '33.33% 33.33%',
+                backgroundPosition: 'center',
+              }}
+            />
+          )}
           
           <canvas ref={canvasRef} className="hidden" />
           
@@ -300,6 +329,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           
           {!inCaptureMode && (
             <>
+              {/* Mirror button (top right) */}
               <button 
                 onClick={toggleMirror}
                 className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -307,6 +337,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 <FlipHorizontal className="w-5 h-5 text-white" />
               </button>
               
+              {/* Fullscreen button (bottom right) */}
               <button 
                 onClick={toggleFullscreen}
                 className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
@@ -317,24 +348,21 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 }
               </button>
               
-              <div className="absolute top-3 left-3 bg-black/30 rounded-full p-1 z-20">
-                <ToggleGroup 
-                  type="single" 
-                  value={aspectRatio} 
-                  onValueChange={(value) => value && setAspectRatio(value as AspectRatioType)}
-                  className="bg-transparent"
-                >
-                  <ToggleGroupItem value="4:3" className="text-xs px-2 py-1 rounded-l-full data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
-                    4:3
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="1:1" className="text-xs px-2 py-1 data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
-                    1:1
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="3:2" className="text-xs px-2 py-1 rounded-r-full data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
-                    3:2
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
+              {/* Aspect ratio button (top left) - new cycled button */}
+              <button
+                onClick={cycleAspectRatio}
+                className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
+              >
+                <span className="text-xs font-bold text-white">{aspectRatio}</span>
+              </button>
+              
+              {/* Grid toggle button (bottom left) - new button */}
+              <button 
+                onClick={toggleGrid}
+                className="absolute bottom-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
+              >
+                <Grid className={`w-5 h-5 ${showGrid ? 'text-idol-gold' : 'text-white'}`} />
+              </button>
             </>
           )}
         </div>
