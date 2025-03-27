@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -93,25 +92,30 @@ const PhotoBooth = () => {
     }
     
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-        {photoStripImages.map((image, index) => (
-          <div 
-            key={index} 
-            className="polaroid-frame bg-white shadow-lg p-2 pb-6 transform transition-transform hover:rotate-1"
-            style={{ maxWidth: '180px' }}
-          >
-            <div className={`mb-2 overflow-hidden`}>
-              <img 
-                src={image} 
-                alt={`Photo ${index + 1}`} 
-                className="w-full h-auto" 
-              />
+      <div className="flex justify-center mt-6 overflow-x-auto py-4">
+        <div className={`flex ${photoStripImages.length > 1 ? 'justify-center' : 'justify-center'} gap-4 transition-all duration-300`}>
+          {photoStripImages.map((image, index) => (
+            <div 
+              key={index} 
+              className="polaroid-frame bg-white shadow-lg p-2 pb-6 transform transition-transform hover:rotate-1"
+              style={{ 
+                maxWidth: '180px',
+                order: photoStripImages.length - index // Reverse order so new photos appear on the right
+              }}
+            >
+              <div className="mb-2 overflow-hidden">
+                <img 
+                  src={image} 
+                  alt={`Photo ${index + 1}`} 
+                  className="w-full h-auto" 
+                />
+              </div>
+              <div className="text-center text-xs text-gray-600">
+                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
             </div>
-            <div className="text-center text-xs text-gray-600">
-              Photo {index + 1}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };
