@@ -23,13 +23,14 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
-  const [photoGap, setPhotoGap] = useState<number>(50);  // Changed default to 50
+  const [photoGap, setPhotoGap] = useState<number>(50);
   const [showDate, setShowDate] = useState<boolean>(true);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   
   useEffect(() => {
     // Check if we have images in the state
@@ -85,10 +86,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
                           (padding * (loadedImages.length - 1));
       
-      // Add extra space for text and date
-      const extraSpace = (customText ? 60 * scale : 0) + 
-                         (showDate ? 40 * scale : 0) + 
-                         (stripPadding * 2);
+      // Add extra space for text and date - INCREASED space here to fix overlap
+      const textSpace = customText ? Math.max(100, 100 * scale) : 0;
+      const dateSpace = showDate ? Math.max(60, 60 * scale) : 0;
+      const extraSpace = textSpace + dateSpace + (stripPadding * 2);
       
       const stripHeight = totalImagesHeight + extraSpace;
       
@@ -132,9 +133,9 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         }
       });
       
-      // Add custom text
+      // Add custom text - increased Y position to prevent overlap
       if (customText) {
-        const textY = stripHeight - (showDate ? 90 * scale : 40 * scale);
+        const textY = stripHeight - (showDate ? 110 * scale : 50 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
         // Increase text size based on scale
         ctx.font = `bold ${Math.max(24, 28 * scale)}px sans-serif`;
@@ -142,21 +143,21 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.fillText(customText, stripWidth / 2, textY);
       }
       
-      // Add date
+      // Add date - increased Y position to prevent overlap
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
         // Increase date text size
         ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
         ctx.textAlign = 'center';
         const dateText = new Date().toLocaleDateString();
-        ctx.fillText(dateText, stripWidth / 2, stripHeight - 40 * scale);
+        ctx.fillText(dateText, stripWidth / 2, stripHeight - 60 * scale);
       }
       
       // Add IdolBooth logo
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
       ctx.font = `bold ${Math.max(16, 18 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 15 * scale);
+      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 25 * scale);
     });
   };
   
@@ -178,10 +179,8 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     return luminance < 0.5;
   };
 
+  // Generate the thumbnail on initial render and when settings change
   useEffect(() => {
-    if (canvasRef.current) {
-      generatePhotoStrip(canvasRef.current, 1);
-    }
     if (thumbnailCanvasRef.current) {
       // Use a smaller scale for thumbnail to ensure it fits on screen
       const scale = isMobile ? 0.3 : 0.4;
@@ -189,23 +188,43 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     }
   }, [images, selectedColor, customText, photoGap, showDate, isMobile]);
 
+  // Generate the full-size canvas when the dialog is opened
+  useEffect(() => {
+    if (dialogOpen && canvasRef.current) {
+      // Generate full-size version for the dialog
+      generatePhotoStrip(canvasRef.current, 1);
+    }
+  }, [dialogOpen, images, selectedColor, customText, photoGap, showDate]);
+
   const handleDownload = () => {
-    if (!canvasRef.current) return;
+    // Create a temporary canvas for downloading at full resolution
+    const tempCanvas = document.createElement('canvas');
+    const ctx = tempCanvas.getContext('2d');
+    
+    if (!ctx) {
+      toast.error("Could not create download canvas");
+      return;
+    }
     
     // Generate a full-size version for download
-    generatePhotoStrip(canvasRef.current, 1);
+    generatePhotoStrip(tempCanvas, 1);
     
     // Wait a bit to ensure the canvas is fully rendered
     setTimeout(() => {
-      // Create a download link for the canvas
-      const link = document.createElement('a');
-      link.download = `photo_strip_${Date.now()}.jpg`;
-      link.href = canvasRef.current!.toDataURL('image/jpeg', 0.95);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast.success("Photo strip downloaded successfully!");
+      try {
+        // Create a download link for the canvas
+        const link = document.createElement('a');
+        link.download = `photo_strip_${Date.now()}.jpg`;
+        link.href = tempCanvas.toDataURL('image/jpeg', 0.95);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success("Photo strip downloaded successfully!");
+      } catch (error) {
+        console.error("Download error:", error);
+        toast.error("Failed to download photo strip");
+      }
     }, 200);
   };
 
@@ -228,8 +247,8 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
             <div className="flex flex-col items-center">
               <div className="mb-4 relative mx-auto">
                 {/* Thumbnail version for display, sized to fit on one screen */}
-                <Dialog>
-                  <DialogTrigger>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
                     <div className="relative cursor-pointer group">
                       <canvas 
                         ref={thumbnailCanvasRef} 
