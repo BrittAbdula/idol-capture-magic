@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, FlipHorizontal } from 'lucide-react';
+import { Camera, FlipHorizontal, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -13,6 +13,7 @@ type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -20,6 +21,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [photoCount, setPhotoCount] = useState(0);
   const [mirrored, setMirrored] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const startWebcam = useCallback(async () => {
     try {
@@ -121,6 +123,33 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     setMirrored(prev => !prev);
   }, []);
 
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen()
+          .then(() => setIsFullscreen(true))
+          .catch(err => console.error('Error attempting to enable fullscreen:', err));
+      }
+    } else {
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(err => console.error('Error attempting to exit fullscreen:', err));
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   useEffect(() => {
     startWebcam();
     return () => {
@@ -139,8 +168,11 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     }
   };
 
+  // Check if we're in capture mode (either counting down or taking photos)
+  const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < 4);
+
   return (
-    <div className="flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden" ref={containerRef}>
       <div className="relative bg-black">
         {isCapturing && (
           <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
@@ -176,32 +208,56 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             </div>
           )}
           
-          {/* Mirror toggle button in top right */}
-          <button 
-            onClick={toggleMirror}
-            className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
-          >
-            <FlipHorizontal className="w-5 h-5 text-white" />
-          </button>
+          {/* Hide controls during capture mode */}
+          {!inCaptureMode && (
+            <>
+              {/* Mirror toggle button in top right */}
+              <button 
+                onClick={toggleMirror}
+                className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
+              >
+                <FlipHorizontal className="w-5 h-5 text-white" />
+              </button>
+              
+              {/* Fullscreen toggle in bottom right */}
+              <button 
+                onClick={toggleFullscreen}
+                className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
+              >
+                {isFullscreen ? 
+                  <Minimize className="w-5 h-5 text-white" /> : 
+                  <Maximize className="w-5 h-5 text-white" />
+                }
+              </button>
+            </>
+          )}
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-          <div className="flex gap-4">
-            <button 
-              onClick={startPhotoSession}
-              disabled={!isStreaming || countdownValue !== null || (photoCount > 0 && photoCount < 4)}
-              className="w-16 h-16 bg-idol-gold flex items-center justify-center rounded-full transition-all 
-                        hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Camera className="w-6 h-6 text-black" />
-            </button>
-          </div>
+          {/* Hide camera button during capture mode */}
+          {!inCaptureMode && (
+            <div className="flex gap-4">
+              <button 
+                onClick={startPhotoSession}
+                disabled={!isStreaming}
+                className="w-16 h-16 bg-idol-gold flex items-center justify-center rounded-full transition-all 
+                          hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Camera className="w-6 h-6 text-black" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
       
       <div className="p-3 bg-transparent">
         <div className="flex justify-center">
-          <ToggleGroup type="single" value={activeFilter} onValueChange={(value) => value && setActiveFilter(value as FilterType)}>
+          <ToggleGroup 
+            type="single" 
+            value={activeFilter} 
+            onValueChange={(value) => !inCaptureMode && value && setActiveFilter(value as FilterType)}
+            className={inCaptureMode ? "opacity-50 pointer-events-none" : ""}
+          >
             <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
               Normal
             </ToggleGroupItem>
