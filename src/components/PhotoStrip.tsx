@@ -81,29 +81,33 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-hidden bg-black flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {images.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            <p>Take photos to see your strip here</p>
+          <div className="flex flex-col gap-4">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="w-full aspect-[4/3] bg-black rounded-md" />
+            ))}
           </div>
         ) : (
-          <div className={`flex-1 overflow-auto ${getFilterClassName()}`}>
-            <div className="flex flex-col gap-1">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <img src={image} alt={`Photo ${index + 1}`} className="w-full" />
-                </div>
-              ))}
-            </div>
+          <div className={`flex flex-col gap-4 ${getFilterClassName()}`}>
+            {images.map((image, index) => (
+              <div key={index} className="relative">
+                <img 
+                  src={image} 
+                  alt={`Photo ${index + 1}`} 
+                  className="w-full aspect-[4/3] object-cover rounded-md" 
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>
       
       {images.length > 0 && (
-        <div className="p-2 bg-gray-100 dark:bg-gray-800 flex justify-center gap-2">
+        <div className="mt-4 flex justify-center gap-2">
           <button 
             onClick={handleDownload}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-idol-gold text-black rounded-md hover:bg-opacity-90 transition-colors"
+            className="flex items-center gap-1 px-3 py-2 text-xs bg-idol-gold text-black rounded-md hover:bg-opacity-90 transition-colors"
           >
             <Download size={14} />
             <span>Download</span>
@@ -114,7 +118,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
               navigator.clipboard.writeText("Check out my photo strip from IdolBooth!");
               toast.success("Sharing message copied to clipboard!");
             }}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1 px-3 py-2 text-xs bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
           >
             <Share2 size={14} />
             <span>Share</span>
