@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Camera, Upload, Image as ImageIcon, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react';
@@ -110,16 +111,16 @@ const PhotoBooth = () => {
       case 2:
         return (
           <div className="max-w-full mx-auto">
-            <div className="text-center mb-4">
-              <h1 className="text-3xl font-bold mb-2 font-montserrat">Take Your Photos</h1>
-              <p className="text-gray-600 mb-2">
-                We'll take 4 photos in sequence to create your photo strip.
-              </p>
-            </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
               {/* Webcam section - 5 columns on medium screens */}
               <div className="md:col-span-5">
+                <div className="text-center mb-4">
+                  <h1 className="text-3xl font-bold mb-2 font-montserrat">Take Your Photos</h1>
+                  <p className="text-gray-600 mb-2">
+                    We'll take 4 photos in sequence to create your photo strip.
+                  </p>
+                </div>
+
                 {showWebcam ? (
                   <div className="relative">
                     <WebcamCapture onCapture={handlePhotoStripCapture} />
@@ -156,8 +157,10 @@ const PhotoBooth = () => {
               
               {/* Photo Strip Preview - 2 columns on medium screens */}
               <div className="md:col-span-2 h-[480px]">
-                <div className="glass-panel p-2 h-full">
-                  <h3 className="text-lg font-semibold mb-2 font-montserrat text-center">Your Photo Strip</h3>
+                <div className="text-center mb-4">
+                  <h1 className="text-3xl font-bold mb-2 font-montserrat">Your Strip</h1>
+                </div>
+                <div className="glass-panel p-2 h-[calc(100%-3rem)]">
                   <PhotoStrip images={photoStripImages} filter={filter} />
                 </div>
               </div>
@@ -168,16 +171,16 @@ const PhotoBooth = () => {
       case 3:
         return (
           <div className="max-w-full mx-auto">
-            <div className="text-center mb-4">
-              <h1 className="text-3xl font-bold mb-2 font-montserrat">Your Perfect Photo Strip</h1>
-              <p className="text-gray-600">
-                Select a filter and download your photo strip.
-              </p>
-            </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
               {/* Left Panel - Filters and Controls */}
               <div className="md:col-span-5">
+                <div className="text-center mb-4">
+                  <h1 className="text-3xl font-bold mb-2 font-montserrat">Your Perfect Photo Strip</h1>
+                  <p className="text-gray-600">
+                    Select a filter and download your photo strip.
+                  </p>
+                </div>
+                
                 <div className="glass-panel p-4 mb-4">
                   <h3 className="text-xl font-semibold mb-3 font-montserrat">Choose a Filter</h3>
                   <PhotoFilters onSelectFilter={handleFilterSelect} selectedFilter={filter} />
@@ -211,8 +214,10 @@ const PhotoBooth = () => {
               
               {/* Photo Strip Preview - 2 columns */}
               <div className="md:col-span-2 h-[480px]">
-                <div className="glass-panel p-2 h-full">
-                  <h3 className="text-lg font-semibold mb-2 font-montserrat text-center">Your Photo Strip</h3>
+                <div className="text-center mb-4">
+                  <h1 className="text-3xl font-bold mb-2 font-montserrat">Your Strip</h1>
+                </div>
+                <div className="glass-panel p-2 h-[calc(100%-3rem)]">
                   <PhotoStrip images={photoStripImages} filter={filter} />
                 </div>
               </div>
