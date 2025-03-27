@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, Flip } from 'lucide-react';
+import { Camera, FlipHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -181,7 +181,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             onClick={toggleMirror}
             className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
           >
-            <Flip className="w-5 h-5 text-white" />
+            <FlipHorizontal className="w-5 h-5 text-white" />
           </button>
         </div>
         
