@@ -41,8 +41,13 @@ const PhotoBooth = () => {
   const handlePhotoStripCapture = (images: string[]) => {
     setPhotoStripImages(images);
     if (images.length === 4) {
-      // Navigate to results page with the images
-      navigate('/photo-booth/result', { state: { images } });
+      // Navigate to results page with the images and filter
+      navigate('/photo-booth/result', { 
+        state: { 
+          images,
+          filter 
+        } 
+      });
     }
   };
   
@@ -53,8 +58,13 @@ const PhotoBooth = () => {
       const imageUrl = URL.createObjectURL(file);
       const images = Array(4).fill(imageUrl);
       setPhotoStripImages(images);
-      // Navigate to results page with the images
-      navigate('/photo-booth/result', { state: { images } });
+      // Navigate to results page with the images and filter
+      navigate('/photo-booth/result', { 
+        state: { 
+          images,
+          filter
+        } 
+      });
     } catch (error) {
       console.error("Error processing user photo:", error);
       toast.error("Failed to process user photo");
@@ -130,7 +140,9 @@ const PhotoBooth = () => {
                   </TabsList>
                   
                   <TabsContent value="webcam" className="overflow-hidden rounded-lg shadow-md">
-                    <WebcamCapture onCapture={handlePhotoStripCapture} />
+                    <WebcamCapture 
+                      onCapture={handlePhotoStripCapture} 
+                    />
                   </TabsContent>
                   
                   <TabsContent value="upload">

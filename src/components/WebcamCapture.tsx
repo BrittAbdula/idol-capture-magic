@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, FlipHorizontal, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
@@ -64,12 +63,39 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         if (mirrored) {
-          // Flip the image horizontally for mirrored capture
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
         
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        if (activeFilter !== 'Normal') {
+          switch (activeFilter) {
+            case 'Warm':
+              ctx.filter = 'sepia(0.3) brightness(1.05)';
+              break;
+            case 'Cool':
+              ctx.filter = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)';
+              break;
+            case 'Vintage':
+              ctx.filter = 'sepia(0.5) brightness(0.9) contrast(1.1)';
+              break;
+            case 'B&W':
+              ctx.filter = 'grayscale(1)';
+              break;
+            case 'Dramatic':
+              ctx.filter = 'contrast(1.25) brightness(0.9)';
+              break;
+          }
+          if (mirrored) {
+            ctx.resetTransform();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+          } else {
+            ctx.resetTransform();
+          }
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
         
         const imageDataURL = canvas.toDataURL('image/jpeg');
         const newCapturedImages = [...capturedImages, imageDataURL];
@@ -83,7 +109,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
-  }, [capturedImages, onCapture, mirrored]);
+  }, [capturedImages, onCapture, mirrored, activeFilter]);
 
   useEffect(() => {
     if (photoCount === 4) {
@@ -123,7 +149,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     setMirrored(prev => !prev);
   }, []);
 
-  // Fullscreen toggle
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       if (containerRef.current?.requestFullscreen) {
@@ -168,7 +193,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     }
   };
 
-  // Check if we're in capture mode (either counting down or taking photos)
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < 4);
 
   return (
@@ -208,10 +232,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             </div>
           )}
           
-          {/* Hide controls during capture mode */}
           {!inCaptureMode && (
             <>
-              {/* Mirror toggle button in top right */}
               <button 
                 onClick={toggleMirror}
                 className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
@@ -219,7 +241,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 <FlipHorizontal className="w-5 h-5 text-white" />
               </button>
               
-              {/* Fullscreen toggle in bottom right */}
               <button 
                 onClick={toggleFullscreen}
                 className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
@@ -234,7 +255,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-          {/* Hide camera button during capture mode */}
           {!inCaptureMode && (
             <div className="flex gap-4">
               <button 
