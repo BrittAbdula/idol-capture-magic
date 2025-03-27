@@ -81,7 +81,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-hidden bg-black flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {images.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-gray-400">
             <p>Take photos to see your strip here</p>
@@ -91,7 +91,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
             <div className="flex flex-col gap-1">
               {images.map((image, index) => (
                 <div key={index} className="relative">
-                  <img src={image} alt={`Photo ${index + 1}`} className="w-full" />
+                  <img src={image} alt={`Photo ${index + 1}`} className="w-full max-w-[180px] mx-auto" />
                 </div>
               ))}
             </div>
@@ -100,7 +100,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter }) => {
       </div>
       
       {images.length > 0 && (
-        <div className="p-2 bg-gray-100 dark:bg-gray-800 flex justify-center gap-2">
+        <div className="p-2 flex justify-center gap-2">
           <button 
             onClick={handleDownload}
             className="flex items-center gap-1 px-2 py-1 text-xs bg-idol-gold text-black rounded-md hover:bg-opacity-90 transition-colors"
