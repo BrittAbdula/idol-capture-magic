@@ -9,7 +9,7 @@ interface WebcamCaptureProps {
 }
 
 type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
-type AspectRatioType = '4:3' | '1:1' | '9:16';
+type AspectRatioType = '4:3' | '1:1' | '3:2';
 
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -71,8 +71,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         offsetY = (height - size) / 2;
         width = size;
         height = size;
-      } else if (aspectRatio === '9:16') {
-        const newWidth = (height * 9) / 16;
+      } else if (aspectRatio === '3:2') {
+        const newWidth = (height * 3) / 2;
         offsetX = (width - newWidth) / 2;
         width = newWidth;
       }
@@ -223,9 +223,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     } else if (aspectRatio === '1:1') {
       containerStyle.maxHeight = '100%';
       containerStyle.aspectRatio = '1/1';
-    } else if (aspectRatio === '9:16') {
+    } else if (aspectRatio === '3:2') {
       containerStyle.maxHeight = '90vh';
-      containerStyle.aspectRatio = '9/16';
+      containerStyle.aspectRatio = '3/2';
     }
 
     return containerStyle;
@@ -267,9 +267,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             className="absolute inset-0 pointer-events-none m-auto"
             style={{ 
               boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
-              aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '9/16',
-              width: aspectRatio === '9:16' ? 'auto' : '100%',
-              height: aspectRatio === '9:16' ? '100%' : 'auto',
+              aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
+              width: aspectRatio === '3:2' ? 'auto' : '100%',
+              height: aspectRatio === '3:2' ? '100%' : 'auto',
               maxWidth: '100%',
               maxHeight: '100%',
             }}
@@ -330,8 +330,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                   <ToggleGroupItem value="1:1" className="text-xs px-2 py-1 data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
                     1:1
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="9:16" className="text-xs px-2 py-1 rounded-r-full data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
-                    9:16
+                  <ToggleGroupItem value="3:2" className="text-xs px-2 py-1 rounded-r-full data-[state=on]:bg-idol-gold data-[state=on]:text-black text-white">
+                    3:2
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>

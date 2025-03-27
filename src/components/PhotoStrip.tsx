@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -151,12 +150,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
       ) : (
         <div className="flex flex-col items-center mt-4 max-w-full overflow-auto">
           <div 
-            className="receipt-strip bg-white shadow-md p-5 pb-10"
+            className="bg-white p-5 pb-10"
             style={{ 
               maxWidth: '280px',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-              borderTop: '1px dashed #aaa',
-              borderBottom: '1px dashed #aaa'
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
             }}
           >
             {images.map((image, index) => (
