@@ -1,6 +1,5 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, FlipHorizontal, Maximize, Minimize, AspectRatio } from 'lucide-react';
+import { Camera, FlipHorizontal, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -60,26 +59,22 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Set canvas dimensions based on selected aspect ratio
       let width = video.videoWidth;
       let height = video.videoHeight;
       let offsetX = 0;
       let offsetY = 0;
       
       if (aspectRatio === '1:1') {
-        // For square, use the smaller dimension for both width and height
         const size = Math.min(width, height);
         offsetX = (width - size) / 2;
         offsetY = (height - size) / 2;
         width = size;
         height = size;
       } else if (aspectRatio === '9:16') {
-        // For vertical 9:16, calculate the width based on the height
         const newWidth = (height * 9) / 16;
         offsetX = (width - newWidth) / 2;
         width = newWidth;
       }
-      // 4:3 is the default video ratio, so no changes needed
       
       canvas.width = width;
       canvas.height = height;
@@ -91,11 +86,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           ctx.scale(-1, 1);
         }
         
-        // Draw the cropped portion of the video based on aspect ratio
         ctx.drawImage(
           video, 
-          offsetX, offsetY, width, height, // Source rectangle
-          0, 0, width, height              // Destination rectangle
+          offsetX, offsetY, width, height, 
+          0, 0, width, height
         );
         
         if (activeFilter !== 'Normal') {
@@ -123,11 +117,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           } else {
             ctx.resetTransform();
           }
-          // Redraw the cropped portion with the filter applied
           ctx.drawImage(
             video, 
-            offsetX, offsetY, width, height, // Source rectangle
-            0, 0, width, height              // Destination rectangle
+            offsetX, offsetY, width, height, 
+            0, 0, width, height
           );
         }
         
@@ -250,7 +243,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             }}
           />
           
-          {/* Crop guide overlay */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{ 
