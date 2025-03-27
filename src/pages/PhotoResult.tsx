@@ -50,7 +50,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     if (dialogOpen && canvasRef.current) {
       generatePhotoStrip(canvasRef.current, 1);
     }
-  }, [dialogOpen]);
+  }, [dialogOpen, selectedColor, customText, photoGap, showDate, aspectRatio]);
 
   const colors = [
     '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
@@ -162,7 +162,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       }
       
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-      ctx.font = `bold ${Math.max(16, 18 * scale)}px sans-serif`;
+      ctx.font = `bold ${Math.max(18, 22 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 35 * scale);
     });
