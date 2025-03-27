@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, FlipHorizontal, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface WebcamCaptureProps {
   onCapture: (images: string[], aspectRatio?: string) => void;
@@ -209,6 +210,27 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     };
   }, [startWebcam, stopWebcam]);
 
+  const getContainerStyle = () => {
+    let containerStyle: React.CSSProperties = {
+      position: 'relative',
+      width: '100%',
+      backgroundColor: 'black',
+      overflow: 'hidden',
+    };
+
+    if (aspectRatio === '4:3') {
+      containerStyle.maxHeight = '560px';
+    } else if (aspectRatio === '1:1') {
+      containerStyle.maxHeight = '100%';
+      containerStyle.aspectRatio = '1/1';
+    } else if (aspectRatio === '9:16') {
+      containerStyle.maxHeight = '90vh';
+      containerStyle.aspectRatio = '9/16';
+    }
+
+    return containerStyle;
+  };
+
   const getFilterClassName = () => {
     switch (activeFilter) {
       case 'Warm': return 'sepia-[0.3] brightness-105';
@@ -229,26 +251,27 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           <div className="absolute inset-0 bg-white opacity-30 z-10 animate-flash" />
         )}
         
-        <div className="relative">
+        <div style={getContainerStyle()}>
           <video 
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className={`w-full object-cover ${getFilterClassName()}`}
+            className={`w-full h-full object-cover ${getFilterClassName()}`}
             style={{ 
-              maxHeight: '560px',
               transform: mirrored ? 'scaleX(-1)' : 'none',
-              aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '9/16'
             }}
           />
           
           <div 
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none m-auto"
             style={{ 
               boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
               aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '9/16',
-              margin: 'auto'
+              width: aspectRatio === '9:16' ? 'auto' : '100%',
+              height: aspectRatio === '9:16' ? '100%' : 'auto',
+              maxWidth: '100%',
+              maxHeight: '100%',
             }}
           >
             <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white"></div>
@@ -279,7 +302,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             <>
               <button 
                 onClick={toggleMirror}
-                className="absolute top-3 right-14 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
+                className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
               >
                 <FlipHorizontal className="w-5 h-5 text-white" />
               </button>
@@ -294,7 +317,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 }
               </button>
               
-              <div className="absolute top-3 left-3 bg-black/30 rounded-full p-1">
+              <div className="absolute top-3 left-3 bg-black/30 rounded-full p-1 z-20">
                 <ToggleGroup 
                   type="single" 
                   value={aspectRatio} 
