@@ -7,12 +7,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 
 interface PhotoResultProps {}
 
@@ -21,26 +17,21 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [images, setImages] = useState<string[]>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [photoGap, setPhotoGap] = useState<number>(50);
   const [showDate, setShowDate] = useState<boolean>(true);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
-  const dialogContentRef = useRef<HTMLDivElement>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [isGeneratingDownload, setIsGeneratingDownload] = useState<boolean>(false);
   
   useEffect(() => {
     // Check if we have images in the state
     if (location.state?.images) {
       setImages(location.state.images);
-      if (location.state.images.length > 0) {
-        setSelectedImage(location.state.images[0]);
-      }
       
       // Set aspect ratio if provided in state
       if (location.state.aspectRatio) {
@@ -52,6 +43,13 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     }
   }, [location, navigate]);
 
+  // Regenerate the strip when the dialog is opened to ensure it's displayed properly
+  useEffect(() => {
+    if (dialogOpen && canvasRef.current) {
+      generatePhotoStrip(canvasRef.current, 1);
+    }
+  }, [dialogOpen]);
+
   const colors = [
     '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
     '#FF69B4', '#00008B', '#BDFFA3', '#FFDAB9', '#3A1E1E',
@@ -59,6 +57,24 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     '#4182E4', '#58D3F7', '#F9E79F', '#ABEBC6', '#F7B6D2', '#D3D3D3',
     '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
   ];
+
+  // Detect if color is dark (for text contrast)
+  const isDarkColor = (hexColor: string): boolean => {
+    // Remove # if present
+    const hex = hexColor.replace('#', '');
+    
+    // Convert hex to RGB
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate luminance (perceived brightness)
+    // Using the formula: (0.299*R + 0.587*G + 0.114*B)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // If luminance is less than 0.5, color is considered dark
+    return luminance < 0.5;
+  };
 
   const generatePhotoStrip = (targetCanvas: HTMLCanvasElement, scale: number = 1) => {
     if (!targetCanvas || images.length === 0) return;
@@ -92,7 +108,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       let stripWidth = imgWidth + (stripPadding * 2);
       
       // For vertical photos (9:16), make the strip proportionally wider
-      if (aspectRatio === '9:16') {
+      if (aspectRatio === '9:16' || aspectRatio === '3:2') {
         stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (stripPadding * 2);
       }
       
@@ -100,9 +116,9 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
                           (padding * (loadedImages.length - 1));
       
-      // Add extra space for text and date - INCREASED space here to fix overlap
-      const textSpace = customText ? Math.max(100, 120 * scale) : 0;
-      const dateSpace = showDate ? Math.max(60, 80 * scale) : 0;
+      // Add extra space for text and date
+      const textSpace = customText ? 120 * scale : 0;
+      const dateSpace = showDate ? 80 * scale : 0;
       const extraSpace = textSpace + dateSpace + (stripPadding * 2);
       
       const stripHeight = totalImagesHeight + extraSpace;
@@ -151,7 +167,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         }
       });
       
-      // Add custom text - increased Y position to prevent overlap
+      // Add custom text
       if (customText) {
         const textY = stripHeight - (showDate ? 130 * scale : 60 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
@@ -161,7 +177,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.fillText(customText, stripWidth / 2, textY);
       }
       
-      // Add date - increased Y position to prevent overlap
+      // Add date
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
         // Increase date text size
@@ -178,24 +194,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 35 * scale);
     });
   };
-  
-  // Detect if color is dark (for text contrast)
-  const isDarkColor = (hexColor: string): boolean => {
-    // Remove # if present
-    const hex = hexColor.replace('#', '');
-    
-    // Convert hex to RGB
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    
-    // Calculate luminance (perceived brightness)
-    // Using the formula: (0.299*R + 0.587*G + 0.114*B)
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
-    // If luminance is less than 0.5, color is considered dark
-    return luminance < 0.5;
-  };
 
   // Generate the thumbnail on initial render and when settings change
   useEffect(() => {
@@ -206,22 +204,16 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     }
   }, [images, selectedColor, customText, photoGap, showDate, isMobile, aspectRatio]);
 
-  // Generate the full-size canvas when the dialog is opened
-  useEffect(() => {
-    if (dialogOpen && canvasRef.current) {
-      // Generate full-size version for the dialog
-      generatePhotoStrip(canvasRef.current, 1);
-    }
-  }, [dialogOpen, images, selectedColor, customText, photoGap, showDate, aspectRatio]);
-
   const handleDownload = () => {
+    setIsGeneratingDownload(true);
+    
     // Create a temporary canvas for downloading at full resolution
     const tempCanvas = document.createElement('canvas');
     
     // Generate a full-size version for download
     generatePhotoStrip(tempCanvas, 1);
     
-    // Wait a bit to ensure the canvas is fully rendered
+    // Wait to ensure the canvas is fully rendered
     setTimeout(() => {
       try {
         // Create a download link for the canvas
@@ -236,8 +228,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       } catch (error) {
         console.error("Download error:", error);
         toast.error("Failed to download photo strip");
+      } finally {
+        setIsGeneratingDownload(false);
       }
-    }, 500);  // Increased timeout to ensure canvas rendering is complete
+    }, 500);
   };
 
   const handleRetake = () => {
@@ -271,13 +265,22 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                       </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] p-0" ref={dialogContentRef}>
-                    <div className="p-6 bg-white flex justify-center h-full">
-                      <ScrollArea className="w-full max-h-[80vh]">
-                        <canvas 
-                          ref={canvasRef} 
-                          className="max-w-full shadow-lg mx-auto block"
-                        />
+                  <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] overflow-hidden">
+                    <DialogHeader>
+                      <DialogTitle className="sr-only">Photo Strip Preview</DialogTitle>
+                      <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                      </DialogClose>
+                    </DialogHeader>
+                    <div className="flex justify-center items-center p-6 pt-0">
+                      <ScrollArea className="h-[70vh] w-full">
+                        <div className="flex justify-center">
+                          <canvas 
+                            ref={canvasRef} 
+                            className="max-w-full shadow-lg mx-auto block"
+                          />
+                        </div>
                       </ScrollArea>
                     </div>
                   </DialogContent>
@@ -386,10 +389,11 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
               <div className="flex gap-4 mt-auto">
                 <button 
                   onClick={handleDownload}
-                  className="flex-1 idol-button flex items-center justify-center gap-2 py-3"
+                  disabled={isGeneratingDownload}
+                  className={`flex-1 idol-button flex items-center justify-center gap-2 py-3 ${isGeneratingDownload ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   <Download className="w-5 h-5" />
-                  <span>Download</span>
+                  <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
                 </button>
                 
                 <button 
