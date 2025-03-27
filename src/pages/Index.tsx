@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Camera, Star, Image, Sparkles, ArrowRight } from 'lucide-react';
+import { Camera, Star, Image, Sparkles, ArrowRight, Upload, Download } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
