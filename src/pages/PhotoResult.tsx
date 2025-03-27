@@ -1,13 +1,15 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Download, Undo2, Type, Image as ImageIcon } from 'lucide-react';
+import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface PhotoResultProps {}
 
@@ -20,7 +22,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [photoGap, setPhotoGap] = useState<number>(20);
   const [showDate, setShowDate] = useState<boolean>(true);
+  const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
     // Check if we have images in the state
@@ -39,13 +44,14 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
     '#FF69B4', '#00008B', '#BDFFA3', '#FFDAB9', '#3A1E1E',
     '#C0C0C0', '#F2D7D5', '#A9CCE3', '#F7DC6F', '#D5F5E3', 
-    '#4182E4', '#58D3F7', '#F9E79F', '#ABEBC6', '#F7B6D2', '#D3D3D3'
+    '#4182E4', '#58D3F7', '#F9E79F', '#ABEBC6', '#F7B6D2', '#D3D3D3',
+    '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
   ];
 
-  const generatePhotoStrip = () => {
-    if (!canvasRef.current || images.length === 0) return;
+  const generatePhotoStrip = (targetCanvas: HTMLCanvasElement, scale: number = 1) => {
+    if (!targetCanvas || images.length === 0) return;
     
-    const canvas = canvasRef.current;
+    const canvas = targetCanvas;
     const ctx = canvas.getContext('2d');
     
     if (!ctx) return;
@@ -63,18 +69,18 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       if (loadedImages.length === 0) return;
       
       // Get dimensions from first image
-      const imgWidth = loadedImages[0].width;
-      const imgHeight = loadedImages[0].height;
+      const imgWidth = loadedImages[0].width * scale;
+      const imgHeight = loadedImages[0].height * scale;
       
       // Calculate strip dimensions
-      const padding = photoGap;
-      const stripPadding = 40;
+      const padding = photoGap * scale;
+      const stripPadding = 40 * scale;
       const stripWidth = imgWidth + (stripPadding * 2);
       const stripHeight = (imgHeight * loadedImages.length) + 
                           (padding * (loadedImages.length - 1)) + 
                           (stripPadding * 2) + 
-                          (customText ? 40 : 0) + 
-                          (showDate ? 30 : 0);
+                          (customText ? 60 * scale : 0) + 
+                          (showDate ? 40 * scale : 0);
       
       // Set canvas size
       canvas.width = stripWidth;
@@ -85,10 +91,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Add strip frame effect (dashed borders)
-      ctx.setLineDash([8, 8]);
+      ctx.setLineDash([8 * scale, 8 * scale]);
       ctx.beginPath();
-      ctx.moveTo(0, 15);
-      ctx.lineTo(canvas.width, 15);
+      ctx.moveTo(0, 15 * scale);
+      ctx.lineTo(canvas.width, 15 * scale);
       ctx.strokeStyle = isDarkColor(selectedColor) ? '#FFFFFF50' : '#00000050';
       ctx.stroke();
       
@@ -97,7 +103,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         const y = stripPadding + (index * (imgHeight + padding));
         
         // Draw white border around image
-        const borderWidth = 5;
+        const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(stripPadding - borderWidth, y - borderWidth, 
                    imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
@@ -107,7 +113,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         
         // Add perforations between photos (except after the last one)
         if (index < loadedImages.length - 1) {
-          ctx.setLineDash([5, 5]);
+          ctx.setLineDash([5 * scale, 5 * scale]);
           ctx.beginPath();
           ctx.moveTo(0, y + imgHeight + padding/2);
           ctx.lineTo(canvas.width, y + imgHeight + padding/2);
@@ -118,9 +124,9 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       
       // Add custom text
       if (customText) {
-        const textY = stripHeight - (showDate ? 70 : 40);
+        const textY = stripHeight - (showDate ? 90 * scale : 40 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-        ctx.font = 'bold 16px sans-serif';
+        ctx.font = `bold ${24 * scale}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(customText, stripWidth / 2, textY);
       }
@@ -128,17 +134,17 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       // Add date
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
-        ctx.font = '12px monospace';
+        ctx.font = `${16 * scale}px monospace`;
         ctx.textAlign = 'center';
         const dateText = new Date().toLocaleDateString();
-        ctx.fillText(dateText, stripWidth / 2, stripHeight - 30);
+        ctx.fillText(dateText, stripWidth / 2, stripHeight - 40 * scale);
       }
       
       // Add IdolBooth logo
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-      ctx.font = 'bold 12px sans-serif';
+      ctx.font = `bold ${16 * scale}px sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 15);
+      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 15 * scale);
     });
   };
   
@@ -161,7 +167,12 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   };
 
   useEffect(() => {
-    generatePhotoStrip();
+    if (canvasRef.current) {
+      generatePhotoStrip(canvasRef.current, 1);
+    }
+    if (thumbnailCanvasRef.current) {
+      generatePhotoStrip(thumbnailCanvasRef.current, 0.5);
+    }
   }, [images, selectedColor, customText, photoGap, showDate]);
 
   const handleDownload = () => {
@@ -180,6 +191,15 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     navigate('/photo-booth');
   };
 
+  const handleAddCustomColor = () => {
+    if (!customColorInput.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
+      toast.error("Please enter a valid hex color code.");
+      return;
+    }
+    
+    setSelectedColor(customColorInput);
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -193,11 +213,29 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left column - Photo strip display */}
             <div className="flex flex-col items-center">
-              <div className="bg-gray-100 p-4 rounded-lg shadow-inner mb-4 overflow-auto max-h-[70vh]">
-                <canvas 
-                  ref={canvasRef} 
-                  className="max-w-full shadow-lg"
-                />
+              <div className="mb-4 overflow-auto max-h-[70vh]">
+                {/* Thumbnail version for display */}
+                <Dialog>
+                  <DialogTrigger>
+                    <div className="relative cursor-pointer group">
+                      <canvas 
+                        ref={thumbnailCanvasRef} 
+                        className="max-w-full shadow-lg transition-all duration-300 group-hover:shadow-xl"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 bg-black/20 rounded-lg group-hover:opacity-100 transition-all duration-300">
+                        <Maximize2 className="text-white w-10 h-10" />
+                      </div>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] p-0 overflow-auto">
+                    <div className="p-6 bg-white flex justify-center">
+                      <canvas 
+                        ref={canvasRef} 
+                        className="max-w-full max-h-[80vh] shadow-lg"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
               
               {images.length > 1 && (
@@ -213,7 +251,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                 <h2 className="text-xl font-semibold mb-4 font-montserrat">
                   Frame color
                 </h2>
-                <div className="grid grid-cols-6 md:grid-cols-7 gap-3">
+                <div className="flex flex-wrap gap-3">
                   {colors.map((color, index) => (
                     <button
                       key={index}
@@ -223,6 +261,29 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                       aria-label={`Select color ${index + 1}`}
                     />
                   ))}
+                  
+                  {/* Custom color picker */}
+                  <div className="flex items-center gap-2 mt-4 w-full">
+                    <input
+                      type="color"
+                      value={customColorInput}
+                      onChange={(e) => setCustomColorInput(e.target.value)}
+                      className="w-10 h-10 p-0 border-0 rounded-full cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={customColorInput}
+                      onChange={(e) => setCustomColorInput(e.target.value)}
+                      placeholder="#RRGGBB"
+                      className="w-24 px-2 py-1 border rounded-md text-sm"
+                    />
+                    <button
+                      onClick={handleAddCustomColor}
+                      className="px-3 py-1 bg-idol-gold text-black rounded-md text-sm hover:bg-opacity-90 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
               </div>
               
