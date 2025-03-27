@@ -10,6 +10,7 @@ import PhotoUpload from '../components/PhotoUpload';
 import PhotoFrame from '../components/PhotoFrame';
 import PhotoStrip from '../components/PhotoStrip';
 import { extractSubject, applyFilter } from '../lib/imageProcessing';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const PhotoBooth = () => {
   // State for photo booth
@@ -17,7 +18,7 @@ const PhotoBooth = () => {
   const [idolPhoto, setIdolPhoto] = useState<string | null>(null);
   const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
   const [filter, setFilter] = useState('Normal');
-  const [showWebcam, setShowWebcam] = useState(true);
+  const [captureMethod, setCaptureMethod] = useState<'webcam' | 'upload'>('webcam');
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   
@@ -68,7 +69,7 @@ const PhotoBooth = () => {
     setPhotoStripImages([]);
     setFilter('Normal');
     setStep(1);
-    setShowWebcam(true);
+    setCaptureMethod('webcam');
   };
   
   // Render step content
@@ -112,36 +113,33 @@ const PhotoBooth = () => {
           <div className="max-w-full mx-auto">
             <div className="flex flex-col items-center">
               <div className="w-full max-w-xl mx-auto mb-6">
-                {showWebcam ? (
-                  <div className="overflow-hidden rounded-lg shadow-md">
+                <Tabs 
+                  defaultValue={captureMethod} 
+                  onValueChange={(value) => setCaptureMethod(value as 'webcam' | 'upload')}
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="webcam" className="flex items-center gap-2">
+                      <Camera className="w-4 h-4" />
+                      <span>Use Camera</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="upload" className="flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      <span>Upload Photos</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="webcam" className="overflow-hidden rounded-lg shadow-md">
                     <WebcamCapture onCapture={handlePhotoStripCapture} />
-                  </div>
-                ) : (
-                  <PhotoUpload
-                    onUpload={handleUserPhotoUpload}
-                    label="Upload Your Photos"
-                  />
-                )}
-                
-                <div className="mt-4 flex justify-center gap-4">
-                  {showWebcam ? (
-                    <button 
-                      onClick={() => setShowWebcam(false)}
-                      className="idol-button-outline"
-                    >
-                      <Upload className="w-5 h-5 mr-2" />
-                      Upload Photos Instead
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => setShowWebcam(true)}
-                      className="idol-button-outline"
-                    >
-                      <Camera className="w-5 h-5 mr-2" />
-                      Use Webcam Instead
-                    </button>
-                  )}
-                </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="upload">
+                    <PhotoUpload
+                      onUpload={handleUserPhotoUpload}
+                      label="Upload Your Photos"
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
               
               <div className="w-full max-w-4xl">
