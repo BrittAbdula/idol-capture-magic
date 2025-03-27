@@ -175,7 +175,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     <div className="flex flex-col overflow-hidden" ref={containerRef}>
       <div className="relative bg-black">
         {isCapturing && (
-          <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
+          <div className="absolute inset-0 bg-white opacity-30 z-10 animate-flash" />
         )}
         
         <div className="relative">
@@ -193,7 +193,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           <canvas ref={canvasRef} className="hidden" />
           
           {countdownValue && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <span className="text-7xl font-bold text-white animate-pulse-slight">
                 {countdownValue}
               </span>
@@ -201,9 +201,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           )}
           
           {photoCount > 0 && photoCount < 4 && !countdownValue && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-              <span className="text-xl font-bold text-white">
-                Photo {photoCount} of 4 taken
+            <div className="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded-full z-10">
+              <span className="text-sm font-bold text-white">
+                Photo {photoCount} of 4
               </span>
             </div>
           )}
