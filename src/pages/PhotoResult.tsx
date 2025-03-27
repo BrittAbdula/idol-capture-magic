@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X } from 'lucide-react';
+import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X, Printer, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,7 +33,9 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [isGeneratingDownload, setIsGeneratingDownload] = useState<boolean>(false);
-  
+  const [isPrinting, setIsPrinting] = useState<boolean>(false);
+  const [isSharing, setIsSharing] = useState<boolean>(false);
+
   useEffect(() => {
     if (location.state?.images) {
       setImages(location.state.images);
@@ -201,6 +203,120 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     }, 500);
   };
 
+  const handlePrint = () => {
+    setIsPrinting(true);
+    
+    const tempCanvas = document.createElement('canvas');
+    generatePhotoStrip(tempCanvas, 1);
+    
+    setTimeout(() => {
+      try {
+        const dataUrl = tempCanvas.toDataURL('image/jpeg');
+        
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          toast.error("Pop-up blocked. Please allow pop-ups to print.");
+          setIsPrinting(false);
+          return;
+        }
+        
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print Photo Strip</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 0;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                }
+                img {
+                  max-width: 100%;
+                  max-height: 100vh;
+                }
+                @media print {
+                  body {
+                    height: auto;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <img src="${dataUrl}" />
+              <script>
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                    window.close();
+                  }, 200);
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        
+        printWindow.document.close();
+        toast.success("Preparing photo strip for printing!");
+      } catch (error) {
+        console.error("Print error:", error);
+        toast.error("Failed to print photo strip");
+      } finally {
+        setIsPrinting(false);
+      }
+    }, 500);
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    
+    try {
+      const tempCanvas = document.createElement('canvas');
+      generatePhotoStrip(tempCanvas, 1);
+      
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        tempCanvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Canvas to Blob conversion failed'));
+          }
+        }, 'image/jpeg', 0.95);
+      });
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My Photo Strip from IdolBooth',
+          text: 'Check out my photo strip from IdolBooth!',
+          files: [new File([blob], 'photo-strip.jpg', { type: 'image/jpeg' })]
+        });
+        toast.success("Photo strip shared successfully!");
+      } else {
+        const shareUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.download = `photo_strip_${Date.now()}.jpg`;
+        link.href = shareUrl;
+        link.click();
+        
+        URL.revokeObjectURL(shareUrl);
+        
+        toast.info("Sharing not supported on this browser. Photo strip downloaded instead.");
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.info("Share operation was cancelled");
+      } else {
+        toast.error("Failed to share photo strip");
+      }
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const handleRetake = () => {
     navigate('/photo-booth');
   };
@@ -349,7 +465,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                 </div>
               </div>
               
-              <div className="flex gap-4 mt-auto">
+              <div className="flex flex-wrap gap-3 mt-auto">
                 <button 
                   onClick={handleDownload}
                   disabled={isGeneratingDownload}
@@ -357,6 +473,24 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                 >
                   <Download className="w-5 h-5" />
                   <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
+                </button>
+                
+                <button 
+                  onClick={handlePrint}
+                  disabled={isPrinting}
+                  className={`flex-1 idol-button-secondary flex items-center justify-center gap-2 py-3 ${isPrinting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  <Printer className="w-5 h-5" />
+                  <span>{isPrinting ? "Preparing..." : "Print"}</span>
+                </button>
+                
+                <button 
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className={`flex-1 idol-button-secondary flex items-center justify-center gap-2 py-3 ${isSharing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  <Share2 className="w-5 h-5" />
+                  <span>{isSharing ? "Sharing..." : "Share"}</span>
                 </button>
                 
                 <button 
