@@ -8,7 +8,7 @@ interface WebcamCaptureProps {
   onCapture: (images: string[]) => void;
 }
 
-type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
+type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Soft' | 'Instax' | 'DV';
 
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -139,14 +139,17 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       case 'Cool': return 'brightness-110 contrast-110 saturate-125 hue-rotate-[-10deg]';
       case 'Vintage': return 'sepia-[0.5] brightness-90 contrast-110';
       case 'B&W': return 'grayscale';
-      case 'Dramatic': return 'contrast-125 brightness-90';
+      case 'Soft': return 'brightness-105 contrast-95 saturate-95';
+      case 'Instax': return 'brightness-110 contrast-105 saturate-115 hue-rotate-[5deg]';
+      case 'DV': return 'contrast-120 saturate-80 brightness-95 hue-rotate-[-5deg]';
       default: return '';
     }
   };
 
   return (
-    <div className="flex flex-col overflow-hidden">
-      <div className="relative bg-black">
+    <div className="flex flex-col items-center">
+      {/* Main Camera View */}
+      <div className="relative bg-black rounded-lg overflow-hidden mb-4 w-full">
         {isCapturing && (
           <div className="absolute inset-0 bg-white z-10 animate-shutter-flash" />
         )}
@@ -162,73 +165,74 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           <canvas ref={canvasRef} className="hidden" />
           
           {countdownValue && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-              <span className="text-7xl font-bold text-white animate-pulse-slight">
-                {countdownValue}
-              </span>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+              <div className="bg-white/90 rounded-xl w-16 h-16 flex items-center justify-center">
+                <span className="text-5xl font-bold text-pink-500">
+                  {countdownValue}
+                </span>
+              </div>
             </div>
           )}
           
           {photoCount > 0 && photoCount < 4 && !countdownValue && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-              <span className="text-xl font-bold text-white">
-                Photo {photoCount} of 4 taken
+            <div className="absolute top-3 right-3 bg-white/80 px-2 py-1 rounded-md z-10">
+              <span className="text-xs font-medium text-gray-700">
+                {photoCount}/4
               </span>
             </div>
           )}
         </div>
-        
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-          <div className="flex gap-4">
-            <button 
-              onClick={startPhotoSession}
-              disabled={!isStreaming || countdownValue !== null || (photoCount > 0 && photoCount < 4)}
-              className="w-16 h-16 bg-idol-gold flex items-center justify-center transition-all 
-                        hover:bg-opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Camera className="w-6 h-6 text-black" />
-            </button>
-            
-            <button 
-              onClick={() => {
-                stopWebcam();
-                setTimeout(startWebcam, 300);
-              }}
-              className="w-10 h-10 bg-white/20 flex items-center justify-center transition-all 
-                        hover:bg-white/30 active:scale-95"
-            >
-              <RefreshCw className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        </div>
       </div>
       
-      {/* Filter controls - now below the video stream */}
-      <div className="p-3 bg-gray-100 dark:bg-gray-800">
-        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 text-center">Photo Filters</p>
-        <div className="flex justify-center">
+      {/* Filter Selection */}
+      <div className="mb-4 w-full">
+        <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Choose a filter</p>
+        <div className="flex justify-center gap-2 flex-wrap">
           <ToggleGroup type="single" value={activeFilter} onValueChange={(value) => value && setActiveFilter(value as FilterType)}>
-            <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+            <ToggleGroupItem value="Normal" className="rounded-full text-xs px-4 py-2 data-[state=on]:bg-pink-400 data-[state=on]:text-white">
               Normal
             </ToggleGroupItem>
-            <ToggleGroupItem value="Warm" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Warm
+            <ToggleGroupItem value="B&W" className="rounded-full text-xs px-4 py-2 data-[state=on]:bg-pink-400 data-[state=on]:text-white">
+              BW
             </ToggleGroupItem>
-            <ToggleGroupItem value="Cool" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Cool
-            </ToggleGroupItem>
-            <ToggleGroupItem value="Vintage" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+            <ToggleGroupItem value="Vintage" className="rounded-full text-xs px-4 py-2 data-[state=on]:bg-pink-400 data-[state=on]:text-white">
               Vintage
             </ToggleGroupItem>
-            <ToggleGroupItem value="B&W" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              B&W
+            <ToggleGroupItem value="Soft" className="rounded-full text-xs px-4 py-2 data-[state=on]:bg-pink-400 data-[state=on]:text-white">
+              Soft
             </ToggleGroupItem>
-            <ToggleGroupItem value="Dramatic" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Dramatic
+            <ToggleGroupItem value="Instax" className="rounded-full text-xs px-4 py-2 data-[state=on]:bg-pink-400 data-[state=on]:text-white">
+              Instax
+            </ToggleGroupItem>
+            <ToggleGroupItem value="DV" className="rounded-full text-xs px-4 py-2 data-[state=on]:bg-pink-400 data-[state=on]:text-white">
+              DV
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
       </div>
+      
+      {/* Capture Button */}
+      <button 
+        onClick={startPhotoSession}
+        disabled={!isStreaming || countdownValue !== null || (photoCount > 0 && photoCount < 4)}
+        className="w-full bg-pink-400 text-white font-medium py-3 px-8 rounded-full transition-all 
+                 hover:bg-pink-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      >
+        <Camera className="w-5 h-5 mr-2" />
+        {photoCount === 0 ? 'Capturing...' : 'Continue'}
+      </button>
+      
+      {/* Refresh Camera */}
+      <button 
+        onClick={() => {
+          stopWebcam();
+          setTimeout(startWebcam, 300);
+        }}
+        className="mt-2 text-xs text-gray-500 flex items-center justify-center"
+      >
+        <RefreshCw className="w-3 h-3 mr-1" />
+        Refresh camera
+      </button>
     </div>
   );
 };
