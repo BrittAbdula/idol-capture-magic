@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Camera, Upload, Image as ImageIcon, ChevronLeft, ChevronRight, Download, Trash2, Share2 } from 'lucide-react';
+import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import WebcamCapture from '../components/WebcamCapture';
 import PhotoUpload from '../components/PhotoUpload';
 import PhotoFrame from '../components/PhotoFrame';
 import PhotoStrip from '../components/PhotoStrip';
-import PhotoFilters from '../components/PhotoFilters';
 import { extractSubject, applyFilter } from '../lib/imageProcessing';
 
 const PhotoBooth = () => {
@@ -18,6 +19,7 @@ const PhotoBooth = () => {
   const [filter, setFilter] = useState('Normal');
   const [showWebcam, setShowWebcam] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
   
   // Handle idol photo upload
   const handleIdolPhotoUpload = async (file: File) => {
@@ -34,11 +36,12 @@ const PhotoBooth = () => {
     }
   };
   
-  // Handle user photo capture from webcam - updated to accept partial images
+  // Handle user photo capture from webcam
   const handlePhotoStripCapture = (images: string[]) => {
     setPhotoStripImages(images);
     if (images.length === 4) {
-      setStep(3);
+      // Navigate to results page with the images
+      navigate('/photo-booth/result', { state: { images } });
     }
   };
   
@@ -47,19 +50,16 @@ const PhotoBooth = () => {
     try {
       setIsProcessing(true);
       const imageUrl = URL.createObjectURL(file);
-      setPhotoStripImages(Array(4).fill(imageUrl));
-      setStep(3);
+      const images = Array(4).fill(imageUrl);
+      setPhotoStripImages(images);
+      // Navigate to results page with the images
+      navigate('/photo-booth/result', { state: { images } });
     } catch (error) {
       console.error("Error processing user photo:", error);
       toast.error("Failed to process user photo");
     } finally {
       setIsProcessing(false);
     }
-  };
-  
-  // Handle filter selection
-  const handleFilterSelect = (filterName: string) => {
-    setFilter(filterName);
   };
   
   // Reset the photo booth
@@ -151,112 +151,9 @@ const PhotoBooth = () => {
           </div>
         );
         
-      case 3:
-        return (
-          <div className="max-w-full mx-auto">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="md:w-1/4">
-                <div className="glass-panel p-4 mb-4">
-                  <h3 className="text-xl font-semibold mb-3 font-montserrat">Choose a Filter</h3>
-                  <PhotoFilters onSelectFilter={handleFilterSelect} selectedFilter={filter} />
-                </div>
-                
-                <div className="glass-panel p-4 flex flex-col">
-                  <h3 className="text-xl font-semibold mb-3 font-montserrat">What's Next?</h3>
-                  <p className="text-gray-600 mb-4">
-                    You can download your photo strip or create a new one.
-                  </p>
-                  
-                  <div className="flex-1 flex flex-col gap-4 justify-center">
-                    <button 
-                      onClick={() => setStep(2)}
-                      className="idol-button flex items-center justify-center"
-                    >
-                      <Camera className="w-5 h-5 mr-2" />
-                      Take New Photos
-                    </button>
-                    
-                    <button 
-                      onClick={handleReset}
-                      className="idol-button-outline flex items-center justify-center"
-                    >
-                      <Trash2 className="w-5 h-5 mr-2" />
-                      Start Over
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="md:w-3/4 flex justify-center">
-                <div className="w-full">
-                  <PhotoStrip images={photoStripImages} filter={filter} />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-        
       default:
         return null;
     }
-  };
-
-  // Helper function for filter class names
-  const getFilterClassName = (filter: string) => {
-    switch (filter) {
-      case 'Warm': return 'sepia-[0.3] brightness-105';
-      case 'Cool': return 'brightness-110 contrast-110 saturate-125 hue-rotate-[-10deg]';
-      case 'Vintage': return 'sepia-[0.5] brightness-90 contrast-110';
-      case 'B&W': return 'grayscale';
-      case 'Dramatic': return 'contrast-125 brightness-90';
-      default: return '';
-    }
-  };
-  
-  // Render step navigation
-  const renderStepNavigation = () => {
-    return (
-      <div className="flex justify-between items-center py-4 px-6 glass-panel mt-8 max-w-xl mx-auto">
-        <button
-          onClick={() => step > 1 && setStep(step - 1)}
-          disabled={step === 1}
-          className={`flex items-center gap-1 ${
-            step === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-black hover:text-idol-gold'
-          }`}
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <span>Previous</span>
-        </button>
-        
-        <div className="flex gap-2">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`w-3 h-3 rounded-full ${
-                s === step 
-                  ? 'bg-idol-gold' 
-                  : s < step 
-                    ? 'bg-gray-400' 
-                    : 'bg-gray-200'
-              }`}
-            />
-          ))}
-        </div>
-        
-        <button
-          onClick={() => step < 3 && photoStripImages.length > 0 && setStep(step + 1)}
-          disabled={step === 3 || (step === 2 && photoStripImages.length === 0)}
-          className={`flex items-center gap-1 ${
-            step === 3 || (step === 2 && photoStripImages.length === 0) 
-              ? 'text-gray-400 cursor-not-allowed' 
-              : 'text-black hover:text-idol-gold'
-          }`}
-        >
-          <span>Next</span>
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    );
   };
   
   return (
@@ -265,7 +162,6 @@ const PhotoBooth = () => {
       
       <main className="pt-32 pb-24 px-4">
         {renderStepContent()}
-        {renderStepNavigation()}
       </main>
       
       <Footer />

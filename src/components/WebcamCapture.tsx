@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -78,13 +79,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   useEffect(() => {
     if (photoCount === 4) {
       toast.success("Photo strip complete!");
-      
-      const resetTimer = setTimeout(() => {
-        setPhotoCount(0);
-        setCapturedImages([]);
-      }, 3000);
-      
-      return () => clearTimeout(resetTimer);
     } else if (photoCount > 0 && photoCount < 4) {
       const timer = setTimeout(() => {
         startCountdown();
@@ -148,7 +142,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             playsInline
             muted
             className={`w-full aspect-[4/3] object-cover ${getFilterClassName()}`}
-            style={{ maxHeight: '500px' }}
+            style={{ maxHeight: '560px' }}
           />
           <canvas ref={canvasRef} className="hidden" />
           
