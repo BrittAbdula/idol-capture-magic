@@ -1,27 +1,104 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
+import { Camera, Upload, Image as ImageIcon, Settings2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import WebcamCapture from '../components/WebcamCapture';
 import PhotoUpload from '../components/PhotoUpload';
-import PhotoFrame from '../components/PhotoFrame';
-import PhotoStrip from '../components/PhotoStrip';
-import { extractSubject, applyFilter } from '../lib/imageProcessing';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { usePhotoStrip } from '../contexts/PhotoStripContext';
+import { getTemplate } from '../data/templates';
 
-const PhotoBooth = () => {
+const PhotoBooth: React.FC = () => {
+  // Get template parameters from URL
+  const { category, idol, templateId } = useParams<{ category?: string; idol?: string; templateId?: string }>();
+  const [searchParams] = useSearchParams();
+  const templateFromQuery = searchParams.get('template');
+  
   // State for photo booth
-  const [step, setStep] = useState(1);
-  const [idolPhoto, setIdolPhoto] = useState<string | null>(null);
-  const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
-  const [filter, setFilter] = useState('Normal');
   const [captureMethod, setCaptureMethod] = useState<'webcam' | 'upload'>('webcam');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
+  const [filter, setFilter] = useState('Normal');
+  const [photoNum, setPhotoNum] = useState(4);
+  const [countdown, setCountdown] = useState(3);
+  const [playSound, setPlaySound] = useState(false);
+  const [lightColor, setLightColor] = useState('#FFD700');
+  const [showSettings, setShowSettings] = useState(false);
+  
+  const { photoStripData, setPhotoStripData, updatePhotos, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
-  const location = useLocation();
+  
+  // Load template settings on mount
+  useEffect(() => {
+    const loadTemplateSettings = () => {
+      const templateToLoad = templateId || templateFromQuery;
+      
+      if (templateToLoad) {
+        const template = getTemplate(templateToLoad);
+        
+        if (template) {
+          setCurrentTemplate(template);
+          // Apply template settings
+          setAspectRatio(template.aspectRatio);
+          setPhotoNum(template.photoNum);
+          setCountdown(template.countdown);
+          if (template.filter) setFilter(template.filter);
+          if (template.lightColor) setLightColor(template.lightColor);
+          setPlaySound(template.sound);
+          
+          // Create a new photo strip data based on template
+          const newPhotoStripData = {
+            photoStripId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+            templateId: template.templateId,
+            category: template.category,
+            idol: template.idol,
+            canvasSize: {
+              width: 1200,
+              height: 1600
+            },
+            background: {
+              type: 'color',
+              color: '#FFFFFF'
+            },
+            photoPositions: [
+              { x: 100, y: 100, width: 400, height: 500 },
+              { x: 600, y: 100, width: 400, height: 500 },
+              { x: 100, y: 700, width: 400, height: 500 },
+              { x: 600, y: 700, width: 400, height: 500 }
+            ],
+            photos: []
+          };
+          
+          setPhotoStripData(newPhotoStripData);
+        } else {
+          toast.error("Template not found");
+        }
+      }
+    };
+    
+    loadTemplateSettings();
+  }, [templateId, templateFromQuery, setCurrentTemplate, setPhotoStripData]);
   
   // Enhanced cleanup when navigating away from this page
   useEffect(() => {
@@ -41,71 +118,36 @@ const PhotoBooth = () => {
       stopAllMediaTracks();
     };
   }, []);
-
-  // Handle idol photo upload
-  const handleIdolPhotoUpload = async (file: File) => {
-    try {
-      setIsProcessing(true);
-      const extractedImage = await extractSubject(file);
-      setIdolPhoto(extractedImage);
-      setStep(2);
-    } catch (error) {
-      console.error("Error processing idol photo:", error);
-      toast.error("Failed to process idol photo");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
   
   // Handle user photo capture from webcam
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
     setPhotoStripImages(images);
+    updatePhotos(images);
+    
     if (selectedAspectRatio) {
       setAspectRatio(selectedAspectRatio);
     }
     
-    if (images.length === 4) {
-      // Navigate to results page with the images, filter and aspect ratio
-      navigate('/photo-booth/result', { 
-        state: { 
-          images,
-          filter,
-          aspectRatio: selectedAspectRatio || aspectRatio
-        } 
-      });
+    // If we have enough photos, navigate to the photo strip page
+    if (images.length >= photoNum) {
+      navigate('/photo-strip');
     }
   };
   
   // Handle user photo upload
   const handleUserPhotoUpload = async (file: File) => {
     try {
-      setIsProcessing(true);
       const imageUrl = URL.createObjectURL(file);
-      const images = Array(4).fill(imageUrl);
+      const images = Array(photoNum).fill(imageUrl);
       setPhotoStripImages(images);
-      // Navigate to results page with the images and filter
-      navigate('/photo-booth/result', { 
-        state: { 
-          images,
-          filter,
-          aspectRatio
-        } 
-      });
+      updatePhotos(images);
+      
+      // Navigate to photo strip page with the images
+      navigate('/photo-strip');
     } catch (error) {
       console.error("Error processing user photo:", error);
       toast.error("Failed to process user photo");
-    } finally {
-      setIsProcessing(false);
     }
-  };
-  
-  // Reset the photo booth
-  const handleReset = () => {
-    setIdolPhoto(null);
-    setPhotoStripImages([]);
-    setFilter('Normal');
-    setStep(1);
-    setCaptureMethod('webcam');
   };
   
   // Render polaroid photo display
@@ -120,7 +162,7 @@ const PhotoBooth = () => {
     
     return (
       <div className="flex justify-center mt-6 overflow-x-auto py-4">
-        <div className={`flex ${photoStripImages.length > 1 ? 'justify-center' : 'justify-center'} gap-4 transition-all duration-300`}>
+        <div className={`flex justify-center gap-4 transition-all duration-300`}>
           {photoStripImages.map((image, index) => (
             <div 
               key={index} 
@@ -147,96 +189,195 @@ const PhotoBooth = () => {
     );
   };
   
-  // Render step content
-  const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold mb-4 font-montserrat">Upload Idol Photo</h1>
-              <p className="text-gray-600">
-                Choose a photo of your favorite idol to start creating your photo strip.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <PhotoUpload
-                onUpload={handleIdolPhotoUpload}
-                label="Upload Idol Photo"
-                className="h-full"
-              />
-              
-              <div className="glass-panel p-6">
-                <h3 className="text-xl font-semibold mb-4 font-montserrat">Skip This Step?</h3>
-                <p className="text-gray-600 mb-6">
-                  If you want to take a regular photo without an idol, you can skip this step.
-                </p>
-                <button 
-                  onClick={() => setStep(2)} 
-                  className="idol-button-outline w-full"
-                >
-                  Skip to Camera
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 2:
-        return (
-          <div className="max-w-full mx-auto">
-            <div className="flex flex-col items-center">
-              <div className="w-full max-w-xl mx-auto mb-6">
-                <Tabs 
-                  defaultValue={captureMethod} 
-                  onValueChange={(value) => setCaptureMethod(value as 'webcam' | 'upload')}
-                  className="w-full"
-                >
-                  <TabsList className="grid w-full grid-cols-2 mb-4">
-                    <TabsTrigger value="webcam" className="flex items-center gap-2">
-                      <Camera className="w-4 h-4" />
-                      <span>Use Camera</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="upload" className="flex items-center gap-2">
-                      <Upload className="w-4 h-4" />
-                      <span>Upload Photos</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="webcam" className="overflow-hidden rounded-lg shadow-md">
-                    <WebcamCapture 
-                      onCapture={handlePhotoStripCapture} 
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="upload">
-                    <PhotoUpload
-                      onUpload={handleUserPhotoUpload}
-                      label="Upload Your Photos"
-                    />
-                  </TabsContent>
-                </Tabs>
-              </div>
-              
-              <div className="w-full max-w-4xl">
-                {renderPolaroidPhotos()}
-              </div>
-            </div>
-          </div>
-        );
-        
-      default:
-        return null;
-    }
-  };
-  
   return (
     <div className="min-h-screen">
       <Navbar />
       
       <main className="pt-32 pb-24 px-4">
-        {renderStepContent()}
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold font-montserrat">
+              {currentTemplate 
+                ? `${currentTemplate.templateId.replace(/-/g, ' ')} Template` 
+                : "Photo Booth"}
+            </h1>
+            
+            <Dialog open={showSettings} onOpenChange={setShowSettings}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="ml-2">
+                  <Settings2 className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Photo Booth Settings</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-6 py-4">
+                  <div className="space-y-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="aspect-ratio">Aspect Ratio</Label>
+                      <Select 
+                        value={aspectRatio}
+                        onValueChange={setAspectRatio}
+                      >
+                        <SelectTrigger id="aspect-ratio">
+                          <SelectValue placeholder="Select aspect ratio" />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                          <SelectItem value="4:3">4:3 (Standard)</SelectItem>
+                          <SelectItem value="3:2">3:2 (Classic)</SelectItem>
+                          <SelectItem value="4:5">4:5 (Portrait)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="photo-count">Number of Photos</Label>
+                      <Select 
+                        value={photoNum.toString()}
+                        onValueChange={(value) => setPhotoNum(Number(value))}
+                      >
+                        <SelectTrigger id="photo-count">
+                          <SelectValue placeholder="Select number of photos" />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          <SelectItem value="1">1 Photo</SelectItem>
+                          <SelectItem value="2">2 Photos</SelectItem>
+                          <SelectItem value="3">3 Photos</SelectItem>
+                          <SelectItem value="4">4 Photos</SelectItem>
+                          <SelectItem value="6">6 Photos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="countdown">Countdown Timer</Label>
+                      <Select 
+                        value={countdown.toString()}
+                        onValueChange={(value) => setCountdown(Number(value))}
+                      >
+                        <SelectTrigger id="countdown">
+                          <SelectValue placeholder="Select countdown time" />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          <SelectItem value="1">1 Second</SelectItem>
+                          <SelectItem value="3">3 Seconds</SelectItem>
+                          <SelectItem value="5">5 Seconds</SelectItem>
+                          <SelectItem value="10">10 Seconds</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="filter">Default Filter</Label>
+                      <Select 
+                        value={filter}
+                        onValueChange={setFilter}
+                      >
+                        <SelectTrigger id="filter">
+                          <SelectValue placeholder="Select filter" />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          <SelectItem value="Normal">Normal</SelectItem>
+                          <SelectItem value="Warm">Warm</SelectItem>
+                          <SelectItem value="Cool">Cool</SelectItem>
+                          <SelectItem value="Vintage">Vintage</SelectItem>
+                          <SelectItem value="B&W">Black & White</SelectItem>
+                          <SelectItem value="Dramatic">Dramatic</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="sound">Camera Sound</Label>
+                      <Switch
+                        id="sound"
+                        checked={playSound}
+                        onCheckedChange={setPlaySound}
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="light-color">Flash Light Color</Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="color"
+                          id="light-color"
+                          value={lightColor}
+                          onChange={(e) => setLightColor(e.target.value)}
+                          className="w-10 h-10 p-0 border-0 rounded-full cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={lightColor}
+                          onChange={(e) => {
+                            const color = e.target.value;
+                            if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
+                              setLightColor(color);
+                            }
+                          }}
+                          placeholder="#RRGGBB"
+                          className="w-24 px-2 py-1 border rounded-md text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <DialogClose asChild>
+                  <Button className="w-full">Save Settings</Button>
+                </DialogClose>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <div className="w-full max-w-xl mx-auto mb-6">
+              <Tabs 
+                defaultValue={captureMethod} 
+                onValueChange={(value) => setCaptureMethod(value as 'webcam' | 'upload')}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="webcam" className="flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    <span>Use Camera</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="upload" className="flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Photos</span>
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="webcam" className="overflow-hidden rounded-lg shadow-md">
+                  <WebcamCapture 
+                    onCapture={handlePhotoStripCapture}
+                    aspectRatio={aspectRatio}
+                    photoLimit={photoNum}
+                    countdownTime={countdown}
+                    defaultFilter={filter}
+                    lightColor={lightColor}
+                    playSound={playSound}
+                    idolOverlay={currentTemplate?.idolOverlay}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="upload">
+                  <PhotoUpload
+                    onUpload={handleUserPhotoUpload}
+                    label="Upload Your Photos"
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            <div className="w-full max-w-4xl">
+              {renderPolaroidPhotos()}
+            </div>
+          </div>
+        </div>
       </main>
       
       <Footer />
