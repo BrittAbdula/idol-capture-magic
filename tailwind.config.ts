@@ -183,4 +183,13 @@ export default {
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
+	safelist: [
+		{
+		  pattern: /^ring-idol-/,
+		  variants: ['focus', 'hover'],
+		},
+		{
+		  pattern: /idol-(gold|primary|secondary|accent)\/\d+/,
+		}
+	]
 } satisfies Config;
