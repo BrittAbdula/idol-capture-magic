@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Dialog, 
   DialogContent, 
@@ -26,7 +27,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [photoGap, setPhotoGap] = useState<number>(50);
+  const [sidePadding, setSidePadding] = useState<number>(50);
+  const [topPadding, setTopPadding] = useState<number>(50);
   const [showDate, setShowDate] = useState<boolean>(true);
+  const [showDashedLines, setShowDashedLines] = useState<boolean>(false);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,7 +56,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     if (dialogOpen && canvasRef.current) {
       generatePhotoStrip(canvasRef.current, 1);
     }
-  }, [dialogOpen, selectedColor, customText, photoGap, showDate, aspectRatio]);
+  }, [dialogOpen, selectedColor, customText, photoGap, sidePadding, topPadding, showDate, showDashedLines, aspectRatio]);
 
   const colors = [
     '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
@@ -94,12 +98,13 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const imgHeight = loadedImages[0].height * scale;
       
       const padding = photoGap * scale;
-      const stripPadding = 40 * scale;
+      const sideMargin = (sidePadding / 2) * scale;
+      const topMargin = (topPadding / 2) * scale;
       
-      let stripWidth = imgWidth + (stripPadding * 2);
+      let stripWidth = imgWidth + (sideMargin * 2);
       
       if (aspectRatio === '9:16' || aspectRatio === '3:2') {
-        stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (stripPadding * 2);
+        stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (sideMargin * 2);
       }
       
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
@@ -107,7 +112,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       
       const textSpace = customText ? 120 * scale : 0;
       const dateSpace = showDate ? 80 * scale : 0;
-      const extraSpace = textSpace + dateSpace + (stripPadding * 2);
+      const extraSpace = textSpace + dateSpace + (topMargin * 2);
       
       const stripHeight = totalImagesHeight + extraSpace;
       
@@ -125,7 +130,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       ctx.stroke();
       
       loadedImages.forEach((img, index) => {
-        const y = stripPadding + (index * (imgHeight + padding));
+        const y = topMargin + (index * (imgHeight + padding));
         
         const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
@@ -137,7 +142,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         
         ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
         
-        if (index < loadedImages.length - 1) {
+        if (showDashedLines && index < loadedImages.length - 1) {
           ctx.setLineDash([5 * scale, 5 * scale]);
           ctx.beginPath();
           ctx.moveTo(0, y + imgHeight + padding/2);
@@ -164,7 +169,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       }
       
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-      ctx.font = `bold ${Math.max(18, 22 * scale)}px sans-serif`;
+      ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 35 * scale);
     });
@@ -175,7 +180,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const scale = isMobile ? 0.3 : 0.4;
       generatePhotoStrip(thumbnailCanvasRef.current, scale);
     }
-  }, [images, selectedColor, customText, photoGap, showDate, isMobile, aspectRatio]);
+  }, [images, selectedColor, customText, photoGap, sidePadding, topPadding, showDate, showDashedLines, isMobile, aspectRatio]);
 
   const handleDownload = () => {
     setIsGeneratingDownload(true);
@@ -441,6 +446,34 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                   </div>
                   
                   <div>
+                    <label className="flex items-center justify-between mb-2">
+                      <span>Side margins</span>
+                      <span className="text-sm text-gray-500">{sidePadding}px</span>
+                    </label>
+                    <Slider
+                      value={[sidePadding]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={(value) => setSidePadding(value[0])}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="flex items-center justify-between mb-2">
+                      <span>Top margin</span>
+                      <span className="text-sm text-gray-500">{topPadding}px</span>
+                    </label>
+                    <Slider
+                      value={[topPadding]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={(value) => setTopPadding(value[0])}
+                    />
+                  </div>
+                  
+                  <div>
                     <label className="block mb-2">Custom caption text</label>
                     <input
                       type="text"
@@ -452,15 +485,36 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                     />
                   </div>
                   
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="showDate"
-                      checked={showDate}
-                      onChange={(e) => setShowDate(e.target.checked)}
-                      className="mr-2"
-                    />
-                    <label htmlFor="showDate">Show date</label>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showDate"
+                        checked={showDate}
+                        onCheckedChange={(checked) => 
+                          setShowDate(checked === true)}
+                      />
+                      <label 
+                        htmlFor="showDate"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Show date
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showDashedLines"
+                        checked={showDashedLines}
+                        onCheckedChange={(checked) => 
+                          setShowDashedLines(checked === true)}
+                      />
+                      <label 
+                        htmlFor="showDashedLines"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Show dashed lines between photos
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
