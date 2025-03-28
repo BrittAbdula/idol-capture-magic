@@ -121,7 +121,7 @@ const defaultPhotoStrip: PhotoStrip = {
 
 const PhotoStripContext = createContext<PhotoStripContextType | undefined>(undefined);
 
-export const PhotoStripProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) => {
   const [photoStripData, setPhotoStripData] = useState<PhotoStrip | null>(defaultPhotoStrip);
   const [currentTemplate, setCurrentTemplate] = useState<Template | null>(null);
 
