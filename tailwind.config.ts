@@ -198,6 +198,14 @@ export default {
 		{
 		  pattern: /^bg-opacity-/,
 		  variants: ['hover', 'focus'],
+		},
+		{
+		  pattern: /^border-idol-/,
+		  variants: ['hover', 'focus'],
+		},
+		{
+		  pattern: /^border-opacity-/,
+		  variants: ['hover', 'focus'],
 		}
 	]
 } satisfies Config;

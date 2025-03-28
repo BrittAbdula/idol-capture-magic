@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap');
 
 @tailwind base;
@@ -253,11 +254,11 @@
 
   /* Theme-specific styles */
   [data-theme="neonpop"] .neo-panel {
-    @apply bg-black/40 border border-idol-primary/30 shadow-neon;
+    @apply bg-black/40 border border-[var(--idol-primary)] border-opacity-30 shadow-neon;
   }
 
   [data-theme="neonpop"] .glass-panel {
-    @apply bg-black/40 backdrop-blur-md border border-idol-secondary/30;
+    @apply bg-black/40 backdrop-blur-md border border-[var(--idol-secondary)] border-opacity-30;
   }
 
   [data-theme="millennial"] .neo-panel {
@@ -265,10 +266,10 @@
   }
 
   [data-theme="retro"] .neo-panel {
-    @apply bg-slate-900 border border-idol-primary/50 shadow-neon;
+    @apply bg-slate-900 border border-[var(--idol-primary)] border-opacity-50 shadow-neon;
   }
 
   [data-theme="minimal"] .neo-panel {
-    @apply bg-idol-gray border border-idol-secondary/20 shadow-sm;
+    @apply bg-idol-gray border border-[var(--idol-secondary)] border-opacity-20 shadow-sm;
   }
 }
