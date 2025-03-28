@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X, Printer, Share2 } from 'lucide-react';
@@ -8,6 +9,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
   DialogContent, 
@@ -16,6 +18,17 @@ import {
   DialogClose,
   DialogTrigger 
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface PhotoResultProps {}
 
@@ -98,10 +111,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const imgHeight = loadedImages[0].height * scale;
       
       const padding = photoGap * scale;
-      const sideMargin = (sidePadding / 2) * scale;
-      const topMargin = (topPadding / 2) * scale;
+      const sideMargin = sidePadding * scale;
+      const topMargin = topPadding * scale;
       
-      let stripWidth = imgWidth + (sideMargin * 2);
+      let stripWidth = imgWidth + sideMargin * 2;
       
       if (aspectRatio === '9:16' || aspectRatio === '3:2') {
         stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (sideMargin * 2);
@@ -122,6 +135,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       ctx.fillStyle = selectedColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
+      // Top dashed line
       ctx.setLineDash([8 * scale, 8 * scale]);
       ctx.beginPath();
       ctx.moveTo(0, 15 * scale);
@@ -142,6 +156,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         
         ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
         
+        // Only add dashed lines between photos (not for the first photo)
         if (showDashedLines && index < loadedImages.length - 1) {
           ctx.setLineDash([5 * scale, 5 * scale]);
           ctx.beginPath();
@@ -520,40 +535,40 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
               </div>
               
               <div className="flex flex-wrap gap-3 mt-auto">
-                <button 
-                  onClick={handleDownload}
-                  disabled={isGeneratingDownload}
-                  className={`flex-1 idol-button flex items-center justify-center gap-2 py-3 ${isGeneratingDownload ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  <Download className="w-5 h-5" />
-                  <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      className="flex-1 idol-button flex items-center justify-center gap-2 py-3"
+                      disabled={isGeneratingDownload || isPrinting || isSharing}
+                    >
+                      <Share2 className="w-5 h-5" />
+                      <span>{isGeneratingDownload || isPrinting || isSharing ? "Processing..." : "Share"}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={handleDownload} disabled={isGeneratingDownload}>
+                      <Download className="mr-2 h-4 w-4" />
+                      <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePrint} disabled={isPrinting}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      <span>{isPrinting ? "Preparing..." : "Print"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShare} disabled={isSharing}>
+                      <Share2 className="mr-2 h-4 w-4" />
+                      <span>{isSharing ? "Sharing..." : "Share link"}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 
-                <button 
-                  onClick={handlePrint}
-                  disabled={isPrinting}
-                  className={`flex-1 idol-button-secondary flex items-center justify-center gap-2 py-3 ${isPrinting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  <Printer className="w-5 h-5" />
-                  <span>{isPrinting ? "Preparing..." : "Print"}</span>
-                </button>
-                
-                <button 
-                  onClick={handleShare}
-                  disabled={isSharing}
-                  className={`flex-1 idol-button-secondary flex items-center justify-center gap-2 py-3 ${isSharing ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  <Share2 className="w-5 h-5" />
-                  <span>{isSharing ? "Sharing..." : "Share"}</span>
-                </button>
-                
-                <button 
+                <Button 
                   onClick={handleRetake}
                   className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
+                  variant="outline"
                 >
                   <Undo2 className="w-5 h-5" />
                   <span>Retake</span>
-                </button>
+                </Button>
               </div>
             </div>
           </div>
