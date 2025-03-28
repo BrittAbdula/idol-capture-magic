@@ -230,21 +230,56 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     let containerStyle: React.CSSProperties = {
       position: 'relative',
       width: '100%',
+      height: isFullscreen ? '100vh' : 'auto',
       backgroundColor: 'black',
       overflow: 'hidden',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
     };
 
-    if (aspectRatio === '4:3') {
-      containerStyle.maxHeight = '560px';
-    } else if (aspectRatio === '1:1') {
-      containerStyle.maxHeight = '100%';
-      containerStyle.aspectRatio = '1/1';
-    } else if (aspectRatio === '3:2') {
-      containerStyle.maxHeight = '90vh';
-      containerStyle.aspectRatio = '3/2';
+    // Set max-height and aspect ratio for non-fullscreen mode
+    if (!isFullscreen) {
+      if (aspectRatio === '4:3') {
+        containerStyle.aspectRatio = '4/3';
+      } else if (aspectRatio === '1:1') {
+        containerStyle.aspectRatio = '1/1';
+      } else if (aspectRatio === '3:2') {
+        containerStyle.aspectRatio = '3/2';
+      }
     }
 
     return containerStyle;
+  };
+
+  const getVideoStyle = () => {
+    // Default style for video element
+    let videoStyle: React.CSSProperties = {
+      transform: mirrored ? 'scaleX(-1)' : 'none',
+    };
+
+    // In fullscreen mode, maintain aspect ratio while filling the screen
+    if (isFullscreen) {
+      if (aspectRatio === '4:3') {
+        videoStyle.width = 'auto';
+        videoStyle.height = '100vh';
+        videoStyle.maxWidth = 'calc(100vh * 4 / 3)';
+      } else if (aspectRatio === '1:1') {
+        videoStyle.width = '100vh';
+        videoStyle.height = '100vh';
+        videoStyle.maxWidth = '100vw';
+      } else if (aspectRatio === '3:2') {
+        videoStyle.width = 'auto';
+        videoStyle.height = '100vh';
+        videoStyle.maxWidth = 'calc(100vh * 3 / 2)';
+      }
+    } else {
+      videoStyle.width = '100%';
+      videoStyle.height = '100%';
+      videoStyle.objectFit = 'cover';
+    }
+
+    return videoStyle;
   };
 
   const getFilterClassName = () => {
@@ -274,35 +309,41 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover ${getFilterClassName()}`}
-            style={{ 
-              transform: mirrored ? 'scaleX(-1)' : 'none',
-            }}
+            className={`${getFilterClassName()}`}
+            style={getVideoStyle()}
           />
           
-          {/* Aspect ratio crop guide - removed corner frames */}
+          {/* Aspect ratio crop guide */}
           <div 
-            className="absolute inset-0 pointer-events-none m-auto"
+            className="absolute pointer-events-none"
             style={{ 
               boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
               aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
-              width: aspectRatio === '3:2' ? 'auto' : '100%',
-              height: aspectRatio === '3:2' ? '100%' : 'auto',
-              maxWidth: '100%',
-              maxHeight: '100%',
+              width: isFullscreen ? (aspectRatio === '1:1' ? '100vh' : 'auto') : '100%',
+              height: isFullscreen ? '100vh' : 'auto',
+              maxWidth: isFullscreen ? (
+                aspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
+                aspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' : '100vh'
+              ) : '100%',
+              margin: 'auto',
+              inset: 0,
             }}
           />
           
           {/* Grid overlay with thicker lines */}
           {showGrid && (
             <div 
-              className="absolute inset-0 pointer-events-none m-auto"
+              className="absolute pointer-events-none"
               style={{ 
                 aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
-                width: aspectRatio === '3:2' ? 'auto' : '100%',
-                height: aspectRatio === '3:2' ? '100%' : 'auto',
-                maxWidth: '100%',
-                maxHeight: '100%',
+                width: isFullscreen ? (aspectRatio === '1:1' ? '100vh' : 'auto') : '100%',
+                height: isFullscreen ? '100vh' : 'auto',
+                maxWidth: isFullscreen ? (
+                  aspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
+                  aspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' : '100vh'
+                ) : '100%',
+                margin: 'auto',
+                inset: 0,
                 backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
                 backgroundSize: '33.33% 33.33%',
                 backgroundPosition: 'center',

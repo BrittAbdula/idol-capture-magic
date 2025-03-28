@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -22,7 +21,21 @@ const PhotoBooth = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const navigate = useNavigate();
+  const location = useLocation();
   
+  // Ensure camera is stopped when navigating away from this page
+  useEffect(() => {
+    // This will run when the component unmounts
+    return () => {
+      // Find and stop all active media tracks
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          stream.getTracks().forEach(track => track.stop());
+        })
+        .catch(err => console.log('No camera to stop'));
+    };
+  }, []);
+
   // Handle idol photo upload
   const handleIdolPhotoUpload = async (file: File) => {
     try {
