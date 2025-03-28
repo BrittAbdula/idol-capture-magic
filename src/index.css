@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap');
 
 @tailwind base;
@@ -147,5 +146,31 @@
 
   .hover-scale {
     @apply transition-transform duration-300 hover:scale-[1.02];
+  }
+
+  /* Light beam effects */
+  .light-beam {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+  }
+  
+  .light-beam-white {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  }
+  
+  .light-beam-pink {
+    background: radial-gradient(ellipse at center, rgba(249,168,212,0.3) 0%, rgba(249,168,212,0) 70%);
+  }
+  
+  .light-beam-warm {
+    background: radial-gradient(ellipse at center, rgba(253,230,138,0.3) 0%, rgba(253,230,138,0) 70%);
+  }
+  
+  .light-beam-cool {
+    background: radial-gradient(ellipse at center, rgba(191,219,254,0.3) 0%, rgba(191,219,254,0) 70%);
+  }
+  
+  .light-beam-gold {
+    background: radial-gradient(ellipse at center, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
   }
 }

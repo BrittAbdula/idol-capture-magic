@@ -9,6 +9,7 @@ import WebcamCapture from '../components/WebcamCapture';
 import PhotoUpload from '../components/PhotoUpload';
 import PhotoFrame from '../components/PhotoFrame';
 import PhotoStrip from '../components/PhotoStrip';
+import MakeupLight from '../components/MakeupLight';
 import { extractSubject, applyFilter } from '../lib/imageProcessing';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -168,7 +169,11 @@ const PhotoBooth = () => {
         return (
           <div className="max-w-full mx-auto">
             <div className="flex flex-col items-center">
-              <div className="w-full max-w-xl mx-auto mb-6">
+              <div className="w-full max-w-xl mx-auto mb-6 relative">
+                {/* Add makeup lights positioned at top corners */}
+                <MakeupLight className="top-3 left-20" />
+                <MakeupLight className="top-3 right-20" />
+                
                 <Tabs 
                   defaultValue={captureMethod} 
                   onValueChange={(value) => setCaptureMethod(value as 'webcam' | 'upload')}
