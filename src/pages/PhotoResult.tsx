@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X, Printer, Share2 } from 'lucide-react';
@@ -90,49 +89,39 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     stripWidth: number;
   } => {
     // Default values
-    let padding = 20;
-    let sideMargin = 30;
-    let topMargin = 30;
-    let stripWidth = 0;
+    let padding = 25;
+    let sideMargin = 35;
+    let topMargin = 35;
+    let stripWidth = 480;
 
     switch (aspectRatio) {
       case '1:1':
-        sideMargin = 40;
-        topMargin = 40;
-        stripWidth = 400; // Fixed width for square photos
-        break;
       case '4:3':
-        sideMargin = 35;
-        topMargin = 35;
-        stripWidth = 450; // Fixed width for 4:3 photos
-        break;
       case '3:2':
+        // All these aspect ratios now use the same settings
         sideMargin = 35;
         topMargin = 35;
-        stripWidth = 480; // Fixed width for 3:2 photos
+        stripWidth = 480;
+        padding = 25;
         break;
       case '16:9':
         sideMargin = 30;
         topMargin = 30;
-        stripWidth = 520; // Fixed width for 16:9 photos
+        stripWidth = 520; // Keep original for 16:9
         break;
       case '9:16':
         sideMargin = 25;
         topMargin = 25;
-        stripWidth = 380; // Fixed width for 9:16 photos (vertical)
+        stripWidth = 380; // Keep original for 9:16 (vertical)
         break;
       default:
         sideMargin = 35;
         topMargin = 35;
-        stripWidth = 450;
+        stripWidth = 480;
     }
 
-    // Adjust padding based on the number of images
-    if (imagesCount > 3) {
-      padding = 15; // Less padding for more images
-    } else if (imagesCount <= 2) {
-      padding = 30; // More padding for fewer images
-    }
+    // No longer adjust padding based on the number of images
+    // since we want a consistent padding of 25px for all common aspect ratios
 
     return { padding, sideMargin, topMargin, stripWidth };
   };
