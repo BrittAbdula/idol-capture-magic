@@ -1,21 +1,18 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, FlipHorizontal, Maximize, Minimize, Grid3X3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
-import MakeupLight from './MakeupLight';
-
-type LightColor = 'white' | 'pink' | 'warm' | 'cool' | 'gold' | 'off';
 
 interface WebcamCaptureProps {
   onCapture: (images: string[], aspectRatio?: string) => void;
-  lightColor?: LightColor;
 }
 
 type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
 type AspectRatioType = '4:3' | '1:1' | '3:2';
 
-const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = 'white' }) => {
+const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,7 +26,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<AspectRatioType>('4:3');
   const [showGrid, setShowGrid] = useState(false);
-  const [currentLightColor, setCurrentLightColor] = useState<LightColor>(lightColor);
 
   const startWebcam = useCallback(async () => {
     try {
@@ -143,7 +139,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
-  }, [capturedImages, onCapture, mirrored, activeFilter, aspectRatio, currentLightColor]);
+  }, [capturedImages, onCapture, mirrored, activeFilter, aspectRatio]);
 
   useEffect(() => {
     if (photoCount === 4) {
@@ -216,6 +212,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
     };
   }, [startWebcam, stopWebcam]);
 
+  // New handler for cycling through aspect ratios
   const cycleAspectRatio = useCallback(() => {
     setAspectRatio(prev => {
       if (prev === '4:3') return '1:1';
@@ -224,6 +221,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
     });
   }, []);
 
+  // Toggle grid visibility
   const toggleGrid = useCallback(() => {
     setShowGrid(prev => !prev);
   }, []);
@@ -262,22 +260,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
 
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < 4);
 
-  const getFlashColorClass = () => {
-    switch (currentLightColor) {
-      case 'pink': return 'bg-pink-300';
-      case 'warm': return 'bg-amber-200';
-      case 'cool': return 'bg-blue-200';
-      case 'gold': return 'bg-idol-gold';
-      case 'off': return 'bg-white';
-      default: return 'bg-white';
-    }
-  };
-
   return (
     <div className="flex flex-col overflow-hidden rounded-lg shadow-lg" ref={containerRef}>
+      {/* TOP SECTION - Video Stream */}
       <div className="relative bg-black mb-4">
         {isCapturing && (
-          <div className={`absolute inset-0 ${getFlashColorClass()} opacity-30 z-10 animate-flash`} />
+          <div className="absolute inset-0 bg-white opacity-30 z-10 animate-flash" />
         )}
         
         <div style={getContainerStyle()}>
@@ -292,6 +280,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
             }}
           />
           
+          {/* Aspect ratio crop guide - removed corner frames */}
           <div 
             className="absolute inset-0 pointer-events-none m-auto"
             style={{ 
@@ -303,6 +292,23 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
               maxHeight: '100%',
             }}
           />
+          
+          {/* Grid overlay with thicker lines */}
+          {showGrid && (
+            <div 
+              className="absolute inset-0 pointer-events-none m-auto"
+              style={{ 
+                aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
+                width: aspectRatio === '3:2' ? 'auto' : '100%',
+                height: aspectRatio === '3:2' ? '100%' : 'auto',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
+                backgroundSize: '33.33% 33.33%',
+                backgroundPosition: 'center',
+              }}
+            />
+          )}
           
           <canvas ref={canvasRef} className="hidden" />
           
@@ -324,6 +330,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
           
           {!inCaptureMode && (
             <>
+              {/* Mirror button (top right) */}
               <button 
                 onClick={toggleMirror}
                 className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -331,6 +338,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
                 <FlipHorizontal className="w-5 h-5 text-white" />
               </button>
               
+              {/* Fullscreen button (bottom right) */}
               <button 
                 onClick={toggleFullscreen}
                 className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
@@ -341,6 +349,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
                 }
               </button>
               
+              {/* Aspect ratio button (top left) - cycle button */}
               <button
                 onClick={cycleAspectRatio}
                 className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -348,6 +357,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
                 <span className="text-xs font-bold text-white">{aspectRatio}</span>
               </button>
               
+              {/* Grid toggle button (bottom left) */}
               <button 
                 onClick={toggleGrid}
                 className="absolute bottom-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -359,14 +369,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
         </div>
       </div>
       
+      {/* MIDDLE SECTION - Capture Button */}
       <div className="py-4 flex justify-center">
         {!inCaptureMode && (
-          <div className="flex gap-6 items-center">
-            <MakeupLight 
-              className="flex-shrink-0"
-              onColorChange={setCurrentLightColor}
-            />
-            
+          <div className="flex gap-4">
             <button 
               onClick={startPhotoSession}
               disabled={!isStreaming}
@@ -379,6 +385,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture, lightColor = '
         )}
       </div>
       
+      {/* BOTTOM SECTION - Filters */}
       <div className="p-3 bg-transparent mt-2 mb-4">
         <div className="flex justify-center">
           <ToggleGroup 

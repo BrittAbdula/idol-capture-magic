@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -131,10 +132,6 @@ export default {
 					'0%': { transform: 'translateX(-100%)', opacity: '0' },
 					'100%': { transform: 'translateX(0)', opacity: '1' }
 				},
-				'light-pulse': {
-					'0%, 100%': { opacity: '0.7' },
-					'50%': { opacity: '0.9' }
-				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -143,7 +140,6 @@ export default {
 				'fade-up': 'fade-up 0.8s ease-out',
 				'shutter-flash': 'shutter-flash 0.8s ease-out',
 				'pulse-slight': 'pulse-slight 2s ease-in-out infinite',
-				'light-pulse': 'light-pulse 2s ease-in-out infinite',
 				'scale-in': 'scale-in 0.4s ease-out',
 				'scale-out': 'scale-out 0.4s ease-out',
 				'slide-up': 'slide-up 0.6s ease-out',
@@ -155,7 +151,6 @@ export default {
 				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
 				'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
 				'neo': '8px 8px 16px #d1d1d1, -8px -8px 16px #ffffff',
-				'neon': '0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5), 0 0 30px rgba(0, 255, 255, 0.3)',
 			},
 			backdropBlur: {
 				'glass': 'blur(16px)',
@@ -163,20 +158,4 @@ export default {
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
-	safelist: [
-    'shadow-[0_0_30px_15px_rgba(255,255,255,0.3)]',
-    'shadow-[0_0_30px_15px_rgba(249,168,212,0.3)]',
-    'shadow-[0_0_30px_15px_rgba(253,230,138,0.3)]',
-    'shadow-[0_0_30px_15px_rgba(191,219,254,0.3)]',
-    'shadow-[0_0_30px_15px_rgba(255,215,0,0.3)]',
-    'light-beam-white',
-    'light-beam-pink',
-    'light-beam-warm',
-    'light-beam-cool',
-    'light-beam-gold',
-    {
-      pattern: /bg-(white|pink|amber|blue|idol-gold)/,
-      variants: ['hover', 'focus', '/20'],
-    },
-  ],
 } satisfies Config;
