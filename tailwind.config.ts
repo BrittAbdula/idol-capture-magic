@@ -190,6 +190,14 @@ export default {
 		},
 		{
 		  pattern: /idol-(gold|primary|secondary|accent)\/\d+/,
+		},
+		{
+		  pattern: /^bg-idol-/,
+		  variants: ['hover', 'focus'],
+		},
+		{
+		  pattern: /^bg-opacity-/,
+		  variants: ['hover', 'focus'],
 		}
 	]
 } satisfies Config;
