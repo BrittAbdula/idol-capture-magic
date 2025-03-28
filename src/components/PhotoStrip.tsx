@@ -2,6 +2,7 @@
 import React from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface PhotoStripProps {
   images: string[];
