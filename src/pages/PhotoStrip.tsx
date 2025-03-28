@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
@@ -379,7 +380,7 @@ const PhotoStrip: React.FC = () => {
                     <SelectValue placeholder="Select a template" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Default (4 photos, 4:3)</SelectItem>
+                    <SelectItem value="default">Default (4 photos, 4:3)</SelectItem>
                     {templates.map((template) => (
                       <SelectItem key={template.templateId} value={template.templateId}>
                         {template.category} - {template.templateId} ({template.photoNum} photos, {template.aspectRatio})
