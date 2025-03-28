@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -13,8 +12,9 @@ import MakeupLight from '../components/MakeupLight';
 import { extractSubject, applyFilter } from '../lib/imageProcessing';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+type LightColor = 'white' | 'pink' | 'warm' | 'cool' | 'gold' | 'off';
+
 const PhotoBooth = () => {
-  // State for photo booth
   const [step, setStep] = useState(1);
   const [idolPhoto, setIdolPhoto] = useState<string | null>(null);
   const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
@@ -22,9 +22,9 @@ const PhotoBooth = () => {
   const [captureMethod, setCaptureMethod] = useState<'webcam' | 'upload'>('webcam');
   const [isProcessing, setIsProcessing] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
+  const [lightColor, setLightColor] = useState<LightColor>('white');
   const navigate = useNavigate();
   
-  // Handle idol photo upload
   const handleIdolPhotoUpload = async (file: File) => {
     try {
       setIsProcessing(true);
@@ -39,7 +39,6 @@ const PhotoBooth = () => {
     }
   };
   
-  // Handle user photo capture from webcam
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
     setPhotoStripImages(images);
     if (selectedAspectRatio) {
@@ -47,7 +46,6 @@ const PhotoBooth = () => {
     }
     
     if (images.length === 4) {
-      // Navigate to results page with the images, filter and aspect ratio
       navigate('/photo-booth/result', { 
         state: { 
           images,
@@ -58,14 +56,12 @@ const PhotoBooth = () => {
     }
   };
   
-  // Handle user photo upload
   const handleUserPhotoUpload = async (file: File) => {
     try {
       setIsProcessing(true);
       const imageUrl = URL.createObjectURL(file);
       const images = Array(4).fill(imageUrl);
       setPhotoStripImages(images);
-      // Navigate to results page with the images and filter
       navigate('/photo-booth/result', { 
         state: { 
           images,
@@ -81,7 +77,6 @@ const PhotoBooth = () => {
     }
   };
   
-  // Reset the photo booth
   const handleReset = () => {
     setIdolPhoto(null);
     setPhotoStripImages([]);
@@ -90,7 +85,6 @@ const PhotoBooth = () => {
     setCaptureMethod('webcam');
   };
   
-  // Render polaroid photo display
   const renderPolaroidPhotos = () => {
     if (photoStripImages.length === 0) {
       return (
@@ -109,7 +103,7 @@ const PhotoBooth = () => {
               className="polaroid-frame bg-white shadow-lg p-2 pb-6 transform transition-transform hover:rotate-1"
               style={{ 
                 maxWidth: '180px',
-                order: photoStripImages.length - index // Reverse order so new photos appear on the right
+                order: photoStripImages.length - index
               }}
             >
               <div className="mb-2 overflow-hidden">
@@ -129,7 +123,6 @@ const PhotoBooth = () => {
     );
   };
   
-  // Render step content
   const renderStepContent = () => {
     switch (step) {
       case 1:
@@ -170,9 +163,19 @@ const PhotoBooth = () => {
           <div className="max-w-full mx-auto">
             <div className="flex flex-col items-center">
               <div className="w-full max-w-xl mx-auto mb-6 relative">
-                {/* Add makeup lights positioned at top corners */}
-                <MakeupLight className="top-3 left-20" />
-                <MakeupLight className="top-3 right-20" />
+                {lightColor !== 'off' && (
+                  <div 
+                    className={`absolute light-beam -z-10 opacity-40 transition-opacity duration-300 light-beam-${lightColor}`}
+                    style={{
+                      width: '200vw',
+                      height: '200vh',
+                      top: '25%',
+                      right: '25%',
+                      transform: 'translate(25%, -25%) rotate(45deg)',
+                      pointerEvents: 'none'
+                    }}
+                  />
+                )}
                 
                 <Tabs 
                   defaultValue={captureMethod} 
@@ -193,6 +196,7 @@ const PhotoBooth = () => {
                   <TabsContent value="webcam" className="overflow-hidden rounded-lg shadow-md">
                     <WebcamCapture 
                       onCapture={handlePhotoStripCapture} 
+                      lightColor={lightColor}
                     />
                   </TabsContent>
                   
