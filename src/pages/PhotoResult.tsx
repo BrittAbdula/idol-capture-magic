@@ -99,20 +99,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       case '4:3':
       case '3:2':
         // All these aspect ratios now use the same settings
-        sideMargin = 35;
-        topMargin = 35;
+        sideMargin = 100;
+        topMargin = 100;
         stripWidth = 480;
         padding = 25;
-        break;
-      case '16:9':
-        sideMargin = 30;
-        topMargin = 30;
-        stripWidth = 520; // Keep original for 16:9
-        break;
-      case '9:16':
-        sideMargin = 25;
-        topMargin = 25;
-        stripWidth = 380; // Keep original for 9:16 (vertical)
         break;
       default:
         sideMargin = 35;

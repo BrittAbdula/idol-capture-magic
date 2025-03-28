@@ -1,4 +1,3 @@
-
 # IdolBooth - User Flows
 
 ## Main User Journeys
@@ -7,6 +6,7 @@
 
 ```
 Landing Page → Photo Booth → Photo Result → Download/Share
+Landing Page → Template → Photo Booth → Photo Result → Download/Share
 ```
 
 #### Detailed Steps:
