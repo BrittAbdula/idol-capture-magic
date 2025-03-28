@@ -23,16 +23,22 @@ const PhotoBooth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Ensure camera is stopped when navigating away from this page
+  // Enhanced cleanup when navigating away from this page
   useEffect(() => {
     // This will run when the component unmounts
     return () => {
       // Find and stop all active media tracks
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          stream.getTracks().forEach(track => track.stop());
-        })
-        .catch(err => console.log('No camera to stop'));
+      const stopAllMediaTracks = () => {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+              stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(err => console.log('No camera to stop'));
+        }
+      };
+      
+      stopAllMediaTracks();
     };
   }, []);
 

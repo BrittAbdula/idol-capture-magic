@@ -238,7 +238,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
       alignItems: 'center',
     };
 
-    // Set max-height and aspect ratio for non-fullscreen mode
+    // Set correct aspect ratio constraints for non-fullscreen mode
     if (!isFullscreen) {
       if (aspectRatio === '4:3') {
         containerStyle.aspectRatio = '4/3';
@@ -256,27 +256,32 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
     // Default style for video element
     let videoStyle: React.CSSProperties = {
       transform: mirrored ? 'scaleX(-1)' : 'none',
+      objectFit: 'cover',
     };
 
-    // In fullscreen mode, maintain aspect ratio while filling the screen
+    // In fullscreen mode, maintain aspect ratio while filling the container
     if (isFullscreen) {
       if (aspectRatio === '4:3') {
         videoStyle.width = 'auto';
-        videoStyle.height = '100vh';
+        videoStyle.height = '100%';
         videoStyle.maxWidth = 'calc(100vh * 4 / 3)';
+        videoStyle.objectFit = 'contain';
       } else if (aspectRatio === '1:1') {
-        videoStyle.width = '100vh';
-        videoStyle.height = '100vh';
+        const size = Math.min(window.innerWidth, window.innerHeight);
+        videoStyle.width = `${size}px`;
+        videoStyle.height = `${size}px`;
         videoStyle.maxWidth = '100vw';
+        videoStyle.objectFit = 'cover';
       } else if (aspectRatio === '3:2') {
         videoStyle.width = 'auto';
-        videoStyle.height = '100vh';
+        videoStyle.height = '100%';
         videoStyle.maxWidth = 'calc(100vh * 3 / 2)';
+        videoStyle.objectFit = 'contain';
       }
     } else {
+      // Non-fullscreen mode: Fill the container while respecting aspect ratio
       videoStyle.width = '100%';
       videoStyle.height = '100%';
-      videoStyle.objectFit = 'cover';
     }
 
     return videoStyle;
@@ -313,14 +318,20 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             style={getVideoStyle()}
           />
           
-          {/* Aspect ratio crop guide */}
+          {/* Aspect ratio crop guide with corrected dimensions */}
           <div 
             className="absolute pointer-events-none"
             style={{ 
               boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
               aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
-              width: isFullscreen ? (aspectRatio === '1:1' ? '100vh' : 'auto') : '100%',
-              height: isFullscreen ? '100vh' : 'auto',
+              width: isFullscreen ? 
+                (aspectRatio === '1:1' ? 
+                  `${Math.min(window.innerWidth, window.innerHeight)}px` : 'auto') 
+                : '100%',
+              height: isFullscreen ? 
+                (aspectRatio === '1:1' ? 
+                  `${Math.min(window.innerWidth, window.innerHeight)}px` : '100vh') 
+                : 'auto',
               maxWidth: isFullscreen ? (
                 aspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
                 aspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' : '100vh'
@@ -330,14 +341,20 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
             }}
           />
           
-          {/* Grid overlay with thicker lines */}
+          {/* Grid overlay with corrected dimensions */}
           {showGrid && (
             <div 
               className="absolute pointer-events-none"
               style={{ 
                 aspectRatio: aspectRatio === '4:3' ? '4/3' : aspectRatio === '1:1' ? '1/1' : '3/2',
-                width: isFullscreen ? (aspectRatio === '1:1' ? '100vh' : 'auto') : '100%',
-                height: isFullscreen ? '100vh' : 'auto',
+                width: isFullscreen ? 
+                  (aspectRatio === '1:1' ? 
+                    `${Math.min(window.innerWidth, window.innerHeight)}px` : 'auto') 
+                  : '100%',
+                height: isFullscreen ? 
+                  (aspectRatio === '1:1' ? 
+                    `${Math.min(window.innerWidth, window.innerHeight)}px` : '100vh') 
+                  : 'auto',
                 maxWidth: isFullscreen ? (
                   aspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
                   aspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' : '100vh'
@@ -371,7 +388,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
           
           {!inCaptureMode && (
             <>
-              {/* Mirror button (top right) */}
+              {/* Control buttons */}
               <button 
                 onClick={toggleMirror}
                 className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -379,7 +396,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 <FlipHorizontal className="w-5 h-5 text-white" />
               </button>
               
-              {/* Fullscreen button (bottom right) */}
               <button 
                 onClick={toggleFullscreen}
                 className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
@@ -390,7 +406,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 }
               </button>
               
-              {/* Aspect ratio button (top left) - cycle button */}
               <button
                 onClick={cycleAspectRatio}
                 className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -398,7 +413,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
                 <span className="text-xs font-bold text-white">{aspectRatio}</span>
               </button>
               
-              {/* Grid toggle button (bottom left) */}
               <button 
                 onClick={toggleGrid}
                 className="absolute bottom-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -410,8 +424,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         </div>
       </div>
       
-      {/* MIDDLE SECTION - Capture Button */}
-      <div className="py-4 flex justify-center">
+      {/* CAPTURE BUTTON - Always visible, even in fullscreen */}
+      <div className={`py-4 flex justify-center ${isFullscreen ? 'fixed bottom-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-sm' : ''}`}>
         {!inCaptureMode && (
           <div className="flex gap-4">
             <button 
@@ -426,36 +440,38 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ onCapture }) => {
         )}
       </div>
       
-      {/* BOTTOM SECTION - Filters */}
-      <div className="p-3 bg-transparent mt-2 mb-4">
-        <div className="flex justify-center">
-          <ToggleGroup 
-            type="single" 
-            value={activeFilter} 
-            onValueChange={(value) => !inCaptureMode && value && setActiveFilter(value as FilterType)}
-            className={inCaptureMode ? "opacity-50 pointer-events-none" : ""}
-          >
-            <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Normal
-            </ToggleGroupItem>
-            <ToggleGroupItem value="Warm" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Warm
-            </ToggleGroupItem>
-            <ToggleGroupItem value="Cool" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Cool
-            </ToggleGroupItem>
-            <ToggleGroupItem value="Vintage" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Vintage
-            </ToggleGroupItem>
-            <ToggleGroupItem value="B&W" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              B&W
-            </ToggleGroupItem>
-            <ToggleGroupItem value="Dramatic" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
-              Dramatic
-            </ToggleGroupItem>
-          </ToggleGroup>
+      {/* FILTERS - Only shown in non-fullscreen mode */}
+      {!isFullscreen && (
+        <div className="p-3 bg-transparent mt-2 mb-4">
+          <div className="flex justify-center">
+            <ToggleGroup 
+              type="single" 
+              value={activeFilter} 
+              onValueChange={(value) => !inCaptureMode && value && setActiveFilter(value as FilterType)}
+              className={inCaptureMode ? "opacity-50 pointer-events-none" : ""}
+            >
+              <ToggleGroupItem value="Normal" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+                Normal
+              </ToggleGroupItem>
+              <ToggleGroupItem value="Warm" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+                Warm
+              </ToggleGroupItem>
+              <ToggleGroupItem value="Cool" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+                Cool
+              </ToggleGroupItem>
+              <ToggleGroupItem value="Vintage" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+                Vintage
+              </ToggleGroupItem>
+              <ToggleGroupItem value="B&W" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+                B&W
+              </ToggleGroupItem>
+              <ToggleGroupItem value="Dramatic" className="text-xs data-[state=on]:bg-idol-gold data-[state=on]:text-black">
+                Dramatic
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
