@@ -7,7 +7,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { 
@@ -39,11 +38,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const [images, setImages] = useState<string[]>([]);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
-  const [photoGap, setPhotoGap] = useState<number>(50);
-  const [sidePadding, setSidePadding] = useState<number>(50);
-  const [topPadding, setTopPadding] = useState<number>(50);
   const [showDate, setShowDate] = useState<boolean>(true);
-  const [showDashedLines, setShowDashedLines] = useState<boolean>(false);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -69,7 +64,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     if (dialogOpen && canvasRef.current) {
       generatePhotoStrip(canvasRef.current, 1);
     }
-  }, [dialogOpen, selectedColor, customText, photoGap, sidePadding, topPadding, showDate, showDashedLines, aspectRatio]);
+  }, [dialogOpen, selectedColor, customText, showDate, aspectRatio]);
 
   const colors = [
     '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
@@ -86,6 +81,60 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     const b = parseInt(hex.substr(4, 2), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance < 0.5;
+  };
+
+  const getOptimalCanvasSettings = (aspectRatio: string, imagesCount: number): {
+    padding: number;
+    sideMargin: number;
+    topMargin: number;
+    stripWidth: number;
+  } => {
+    // Default values
+    let padding = 20;
+    let sideMargin = 30;
+    let topMargin = 30;
+    let stripWidth = 0;
+
+    switch (aspectRatio) {
+      case '1:1':
+        sideMargin = 40;
+        topMargin = 40;
+        stripWidth = 400; // Fixed width for square photos
+        break;
+      case '4:3':
+        sideMargin = 35;
+        topMargin = 35;
+        stripWidth = 450; // Fixed width for 4:3 photos
+        break;
+      case '3:2':
+        sideMargin = 35;
+        topMargin = 35;
+        stripWidth = 480; // Fixed width for 3:2 photos
+        break;
+      case '16:9':
+        sideMargin = 30;
+        topMargin = 30;
+        stripWidth = 520; // Fixed width for 16:9 photos
+        break;
+      case '9:16':
+        sideMargin = 25;
+        topMargin = 25;
+        stripWidth = 380; // Fixed width for 9:16 photos (vertical)
+        break;
+      default:
+        sideMargin = 35;
+        topMargin = 35;
+        stripWidth = 450;
+    }
+
+    // Adjust padding based on the number of images
+    if (imagesCount > 3) {
+      padding = 15; // Less padding for more images
+    } else if (imagesCount <= 2) {
+      padding = 30; // More padding for fewer images
+    }
+
+    return { padding, sideMargin, topMargin, stripWidth };
   };
 
   const generatePhotoStrip = (targetCanvas: HTMLCanvasElement, scale: number = 1) => {
@@ -110,83 +159,75 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const imgWidth = loadedImages[0].width * scale;
       const imgHeight = loadedImages[0].height * scale;
       
-      const padding = photoGap * scale;
-      const sideMargin = sidePadding * scale;
-      const topMargin = topPadding * scale;
+      // Get optimal settings based on aspect ratio and image count
+      const { padding, sideMargin, topMargin, stripWidth } = getOptimalCanvasSettings(aspectRatio, loadedImages.length);
       
-      let stripWidth = imgWidth + sideMargin * 2;
+      // Scale the settings
+      const scaledPadding = padding * scale;
+      const scaledSideMargin = sideMargin * scale;
+      const scaledTopMargin = topMargin * scale;
+      const scaledStripWidth = stripWidth * scale;
       
-      if (aspectRatio === '9:16' || aspectRatio === '3:2') {
-        stripWidth = Math.max(stripWidth, imgWidth * 1.3) + (sideMargin * 2);
-      }
-      
+      // Calculate the total height of all images with padding
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
-                          (padding * (loadedImages.length - 1));
+                          (scaledPadding * (loadedImages.length - 1));
       
+      // Add space for custom text and date at the bottom
       const textSpace = customText ? 120 * scale : 0;
       const dateSpace = showDate ? 80 * scale : 0;
-      const extraSpace = textSpace + dateSpace + (topMargin * 2);
+      const extraSpace = textSpace + dateSpace + (scaledTopMargin * 2);
       
-      const stripHeight = totalImagesHeight + extraSpace;
+      // Set the canvas dimensions
+      const calculatedWidth = Math.max(scaledStripWidth, imgWidth + (scaledSideMargin * 2));
+      canvas.width = calculatedWidth;
+      canvas.height = totalImagesHeight + extraSpace;
       
-      canvas.width = stripWidth;
-      canvas.height = stripHeight;
-      
+      // Fill the background
       ctx.fillStyle = selectedColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Top dashed line
-      ctx.setLineDash([8 * scale, 8 * scale]);
-      ctx.beginPath();
-      ctx.moveTo(0, 15 * scale);
-      ctx.lineTo(canvas.width, 15 * scale);
-      ctx.strokeStyle = isDarkColor(selectedColor) ? '#FFFFFF50' : '#00000050';
-      ctx.stroke();
-      
+      // Draw each image
       loadedImages.forEach((img, index) => {
-        const y = topMargin + (index * (imgHeight + padding));
+        const y = scaledTopMargin + (index * (imgHeight + scaledPadding));
         
+        // Add white border around each photo
         const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
         
-        const xPos = (stripWidth - imgWidth) / 2 - borderWidth;
+        // Center the image horizontally
+        const xPos = (canvas.width - imgWidth) / 2 - borderWidth;
         
+        // Draw white border
         ctx.fillRect(xPos, y - borderWidth, 
                    imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
         
+        // Draw the image
         ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
-        
-        // Only add dashed lines between photos (not for the first photo)
-        if (showDashedLines && index < loadedImages.length - 1) {
-          ctx.setLineDash([5 * scale, 5 * scale]);
-          ctx.beginPath();
-          ctx.moveTo(0, y + imgHeight + padding/2);
-          ctx.lineTo(canvas.width, y + imgHeight + padding/2);
-          ctx.strokeStyle = isDarkColor(selectedColor) ? '#FFFFFF50' : '#00000050';
-          ctx.stroke();
-        }
       });
       
+      // Add custom text if provided
       if (customText) {
-        const textY = stripHeight - (showDate ? 130 * scale : 60 * scale);
+        const textY = canvas.height - (showDate ? 130 * scale : 60 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
         ctx.font = `bold ${Math.max(24, 28 * scale)}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(customText, stripWidth / 2, textY);
+        ctx.fillText(customText, canvas.width / 2, textY);
       }
       
+      // Add date if enabled
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
         ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
         ctx.textAlign = 'center';
         const dateText = new Date().toLocaleDateString();
-        ctx.fillText(dateText, stripWidth / 2, stripHeight - 80 * scale);
+        ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
       }
       
+      // Add IdolBooth branding
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
       ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText("IdolBooth", stripWidth / 2, stripHeight - 35 * scale);
+      ctx.fillText("IdolBooth", canvas.width / 2, canvas.height - 35 * scale);
     });
   };
 
@@ -195,7 +236,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const scale = isMobile ? 0.3 : 0.4;
       generatePhotoStrip(thumbnailCanvasRef.current, scale);
     }
-  }, [images, selectedColor, customText, photoGap, sidePadding, topPadding, showDate, showDashedLines, isMobile, aspectRatio]);
+  }, [images, selectedColor, customText, showDate, isMobile, aspectRatio]);
 
   const handleDownload = () => {
     setIsGeneratingDownload(true);
@@ -442,52 +483,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
               
               <div className="glass-panel p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                  Photo strip settings
+                  Caption settings
                 </h2>
                 
                 <div className="space-y-6">
-                  <div>
-                    <label className="flex items-center justify-between mb-2">
-                      <span>Space between photos</span>
-                      <span className="text-sm text-gray-500">{photoGap}px</span>
-                    </label>
-                    <Slider
-                      value={[photoGap]}
-                      min={5}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => setPhotoGap(value[0])}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="flex items-center justify-between mb-2">
-                      <span>Side margins</span>
-                      <span className="text-sm text-gray-500">{sidePadding}px</span>
-                    </label>
-                    <Slider
-                      value={[sidePadding]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => setSidePadding(value[0])}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="flex items-center justify-between mb-2">
-                      <span>Top margin</span>
-                      <span className="text-sm text-gray-500">{topPadding}px</span>
-                    </label>
-                    <Slider
-                      value={[topPadding]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => setTopPadding(value[0])}
-                    />
-                  </div>
-                  
                   <div>
                     <label className="block mb-2">Custom caption text</label>
                     <input
@@ -500,36 +499,19 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
                     />
                   </div>
                   
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="showDate"
-                        checked={showDate}
-                        onCheckedChange={(checked) => 
-                          setShowDate(checked === true)}
-                      />
-                      <label 
-                        htmlFor="showDate"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Show date
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="showDashedLines"
-                        checked={showDashedLines}
-                        onCheckedChange={(checked) => 
-                          setShowDashedLines(checked === true)}
-                      />
-                      <label 
-                        htmlFor="showDashedLines"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Show dashed lines between photos
-                      </label>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="showDate"
+                      checked={showDate}
+                      onCheckedChange={(checked) => 
+                        setShowDate(checked === true)}
+                    />
+                    <label 
+                      htmlFor="showDate"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Show date
+                    </label>
                   </div>
                 </div>
               </div>

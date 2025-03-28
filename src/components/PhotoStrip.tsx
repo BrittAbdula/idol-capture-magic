@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -54,14 +55,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Draw dotted perforation lines at top
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(0, 15);
-      ctx.lineTo(canvas.width, 15);
-      ctx.strokeStyle = '#AAAAAA';
-      ctx.stroke();
-      
       // Apply the filter effect if needed
       if (filter !== 'Normal') {
         // Apply the filter manually based on filter type
@@ -101,29 +94,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
           }
           ctx.filter = filterStyle;
         }
-        
-        // Draw perforation line between photos (except after the last one)
-        if (index < loadedImages.length - 1) {
-          ctx.filter = 'none'; // Reset filter for dotted line
-          ctx.setLineDash([5, 5]);
-          ctx.beginPath();
-          ctx.moveTo(0, y + imgHeight + padding/2);
-          ctx.lineTo(canvas.width, y + imgHeight + padding/2);
-          ctx.strokeStyle = '#AAAAAA';
-          ctx.stroke();
-        }
       });
       
-      // Draw dotted perforation line at bottom
-      ctx.filter = 'none';
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height - 15);
-      ctx.lineTo(canvas.width, canvas.height - 15);
-      ctx.strokeStyle = '#AAAAAA';
-      ctx.stroke();
-      
       // Add footer at the bottom of the receipt
+      ctx.filter = 'none';
       ctx.fillStyle = '#333333';
       ctx.font = '10px monospace';
       ctx.fillText('Thank you for using IdolBooth!', stripPadding + 10, canvas.height - 25);
@@ -169,7 +143,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
                   {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                 </div>
                 {index < images.length - 1 && (
-                  <div className="w-full border-t border-dashed border-gray-300 my-4"></div>
+                  <div className="w-full border-t border-gray-300 my-4"></div>
                 )}
               </div>
             ))}
