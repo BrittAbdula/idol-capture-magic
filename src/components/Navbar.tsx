@@ -51,8 +51,14 @@ const Navbar = () => {
           <Link to="/" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/' ? 'text-idol-gold' : ''}`}>
             Home
           </Link>
-          <Link to="/photo-booth" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-booth' ? 'text-idol-gold' : ''}`}>
+          <Link to="/photo-booth" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : ''}`}>
             Photo Booth
+          </Link>
+          <Link to="/template" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') ? 'text-idol-gold' : ''}`}>
+            Templates
+          </Link>
+          <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
+            Photo Strip
           </Link>
           <Link to="/" className="idol-button-square text-sm py-2">
             Try Now
@@ -76,8 +82,14 @@ const Navbar = () => {
             <Link to="/" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/' ? 'text-idol-gold' : 'text-white'}`}>
               Home
             </Link>
-            <Link to="/photo-booth" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-booth' ? 'text-idol-gold' : 'text-white'}`}>
+            <Link to="/photo-booth" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : 'text-white'}`}>
               Photo Booth
+            </Link>
+            <Link to="/template" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/template') ? 'text-idol-gold' : 'text-white'}`}>
+              Templates
+            </Link>
+            <Link to="/photo-strip" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : 'text-white'}`}>
+              Photo Strip
             </Link>
             <Link to="/photo-booth" className="idol-button-square mt-4">
               Try Now

@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Camera, Upload, Image as ImageIcon, Settings2 } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import WebcamCapture from '../components/WebcamCapture';
-import PhotoUpload from '../components/PhotoUpload';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +34,6 @@ const PhotoBooth: React.FC = () => {
   const templateFromQuery = searchParams.get('template');
   
   // State for photo booth
-  const [captureMethod, setCaptureMethod] = useState<'webcam' | 'upload'>('webcam');
   const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const [filter, setFilter] = useState('Normal');
@@ -131,22 +128,6 @@ const PhotoBooth: React.FC = () => {
     // If we have enough photos, navigate to the photo strip page
     if (images.length >= photoNum) {
       navigate('/photo-strip');
-    }
-  };
-  
-  // Handle user photo upload
-  const handleUserPhotoUpload = async (file: File) => {
-    try {
-      const imageUrl = URL.createObjectURL(file);
-      const images = Array(photoNum).fill(imageUrl);
-      setPhotoStripImages(images);
-      updatePhotos(images);
-      
-      // Navigate to photo strip page with the images
-      navigate('/photo-strip');
-    } catch (error) {
-      console.error("Error processing user photo:", error);
-      toast.error("Failed to process user photo");
     }
   };
   
@@ -335,42 +316,16 @@ const PhotoBooth: React.FC = () => {
           
           <div className="flex flex-col items-center">
             <div className="w-full max-w-xl mx-auto mb-6">
-              <Tabs 
-                defaultValue={captureMethod} 
-                onValueChange={(value) => setCaptureMethod(value as 'webcam' | 'upload')}
-                className="w-full"
-              >
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="webcam" className="flex items-center gap-2">
-                    <Camera className="w-4 h-4" />
-                    <span>Use Camera</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="upload" className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    <span>Upload Photos</span>
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="webcam" className="overflow-hidden rounded-lg shadow-md">
-                  <WebcamCapture 
-                    onCapture={handlePhotoStripCapture}
-                    aspectRatio={aspectRatio}
-                    photoLimit={photoNum}
-                    countdownTime={countdown}
-                    defaultFilter={filter}
-                    lightColor={lightColor}
-                    playSound={playSound}
-                    idolOverlay={currentTemplate?.idolOverlay}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="upload">
-                  <PhotoUpload
-                    onUpload={handleUserPhotoUpload}
-                    label="Upload Your Photos"
-                  />
-                </TabsContent>
-              </Tabs>
+              <WebcamCapture 
+                onCapture={handlePhotoStripCapture}
+                aspectRatio={aspectRatio}
+                photoLimit={photoNum}
+                countdownTime={countdown}
+                defaultFilter={filter}
+                lightColor={lightColor}
+                playSound={playSound}
+                idolOverlay={currentTemplate?.idolOverlay}
+              />
             </div>
             
             <div className="w-full max-w-4xl">
