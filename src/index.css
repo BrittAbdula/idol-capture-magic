@@ -45,109 +45,6 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* Theme variables */
-    --idol-gold: #FFD700;
-    --idol-gray: #F0F0F0;
-    --idol-primary: #FFD700;
-    --idol-secondary: #C0C0C0;
-    --idol-accent: #F0F0F0;
-  }
-
-  /* Neon Pop Theme */
-  [data-theme="neonpop"] {
-    --idol-gold: #FF007F;
-    --idol-gray: #0a0a20;
-    --idol-primary: #007BFF;
-    --idol-secondary: #FF007F;
-    --idol-accent: #8000FF;
-
-    --background: 240 50% 5%;
-    --foreground: 210 40% 98%;
-    --card: 240 40% 10%;
-    --card-foreground: 210 40% 98%;
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 328 100% 50%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 270 100% 50%;
-    --accent-foreground: 210 40% 98%;
-    --muted: 240 30% 15%;
-    --muted-foreground: 240 30% 70%;
-    --border: 240 30% 20%;
-    --ring: 328 100% 50%;
-  }
-
-  /* Millennial Pink Theme */
-  [data-theme="millennial"] {
-    --idol-gold: #FFD700;
-    --idol-gray: #FFF5F7;
-    --idol-primary: #FFB6C1;
-    --idol-secondary: #FFD700;
-    --idol-accent: #81D8D0;
-
-    --background: 350 100% 98%;
-    --foreground: 340 40% 30%;
-    --card: 350 60% 97%;
-    --card-foreground: 340 40% 30%;
-    --primary: 350 100% 85%;
-    --primary-foreground: 340 40% 30%;
-    --secondary: 50 100% 50%;
-    --secondary-foreground: 340 40% 30%;
-    --accent: 175 50% 68%;
-    --accent-foreground: 340 40% 30%;
-    --muted: 350 30% 90%;
-    --muted-foreground: 340 30% 50%;
-    --border: 350 60% 90%;
-    --ring: 350 100% 85%;
-  }
-
-  /* Retro Cyberpunk Theme */
-  [data-theme="retro"] {
-    --idol-gold: #00FF7F;
-    --idol-gray: #1A1A2E;
-    --idol-primary: #00FF7F;
-    --idol-secondary: #FFA500;
-    --idol-accent: #1E90FF;
-
-    --background: 240 20% 15%;
-    --foreground: 0 0% 95%;
-    --card: 240 25% 20%;
-    --card-foreground: 0 0% 95%;
-    --primary: 150 100% 50%;
-    --primary-foreground: 240 20% 10%;
-    --secondary: 30 100% 50%;
-    --secondary-foreground: 240 20% 10%;
-    --accent: 210 90% 55%;
-    --accent-foreground: 0 0% 95%;
-    --muted: 240 20% 25%;
-    --muted-foreground: 0 0% 70%;
-    --border: 240 20% 30%;
-    --ring: 150 100% 50%;
-  }
-
-  /* Minimal Beige Theme */
-  [data-theme="minimal"] {
-    --idol-gold: #D2B48C;
-    --idol-gray: #F8F7F4;
-    --idol-primary: #F5F5DC;
-    --idol-secondary: #D2B48C;
-    --idol-accent: #8F9779;
-
-    --background: 60 30% 97%;
-    --foreground: 35 20% 25%;
-    --card: 60 15% 94%;
-    --card-foreground: 35 20% 25%;
-    --primary: 60 50% 91%;
-    --primary-foreground: 35 20% 25%;
-    --secondary: 35 30% 68%;
-    --secondary-foreground: 35 20% 25%;
-    --accent: 90 10% 53%;
-    --accent-foreground: 35 20% 25%;
-    --muted: 60 10% 88%;
-    --muted-foreground: 35 20% 40%;
-    --border: 60 15% 85%;
-    --ring: 35 30% 68%;
   }
 
   .dark {
@@ -214,22 +111,22 @@
   
   .idol-button {
     @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
-           hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-[var(--idol-gold)];
+           hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
   
   .idol-button-square {
     @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 transition-all duration-300 
-           hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-[var(--idol-gold)];
+           hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
   
   .idol-button-outline {
     @apply border-2 border-idol-gold text-idol-gold font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
-           hover:bg-[var(--idol-gold)] hover:bg-opacity-10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-[var(--idol-gold)];
+           hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
   
   .idol-button-outline-square {
     @apply border-2 border-idol-gold text-idol-gold font-montserrat font-semibold py-3 px-6 transition-all duration-300 
-           hover:bg-[var(--idol-gold)] hover:bg-opacity-10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-[var(--idol-gold)];
+           hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
   
   .neo-panel {
@@ -250,26 +147,5 @@
 
   .hover-scale {
     @apply transition-transform duration-300 hover:scale-[1.02];
-  }
-
-  /* Theme-specific styles */
-  [data-theme="neonpop"] .neo-panel {
-    @apply bg-black/40 border border-[var(--idol-primary)] border-opacity-30 shadow-neon;
-  }
-
-  [data-theme="neonpop"] .glass-panel {
-    @apply bg-black/40 backdrop-blur-md border border-[var(--idol-secondary)] border-opacity-30;
-  }
-
-  [data-theme="millennial"] .neo-panel {
-    @apply bg-pink-50 border border-pink-200 shadow-none;
-  }
-
-  [data-theme="retro"] .neo-panel {
-    @apply bg-slate-900 border border-[var(--idol-primary)] border-opacity-50 shadow-neon;
-  }
-
-  [data-theme="minimal"] .neo-panel {
-    @apply bg-idol-gray border border-[var(--idol-secondary)] border-opacity-20 shadow-sm;
   }
 }

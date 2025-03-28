@@ -65,34 +65,10 @@ export default {
 				},
 				idol: {
 					black: '#000000',
-					gold: 'var(--idol-gold)',
+					gold: '#FFD700',
 					silver: '#C0C0C0',
 					white: '#FFFFFF',
-					gray: 'var(--idol-gray)',
-					primary: 'var(--idol-primary)',
-					secondary: 'var(--idol-secondary)',
-					accent: 'var(--idol-accent)',
-				},
-				// Theme-specific colors
-				neonpop: {
-					primary: '#007BFF',   // Electric Blue
-					secondary: '#FF007F', // Neon Pink
-					accent: '#8000FF',    // Violet
-				},
-				millennial: {
-					primary: '#FFB6C1',   // Millennial Pink
-					secondary: '#FFD700', // Cream Yellow
-					accent: '#81D8D0',    // Tiffany Blue
-				},
-				retro: {
-					primary: '#00FF7F',   // Fluorescent Green
-					secondary: '#FFA500', // Bright Orange
-					accent: '#1E90FF',    // Gem Blue
-				},
-				minimal: {
-					primary: '#F5F5DC',   // Cream White
-					secondary: '#D2B48C', // Light Brown
-					accent: '#8F9779',    // Olive Green
+					gray: '#F0F0F0',
 				}
 			},
 			borderRadius: {
@@ -175,7 +151,6 @@ export default {
 				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
 				'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
 				'neo': '8px 8px 16px #d1d1d1, -8px -8px 16px #ffffff',
-				'neon': '0 0 5px var(--idol-primary), 0 0 20px var(--idol-primary)',
 			},
 			backdropBlur: {
 				'glass': 'blur(16px)',
@@ -183,29 +158,4 @@ export default {
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
-	safelist: [
-		{
-		  pattern: /^ring-idol-/,
-		  variants: ['focus', 'hover'],
-		},
-		{
-		  pattern: /idol-(gold|primary|secondary|accent)\/\d+/,
-		},
-		{
-		  pattern: /^bg-idol-/,
-		  variants: ['hover', 'focus'],
-		},
-		{
-		  pattern: /^bg-opacity-/,
-		  variants: ['hover', 'focus'],
-		},
-		{
-		  pattern: /^border-idol-/,
-		  variants: ['hover', 'focus'],
-		},
-		{
-		  pattern: /^border-opacity-/,
-		  variants: ['hover', 'focus'],
-		}
-	]
 } satisfies Config;

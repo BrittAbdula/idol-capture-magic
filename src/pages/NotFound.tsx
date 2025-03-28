@@ -1,7 +1,8 @@
+
 import React, { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Home, AlertTriangle } from "lucide-react";
-import NavbarThemed from "../components/NavbarThemed";
+import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const NotFound = () => {
@@ -16,7 +17,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <NavbarThemed />
+      <Navbar />
       
       <main className="flex-grow flex items-center justify-center py-20">
         <div className="container mx-auto px-4 md:px-6 text-center max-w-lg">

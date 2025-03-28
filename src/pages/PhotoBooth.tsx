@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
-import NavbarThemed from '../components/NavbarThemed';
+import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import WebcamCapture from '../components/WebcamCapture';
 import PhotoUpload from '../components/PhotoUpload';
@@ -213,7 +214,7 @@ const PhotoBooth = () => {
   
   return (
     <div className="min-h-screen">
-      <NavbarThemed />
+      <Navbar />
       
       <main className="pt-32 pb-24 px-4">
         {renderStepContent()}
