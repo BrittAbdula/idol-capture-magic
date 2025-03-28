@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Download, Undo2, Type, Image as ImageIcon, Maximize2, X, Printer, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import Navbar from '../components/Navbar';
+import NavbarThemed from '../components/NavbarThemed';
 import Footer from '../components/Footer';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     topMargin: number;
     stripWidth: number;
   } => {
-    // Default values
     let padding = 20;
     let sideMargin = 30;
     let topMargin = 30;
@@ -99,27 +97,27 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       case '1:1':
         sideMargin = 40;
         topMargin = 40;
-        stripWidth = 400; // Fixed width for square photos
+        stripWidth = 400;
         break;
       case '4:3':
         sideMargin = 35;
         topMargin = 35;
-        stripWidth = 450; // Fixed width for 4:3 photos
+        stripWidth = 450;
         break;
       case '3:2':
         sideMargin = 35;
         topMargin = 35;
-        stripWidth = 480; // Fixed width for 3:2 photos
+        stripWidth = 480;
         break;
       case '16:9':
         sideMargin = 30;
         topMargin = 30;
-        stripWidth = 520; // Fixed width for 16:9 photos
+        stripWidth = 520;
         break;
       case '9:16':
         sideMargin = 25;
         topMargin = 25;
-        stripWidth = 380; // Fixed width for 9:16 photos (vertical)
+        stripWidth = 380;
         break;
       default:
         sideMargin = 35;
@@ -127,11 +125,10 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         stripWidth = 450;
     }
 
-    // Adjust padding based on the number of images
     if (imagesCount > 3) {
-      padding = 15; // Less padding for more images
+      padding = 15;
     } else if (imagesCount <= 2) {
-      padding = 30; // More padding for fewer images
+      padding = 30;
     }
 
     return { padding, sideMargin, topMargin, stripWidth };
@@ -159,53 +156,41 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const imgWidth = loadedImages[0].width * scale;
       const imgHeight = loadedImages[0].height * scale;
       
-      // Get optimal settings based on aspect ratio and image count
       const { padding, sideMargin, topMargin, stripWidth } = getOptimalCanvasSettings(aspectRatio, loadedImages.length);
       
-      // Scale the settings
       const scaledPadding = padding * scale;
       const scaledSideMargin = sideMargin * scale;
       const scaledTopMargin = topMargin * scale;
       const scaledStripWidth = stripWidth * scale;
       
-      // Calculate the total height of all images with padding
       const totalImagesHeight = (imgHeight * loadedImages.length) + 
                           (scaledPadding * (loadedImages.length - 1));
       
-      // Add space for custom text and date at the bottom
       const textSpace = customText ? 120 * scale : 0;
       const dateSpace = showDate ? 80 * scale : 0;
       const extraSpace = textSpace + dateSpace + (scaledTopMargin * 2);
       
-      // Set the canvas dimensions
       const calculatedWidth = Math.max(scaledStripWidth, imgWidth + (scaledSideMargin * 2));
       canvas.width = calculatedWidth;
       canvas.height = totalImagesHeight + extraSpace;
       
-      // Fill the background
       ctx.fillStyle = selectedColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Draw each image
       loadedImages.forEach((img, index) => {
         const y = scaledTopMargin + (index * (imgHeight + scaledPadding));
         
-        // Add white border around each photo
         const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
         
-        // Center the image horizontally
         const xPos = (canvas.width - imgWidth) / 2 - borderWidth;
         
-        // Draw white border
         ctx.fillRect(xPos, y - borderWidth, 
                    imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
         
-        // Draw the image
         ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
       });
       
-      // Add custom text if provided
       if (customText) {
         const textY = canvas.height - (showDate ? 130 * scale : 60 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
@@ -214,7 +199,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.fillText(customText, canvas.width / 2, textY);
       }
       
-      // Add date if enabled
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
         ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
@@ -223,7 +207,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
       }
       
-      // Add IdolBooth branding
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
       ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
@@ -384,7 +367,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <NavbarThemed />
       
       <main className="pt-28 pb-20 px-4">
         <div className="max-w-6xl mx-auto">

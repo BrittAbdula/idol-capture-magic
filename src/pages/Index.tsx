@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Star, Image, Sparkles, ArrowRight, Upload, Download } from 'lucide-react';
-import Navbar from '../components/Navbar';
+import NavbarThemed from '../components/NavbarThemed';
 import Footer from '../components/Footer';
 
 const Index = () => {
@@ -29,8 +29,8 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white" ref={animatedElementsRef}>
-      <Navbar />
+    <div className="min-h-screen bg-background" ref={animatedElementsRef}>
+      <NavbarThemed />
       
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
