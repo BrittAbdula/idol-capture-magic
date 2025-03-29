@@ -54,12 +54,14 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     height: 0
   });
   const [overlayImages, setOverlayImages] = useState<HTMLImageElement[]>([]);
+  const sessionCompleteRef = useRef(false);
 
-  // Update the current photoLimit when it changes from props
+  // Log photoLimit updates to help with debugging
   useEffect(() => {
     console.log("PhotoLimit updated:", photoLimit);
   }, [photoLimit]);
 
+  // Handle window resize and container changes
   useEffect(() => {
     const updateSizes = () => {
       if (videoContainerRef.current && videoRef.current) {
@@ -97,6 +99,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   }, [isStreaming, currentAspectRatio, isFullscreen]);
 
+  // Load overlay images when they change
   useEffect(() => {
     if (photoOverlays && photoOverlays.length > 0) {
       const loadImages = photoOverlays.map((overlay, index) => {
@@ -119,6 +122,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [photoOverlays]);
 
+  // Initialize audio for camera shutter sound
   useEffect(() => {
     if (playSound) {
       audioRef.current = new Audio('/audio/camera-shutter.mp3');
@@ -127,6 +131,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [playSound]);
 
+  // Initialize overlay refs
   useEffect(() => {
     if (photoOverlays && photoOverlays.length > 0) {
       photoOverlayRefs.current = Array(photoOverlays.length).fill(null);
@@ -145,14 +150,17 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [photoOverlays]);
 
+  // Update aspect ratio when prop changes
   useEffect(() => {
     setCurrentAspectRatio(aspectRatio as AspectRatioType);
   }, [aspectRatio]);
 
+  // Update filter when prop changes
   useEffect(() => {
     setActiveFilter(defaultFilter as FilterType || 'Normal');
   }, [defaultFilter]);
 
+  // Start webcam
   const startWebcam = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -183,6 +191,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [currentAspectRatio]);
 
+  // Stop webcam
   const stopWebcam = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -197,7 +206,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, []);
 
-  // This helper ensures we use the correct overlay for the current photo count
+  // Get current overlay for the photo being taken
   const getCurrentOverlay = useCallback(() => {
     if (!photoOverlays || photoOverlays.length === 0) return null;
     
@@ -206,6 +215,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return photoOverlays[overlayIndex];
   }, [photoOverlays, photoCount]);
 
+  // Calculate position for the overlay
   const calculateOverlayPosition = useCallback((overlay: PhotoOverlay, index: number) => {
     if (!overlay || !overlay.position) return { x: 0, y: 0 };
     
@@ -235,6 +245,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return { x: scaledX, y: scaledY };
   }, []);
 
+  // Capture an image from the webcam
   const captureImage = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -361,22 +372,36 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         const newCapturedImages = [...capturedImages, imageDataURL];
         
         setCapturedImages(newCapturedImages);
-        setPhotoCount(prevCount => prevCount + 1);
         
+        // Update photoCount separately from updating capturedImages to avoid timing issues
+        const nextPhotoCount = photoCount + 1;
+        setPhotoCount(nextPhotoCount);
+        
+        // Update parent component with new images
         onCapture(newCapturedImages, currentAspectRatio);
         
+        // Flash effect
         setIsCapturing(true);
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
   }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays, overlayImages]);
 
+  // Handle photo count logic and session completion
   useEffect(() => {
-    // Check if photoCount exactly equals photoLimit (not greater than)
-    if (photoCount === photoLimit) {
+    // Reset session complete flag when starting a new session
+    if (photoCount === 0) {
+      sessionCompleteRef.current = false;
+    }
+    
+    // Check if we've completed the session (exactly at the limit)
+    if (photoCount === photoLimit && !sessionCompleteRef.current) {
       console.log(`Photo strip complete! Took ${photoCount} of ${photoLimit} photos`);
       toast.success("Photo strip complete!");
-    } else if (photoCount > 0 && photoCount < photoLimit) {
+      sessionCompleteRef.current = true; // Mark session as complete to avoid duplicate messages
+    } 
+    // Continue with more photos if we're not at the limit yet
+    else if (photoCount > 0 && photoCount < photoLimit) {
       console.log(`Preparing for next photo: ${photoCount + 1} of ${photoLimit}`);
       const timer = setTimeout(() => {
         startCountdown();
@@ -386,6 +411,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [photoCount, photoLimit]);
 
+  // Start countdown timer before capturing
   const startCountdown = useCallback(() => {
     setCountdownValue(countdownTime);
     
@@ -399,19 +425,30 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         return prev ? prev - 1 : null;
       });
     }, 1000);
+    
+    // Cleanup interval if component unmounts during countdown
+    return () => clearInterval(countdownInterval);
   }, [captureImage, countdownTime]);
 
+  // Start a new photo session
   const startPhotoSession = useCallback(() => {
+    // Reset state for a new session
     setCapturedImages([]);
     setPhotoCount(0);
+    
+    // Reset in parent component
     onCapture([], currentAspectRatio);
+    
+    // Start the countdown for the first photo
     startCountdown();
   }, [startCountdown, onCapture, currentAspectRatio]);
 
+  // Toggle mirror effect
   const toggleMirror = useCallback(() => {
     setMirrored(prev => !prev);
   }, []);
 
+  // Toggle fullscreen mode
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       if (containerRef.current?.requestFullscreen) {
@@ -426,6 +463,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, []);
 
+  // Handle fullscreen change events
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -438,6 +476,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   }, []);
 
+  // Initialize webcam on component mount
   useEffect(() => {
     startWebcam();
     return () => {
@@ -445,6 +484,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   }, [startWebcam, stopWebcam]);
 
+  // Cycle through aspect ratios
   const cycleAspectRatio = useCallback(() => {
     setCurrentAspectRatio(prev => {
       switch (prev) {
@@ -457,10 +497,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     });
   }, []);
 
+  // Toggle composition grid overlay
   const toggleGrid = useCallback(() => {
     setShowGrid(prev => !prev);
   }, []);
 
+  // Create CSS styles for container based on aspect ratio and fullscreen state
   const getContainerStyle = () => {
     let containerStyle: React.CSSProperties = {
       position: 'relative',
@@ -488,6 +530,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return containerStyle;
   };
 
+  // Create CSS styles for video element
   const getVideoStyle = () => {
     let videoStyle: React.CSSProperties = {
       transform: mirrored ? 'scaleX(-1)' : 'none',
@@ -525,6 +568,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return videoStyle;
   };
 
+  // CSS class for applying filter effects
   const getFilterClassName = () => {
     switch (activeFilter) {
       case 'Warm': return 'sepia-[0.3] brightness-105';
@@ -536,6 +580,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   };
 
+  // Style for overlay container
   const getCroppedOverlayContainerStyle = () => {
     const aspectRatioRect = getAspectRatioRect();
     
@@ -548,6 +593,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   };
 
+  // Calculate aspect ratio rectangle dimensions
   const getAspectRatioRect = () => {
     let width, height;
     
@@ -577,6 +623,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   };
 
+  // Convert overlay position to percentage values
   const getOverlayPositionInPercentages = (overlay: PhotoOverlay) => {
     if (!overlay || !overlay.position) return { x: 50, y: 50 };
     
@@ -588,6 +635,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return position;
   };
 
+  // Style for positioning overlay images
   const getOverlayPositionStyle = (overlay: PhotoOverlay) => {
     if (!overlay || !overlay.position) return {};
     
@@ -620,6 +668,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   };
 
+  // Flag to check if we're in capture mode
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
   // Get the current overlay based on photoCount

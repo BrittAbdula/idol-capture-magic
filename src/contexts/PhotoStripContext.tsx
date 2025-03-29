@@ -154,6 +154,7 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
 
   const updatePhotos = (photos: string[]) => {
     if (photoStripData) {
+      console.log(`Updating photos in context. Count: ${photos.length}`);
       setPhotoStripData({
         ...photoStripData,
         photos
@@ -190,6 +191,7 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
 
   const updatePhotoOverlays = (overlays: PhotoOverlay[]) => {
     if (photoStripData) {
+      console.log(`Updating overlays in context. Count: ${overlays.length}`);
       setPhotoStripData({
         ...photoStripData,
         photoOverlays: overlays

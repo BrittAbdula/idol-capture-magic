@@ -62,7 +62,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       if (loadedImages.length === 0) return;
       
       // Separate loaded images and overlays
-      const photoImages = loadedImages.slice(0, images.length);
+      const photoImages = loadedImages.slice(0, images.length) as HTMLImageElement[];
       const overlayImages = loadOverlays.length > 0 ? 
                             loadedImages.slice(images.length).filter(Boolean) as HTMLImageElement[] : [];
       

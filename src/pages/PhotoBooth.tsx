@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -108,38 +109,61 @@ const PhotoBooth: React.FC = () => {
     loadTemplateSettings();
   }, [templateFromQuery, setCurrentTemplate, setPhotoStripData, filter, lightColor, playSound]);
   
+  // Ensure photoNum is synced with photoStripData and overlays are properly initialized
   useEffect(() => {
-    if (photoStripData && photoNum > 0 && (!currentPhotoOverlays || currentPhotoOverlays.length < photoNum)) {
-      const updatedOverlays = [...currentPhotoOverlays];
-      while (updatedOverlays.length < photoNum) {
-        const index = updatedOverlays.length;
-        if (index < currentPhotoOverlays.length) {
-          updatedOverlays.push(currentPhotoOverlays[index]);
-        } else {
-          updatedOverlays.push({
-            url: "/placeholder.svg",
-            position: { x: 50, y: 50 },
-            scale: 1.0,
-            canvasSize: photoStripData.canvasSize,
-            photoPosition: photoStripData.photoPositions[index] || null
-          });
+    if (photoStripData) {
+      // Only update state if the values are different to avoid infinite loops
+      if (photoStripData.photoBoothSettings.photoNum !== photoNum) {
+        setPhotoNum(photoStripData.photoBoothSettings.photoNum);
+      }
+      
+      // Ensure we have the right number of overlays
+      if (photoNum > 0) {
+        const updatedOverlays = [...currentPhotoOverlays];
+        
+        // Add or remove overlays as needed to match photoNum
+        while (updatedOverlays.length < photoNum) {
+          const index = updatedOverlays.length;
+          if (index < currentPhotoOverlays.length) {
+            updatedOverlays.push(currentPhotoOverlays[index]);
+          } else {
+            updatedOverlays.push({
+              url: "/placeholder.svg",
+              position: { x: 50, y: 50 },
+              scale: 1.0,
+              canvasSize: photoStripData.canvasSize,
+              photoPosition: photoStripData.photoPositions[index] || null
+            });
+          }
+        }
+        
+        // Trim to photoNum if we have too many
+        const finalOverlays = updatedOverlays.slice(0, photoNum);
+        
+        // Only update if the overlays have actually changed
+        if (JSON.stringify(finalOverlays) !== JSON.stringify(currentPhotoOverlays)) {
+          setCurrentPhotoOverlays(finalOverlays);
         }
       }
-      
-      setCurrentPhotoOverlays(updatedOverlays.slice(0, photoNum));
-      
-      // Update photoBoothSettings in photoStripData when photoNum changes
-      if (photoStripData.photoBoothSettings.photoNum !== photoNum) {
-        setPhotoStripData({
-          ...photoStripData,
-          photoBoothSettings: {
-            ...photoStripData.photoBoothSettings,
-            photoNum: photoNum
-          }
-        });
-      }
     }
-  }, [photoNum, photoStripData, currentPhotoOverlays, setPhotoStripData]);
+  }, [photoNum, photoStripData, currentPhotoOverlays]);
+  
+  // Handle photoNum changes from UI
+  const handlePhotoNumChange = (value: string) => {
+    const newPhotoNum = Number(value);
+    setPhotoNum(newPhotoNum);
+    
+    // Update photoStripData with the new photoNum
+    if (photoStripData) {
+      setPhotoStripData({
+        ...photoStripData,
+        photoBoothSettings: {
+          ...photoStripData.photoBoothSettings,
+          photoNum: newPhotoNum
+        }
+      });
+    }
+  };
   
   useEffect(() => {
     return () => {
@@ -158,10 +182,13 @@ const PhotoBooth: React.FC = () => {
   }, [photoNum]);
   
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
+    // Update local state with the new images
     setPhotoStripImages(images);
     
+    // Update the photos in the PhotoStripContext
     updatePhotos(images);
     
+    // Update overlays if we have them
     if (photoStripData && currentPhotoOverlays.length > 0) {
       updatePhotoOverlays(currentPhotoOverlays);
     }
@@ -170,6 +197,7 @@ const PhotoBooth: React.FC = () => {
       setAspectRatio(selectedAspectRatio);
     }
     
+    // Only navigate when we have the expected number of photos
     if (images.length >= photoNum) {
       navigate('/photo-strip');
     }
@@ -466,6 +494,9 @@ const PhotoBooth: React.FC = () => {
               <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Photo Booth Settings</DialogTitle>
+                  <DialogDescription>
+                    Customize your photo booth experience
+                  </DialogDescription>
                 </DialogHeader>
                 
                 <Tabs defaultValue="general" value={settingsTab} onValueChange={setSettingsTab}>
@@ -498,7 +529,7 @@ const PhotoBooth: React.FC = () => {
                         <Label htmlFor="photo-count">Number of Photos</Label>
                         <Select 
                           value={photoNum.toString()}
-                          onValueChange={(value) => setPhotoNum(Number(value))}
+                          onValueChange={handlePhotoNumChange}
                         >
                           <SelectTrigger id="photo-count">
                             <SelectValue placeholder="Select number of photos" />
