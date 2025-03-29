@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,11 +22,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   const [renderedImages, setRenderedImages] = useState<string[]>([]);
   const [renderedOverlays, setRenderedOverlays] = useState<PhotoOverlay[]>([]);
   const stripRef = useRef<HTMLDivElement>(null);
-
-  // Process incoming images and set them for rendering
+  
+  // Process incoming images and set them for rendering - with stable dependency array
   useEffect(() => {
     console.log("PhotoStrip component - Images received:", images?.length || 0);
-    console.log("PhotoStrip component - Overlays received:", photoOverlays?.length || 0);
     
     // Validate images array
     if (Array.isArray(images) && images.length > 0) {
@@ -48,9 +46,13 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       console.error("PhotoStrip - Invalid or empty images array", images);
       setLoaded(false);
     }
-    
+  }, [images]); // Only depend on images, not derived state
+  
+  // Process overlays separately to avoid dependency cycles
+  useEffect(() => {
     // Process overlays if they exist
     if (photoOverlays && photoOverlays.length > 0) {
+      console.log("PhotoStrip - Overlays received:", photoOverlays.length);
       const validOverlays = photoOverlays.filter(overlay => 
         overlay && overlay.url && overlay.url !== "/placeholder.svg"
       );
@@ -60,7 +62,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     } else {
       setRenderedOverlays([]);
     }
-  }, [images, photoOverlays]);
+  }, [photoOverlays]); // Only depend on photoOverlays
 
   const getFilterClassName = () => {
     switch (filter) {

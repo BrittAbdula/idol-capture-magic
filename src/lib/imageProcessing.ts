@@ -111,13 +111,14 @@ export const processPhotoStripData = (photoStripData: PhotoStrip | null): {
     photoStripData.photos?.length || 0, "photos and", 
     photoStripData.photoOverlays?.length || 0, "overlays");
 
-  // Check if we have valid photos
+  // Check if we have valid photos - avoid circular JSON stringify for logging
   const hasValidPhotos = Array.isArray(photoStripData.photos) && 
     photoStripData.photos.length > 0 &&
     photoStripData.photos.every(photo => typeof photo === 'string' && photo.trim() !== '');
 
   if (!hasValidPhotos) {
-    console.error("processPhotoStripData: Invalid photo data", photoStripData.photos);
+    console.error("processPhotoStripData: Invalid photo data", 
+      Array.isArray(photoStripData.photos) ? photoStripData.photos.length : "not an array");
   } else {
     console.log("processPhotoStripData: Valid photos found:", photoStripData.photos.length);
   }
@@ -127,13 +128,27 @@ export const processPhotoStripData = (photoStripData: PhotoStrip | null): {
     photoStripData.photos.filter(photo => typeof photo === 'string' && photo.trim() !== '') : 
     [];
 
-  // Also validate overlays if they exist
-  const processedOverlays = photoStripData.photoOverlays?.map(overlay => ({
-    ...overlay,
-    url: overlay.url || "/placeholder.svg",
-    position: overlay.position || { x: 0, y: 0 },
-    scale: overlay.scale || 1
-  }));
+  // Create a safe copy of overlays if they exist
+  let processedOverlays: PhotoOverlay[] | undefined = undefined;
+  
+  if (photoStripData.photoOverlays && Array.isArray(photoStripData.photoOverlays)) {
+    processedOverlays = photoStripData.photoOverlays.map(overlay => {
+      // Create a new object without circular references
+      return {
+        url: overlay.url || "/placeholder.svg",
+        position: { ...overlay.position } || { x: 0, y: 0 },
+        scale: overlay.scale || 1,
+        // Exclude the circular reference properties
+        canvasSize: overlay.canvasSize ? 
+          { width: overlay.canvasSize.width, height: overlay.canvasSize.height } : 
+          undefined,
+        photoPosition: overlay.photoPosition ? 
+          { x: overlay.photoPosition.x, y: overlay.photoPosition.y, 
+            width: overlay.photoPosition.width, height: overlay.photoPosition.height } : 
+          null
+      };
+    });
+  }
 
   return { 
     hasValidPhotos, 

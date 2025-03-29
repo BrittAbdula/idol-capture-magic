@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import MultiPhotoUpload from '../components/MultiPhotoUpload';
 import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { templates } from '../data/templates';
 import PhotoStrip from '../components/PhotoStrip';
+import { processPhotoStripData } from '@/lib/imageProcessing';
 
 const PhotoStripPage: React.FC = () => {
   const { photoStripData, setPhotoStripData, updatePhotos, updateBackground, updateText, updateDecoration, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
@@ -35,16 +36,23 @@ const PhotoStripPage: React.FC = () => {
   const [isSharing, setIsSharing] = useState<boolean>(false);
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [dataInitialized, setDataInitialized] = useState<boolean>(false);
+
+  const processedData = useMemo(() => {
+    if (!photoStripData) return { hasValidPhotos: false, processedPhotos: [], processedOverlays: undefined };
+    return processPhotoStripData(photoStripData);
+  }, [photoStripData]);
 
   useEffect(() => {
-    if (photoStripData) {
-      console.log("PhotoStripPage - photoStripData loaded:", photoStripData);
+    if (!dataInitialized && photoStripData) {
+      console.log("PhotoStripPage - Initial data loading");
+      const { hasValidPhotos, processedPhotos } = processedData;
       
-      if (photoStripData.photos && photoStripData.photos.length > 0) {
-        console.log("PhotoStripPage - Photos available:", photoStripData.photos.length);
+      if (hasValidPhotos && processedPhotos.length > 0) {
+        console.log("PhotoStripPage - Valid photos found:", processedPhotos.length);
         setShowUpload(false);
       } else {
-        console.log("PhotoStripPage - No photos available, showing upload");
+        console.log("PhotoStripPage - No valid photos found, showing upload");
         setShowUpload(true);
       }
       
@@ -56,17 +64,10 @@ const PhotoStripPage: React.FC = () => {
       if (photoStripData.text?.content) {
         setCustomText(photoStripData.text.content);
       }
-    } else {
-      console.log("PhotoStripPage - No photoStripData available");
+      
+      setDataInitialized(true);
     }
-  }, [photoStripData]);
-
-  useEffect(() => {
-    if (photoStripData?.photos && photoStripData.photos.length > 0) {
-      console.log("Initial mount check - Photos found:", photoStripData.photos.length);
-      setShowUpload(false);
-    }
-  }, []);
+  }, [photoStripData, processedData, dataInitialized]);
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find(t => t.templateId === templateId);
@@ -94,9 +95,13 @@ const PhotoStripPage: React.FC = () => {
 
   const handlePhotoUploadComplete = (photos: string[]) => {
     console.log("Upload complete with", photos.length, "photos");
-    updatePhotos(photos);
-    setShowUpload(false);
-    toast.success("Photos uploaded successfully!");
+    if (photos.length > 0) {
+      updatePhotos(photos);
+      setShowUpload(false);
+      toast.success("Photos uploaded successfully!");
+    } else {
+      toast.error("No photos were uploaded");
+    }
   };
 
   const getOptimalCanvasSettings = () => {
@@ -436,7 +441,7 @@ const PhotoStripPage: React.FC = () => {
   ];
 
   console.log("PhotoStripPage render - showUpload:", showUpload);
-  console.log("PhotoStripPage render - photoStripData:", photoStripData?.photos?.length || 0, "photos");
+  console.log("PhotoStripPage render - photoStripData:", processedData.processedPhotos.length, "photos");
 
   return (
     <div className="min-h-screen">
@@ -448,14 +453,14 @@ const PhotoStripPage: React.FC = () => {
             Your Photo Strip
           </h1>
           
-          {photoStripData?.photos?.length > 0 ? (
+          {processedData.hasValidPhotos && processedData.processedPhotos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col items-center">
                 <div className="mb-4 relative mx-auto">
                   <PhotoStrip 
-                    images={photoStripData.photos}
-                    filter={photoStripData.photoBoothSettings?.filter || 'Normal'}
-                    photoOverlays={photoStripData.photoOverlays}
+                    images={processedData.processedPhotos}
+                    filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
+                    photoOverlays={processedData.processedOverlays}
                   />
                 </div>
               </div>
