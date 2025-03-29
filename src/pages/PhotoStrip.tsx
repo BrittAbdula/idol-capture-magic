@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
@@ -19,8 +18,9 @@ import Footer from '../components/Footer';
 import MultiPhotoUpload from '../components/MultiPhotoUpload';
 import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { templates } from '../data/templates';
+import PhotoStrip from '../components/PhotoStrip';
 
-const PhotoStrip: React.FC = () => {
+const PhotoStripPage: React.FC = () => {
   const { photoStripData, updatePhotos, updateBackground, updateText, updateDecoration, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -63,7 +63,6 @@ const PhotoStrip: React.FC = () => {
       setSelectedTemplate(templateId);
       setCurrentTemplate(template);
       
-      // Create a new photo strip based on the template
       if (photoStripData) {
         const newPhotoStripData = {
           ...photoStripData,
@@ -113,7 +112,6 @@ const PhotoStrip: React.FC = () => {
       });
     });
     
-    // Load decorations if available
     const loadDecorations = photoStripData.decoration ? 
       photoStripData.decoration.map(dec => {
         if (!dec.url) return Promise.resolve(null);
@@ -133,18 +131,15 @@ const PhotoStrip: React.FC = () => {
       
       if (loadedPhotos.length === 0) return;
       
-      // Set canvas dimensions based on photoStripData
       const canvasWidth = photoStripData.canvasSize.width * scale;
       const canvasHeight = photoStripData.canvasSize.height * scale;
       
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
       
-      // Draw background
       ctx.fillStyle = photoStripData.background.color || '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Draw background image if available
       if (photoStripData.background.type === 'image' && photoStripData.background.url) {
         const bgImg = new Image();
         bgImg.onload = () => {
@@ -160,12 +155,10 @@ const PhotoStrip: React.FC = () => {
       }
       
       function drawRemainingElements() {
-        // Draw each photo at its position
         loadedPhotos.forEach((img, index) => {
           if (index < photoStripData.photoPositions.length) {
             const pos = photoStripData.photoPositions[index];
             
-            // Draw white border
             const borderWidth = 5 * scale;
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(
@@ -175,7 +168,6 @@ const PhotoStrip: React.FC = () => {
               pos.height * scale + (borderWidth * 2)
             );
             
-            // Draw the photo
             ctx.drawImage(
               img, 
               pos.x * scale, 
@@ -186,7 +178,6 @@ const PhotoStrip: React.FC = () => {
           }
         });
         
-        // Draw decorations if available
         if (photoStripData.decoration && loadedDecorations.length > 0) {
           photoStripData.decoration.forEach((dec, index) => {
             const img = loadedDecorations[index];
@@ -203,21 +194,18 @@ const PhotoStrip: React.FC = () => {
           });
         }
         
-        // Draw text if available
         if (photoStripData.text) {
           const text = photoStripData.text;
           ctx.fillStyle = text.color;
           ctx.font = `${text.size * scale}px ${text.font || 'Arial'}`;
           ctx.textAlign = 'center';
           
-          // Position text at the specified location or centered at the bottom
           const textX = text.position ? text.position.x * scale : canvas.width / 2;
           const textY = text.position ? text.position.y * scale : canvas.height - 100 * scale;
           
           ctx.fillText(text.content, textX, textY);
         }
         
-        // Add date if requested
         if (showDate) {
           ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
           ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
@@ -226,7 +214,6 @@ const PhotoStrip: React.FC = () => {
           ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
         }
         
-        // Add IdolBooth watermark
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
         ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
         ctx.textAlign = 'center';
@@ -485,14 +472,13 @@ const PhotoStrip: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col items-center">
                 <div className="mb-4 relative mx-auto">
-                  <ScrollArea className="h-[70vh] w-full">
-                    <div className="flex justify-center">
-                      <canvas 
-                        ref={thumbnailCanvasRef} 
-                        className="max-h-[60vh] shadow-lg mx-auto block"
-                      />
-                    </div>
-                  </ScrollArea>
+                  {photoStripData && photoStripData.photos.length > 0 && (
+                    <PhotoStrip 
+                      images={photoStripData.photos}
+                      filter={photoStripData.photoBoothSettings?.filter || 'Normal'}
+                      photoOverlays={photoStripData.photoOverlays}
+                    />
+                  )}
                 </div>
               </div>
               
@@ -634,4 +620,4 @@ const PhotoStrip: React.FC = () => {
   );
 };
 
-export default PhotoStrip;
+export default PhotoStripPage;

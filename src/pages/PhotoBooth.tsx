@@ -147,7 +147,16 @@ const PhotoBooth: React.FC = () => {
   
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
     setPhotoStripImages(images);
+    
     updatePhotos(images);
+    
+    if (photoStripData && currentPhotoOverlays.length > 0) {
+      setPhotoStripData({
+        ...photoStripData,
+        photos: images,
+        photoOverlays: currentPhotoOverlays
+      });
+    }
     
     if (selectedAspectRatio) {
       setAspectRatio(selectedAspectRatio);

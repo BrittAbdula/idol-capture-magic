@@ -52,6 +52,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     width: 0,
     height: 0
   });
+  const [overlayImages, setOverlayImages] = useState<HTMLImageElement[]>([]);
 
   useEffect(() => {
     const updateSizes = () => {
@@ -91,14 +92,24 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   }, [isStreaming, currentAspectRatio, isFullscreen]);
 
   useEffect(() => {
-    if (photoOverlays && photoOverlays.length > 0 && photoOverlays[0]) {
-      const canvasSizeFromContext = photoOverlays[0].canvasSize;
-      if (canvasSizeFromContext) {
-        setTemplateDimensions({
-          width: canvasSizeFromContext.width,
-          height: canvasSizeFromContext.height
+    if (photoOverlays && photoOverlays.length > 0) {
+      const loadImages = photoOverlays.map((overlay, index) => {
+        return new Promise<HTMLImageElement | null>((resolve) => {
+          if (!overlay || !overlay.url || overlay.url === "/placeholder.svg") {
+            resolve(null);
+            return;
+          }
+          
+          const img = new Image();
+          img.src = overlay.url;
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
         });
-      }
+      });
+      
+      Promise.all(loadImages).then((loadedImages) => {
+        setOverlayImages(loadedImages.filter(Boolean) as HTMLImageElement[]);
+      });
     }
   }, [photoOverlays]);
 
@@ -288,11 +299,11 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         }
         
         const currentOverlayIndex = photoCount;
-        if (photoOverlays && photoOverlays[currentOverlayIndex] && photoOverlayRefs.current[currentOverlayIndex]) {
+        if (photoOverlays && photoOverlays[currentOverlayIndex] && overlayImages[currentOverlayIndex]) {
           ctx.resetTransform();
           
           const overlay = photoOverlays[currentOverlayIndex];
-          const overlayImg = photoOverlayRefs.current[currentOverlayIndex];
+          const overlayImg = overlayImages[currentOverlayIndex];
           
           if (overlayImg) {
             const scale = overlay.scale || 1;
@@ -345,7 +356,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
-  }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays]);
+  }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays, overlayImages]);
 
   useEffect(() => {
     if (photoCount === photoLimit) {
@@ -649,8 +660,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             {photoOverlays && 
              photoOverlays[photoCount] && 
              photoOverlays[photoCount].url && 
-             photoOverlays[photoCount].url !== "/placeholder.svg" && 
-             !inCaptureMode && (
+             photoOverlays[photoCount].url !== "/placeholder.svg" && (
               <div style={getCroppedOverlayContainerStyle()}>
                 <img 
                   src={photoOverlays[photoCount].url} 

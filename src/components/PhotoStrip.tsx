@@ -47,9 +47,13 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     
     // If we have photo overlays, preload them too
     const loadOverlays = photoOverlays ? photoOverlays.map(overlay => {
-      return new Promise<HTMLImageElement>((resolve) => {
+      if (!overlay || !overlay.url || overlay.url === "/placeholder.svg") {
+        return Promise.resolve(null);
+      }
+      return new Promise<HTMLImageElement | null>((resolve) => {
         const img = new Image();
         img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
         img.src = overlay.url;
       });
     }) : [];
@@ -60,7 +64,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       // Separate loaded images and overlays
       const photoImages = loadedImages.slice(0, images.length);
       const overlayImages = loadOverlays.length > 0 ? 
-                            loadedImages.slice(images.length) : [];
+                            loadedImages.slice(images.length).filter(Boolean) as HTMLImageElement[] : [];
       
       // Set canvas size - vertical receipt-like strip format
       const imgWidth = photoImages[0].width;
@@ -97,37 +101,63 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
         
         // If we have an overlay for this photo, draw it
+        // Note: The overlay should already be included in the photo since it was captured that way
+        // This is just a safeguard in case we need to re-apply them
         if (photoOverlays && photoOverlays[index] && overlayImages[index]) {
           const overlay = photoOverlays[index];
           const overlayImg = overlayImages[index];
           
-          // Reset filter for overlay image
-          ctx.filter = 'none';
-          
-          // Use exact position from the overlay position data
-          const scale = overlay.scale || 1;
-          const posX = stripPadding + overlay.position.x;
-          const posY = y + overlay.position.y;
-          
-          const overlayWidth = overlayImg.width * scale;
-          const overlayHeight = overlayImg.height * scale;
-          
-          ctx.drawImage(
-            overlayImg,
-            posX, posY, overlayWidth, overlayHeight
-          );
-          
-          // Restore filter for next image
-          if (filter !== 'Normal') {
-            let filterStyle = '';
-            switch (filter) {
-              case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
-              case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
-              case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
-              case 'B&W': filterStyle = 'grayscale(1)'; break;
-              case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
+          if (overlayImg) {
+            // Reset filter for overlay image
+            ctx.filter = 'none';
+            
+            // Use exact position from the overlay position data
+            const scale = overlay.scale || 1;
+            const photoPosition = overlay.photoPosition;
+            
+            if (photoPosition) {
+              const widthRatio = imgWidth / photoPosition.width;
+              const heightRatio = imgHeight / photoPosition.height;
+              
+              const posX = stripPadding + (overlay.position.x * widthRatio);
+              const posY = y + (overlay.position.y * heightRatio);
+              
+              const overlayWidth = overlayImg.width * scale;
+              const overlayHeight = overlayImg.height * scale;
+              
+              ctx.drawImage(
+                overlayImg,
+                posX - (overlayWidth / 2),
+                posY - (overlayHeight / 2),
+                overlayWidth,
+                overlayHeight
+              );
+            } else {
+              // Fallback positioning
+              const posX = stripPadding + overlay.position.x;
+              const posY = y + overlay.position.y;
+              
+              const overlayWidth = overlayImg.width * scale;
+              const overlayHeight = overlayImg.height * scale;
+              
+              ctx.drawImage(
+                overlayImg,
+                posX, posY, overlayWidth, overlayHeight
+              );
             }
-            ctx.filter = filterStyle;
+            
+            // Restore filter for next image
+            if (filter !== 'Normal') {
+              let filterStyle = '';
+              switch (filter) {
+                case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
+                case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
+                case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
+                case 'B&W': filterStyle = 'grayscale(1)'; break;
+                case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
+              }
+              ctx.filter = filterStyle;
+            }
           }
         }
         
@@ -196,8 +226,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                     className="w-full mx-auto block" 
                   />
                   
-                  {/* Display overlay image if available with absolute positioning */}
-                  {photoOverlays && photoOverlays[index] && (
+                  {/* Note: The overlay should already be in the captured image,
+                      but we can render it here for clarity if needed */}
+                  {photoOverlays && photoOverlays[index] && photoOverlays[index].url && 
+                   photoOverlays[index].url !== "/placeholder.svg" && (
                     <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
                       <img 
                         src={photoOverlays[index].url}
