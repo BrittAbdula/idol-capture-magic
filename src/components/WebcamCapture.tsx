@@ -45,6 +45,46 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const photoOverlayRefs = useRef<(HTMLImageElement | null)[]>([]);
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
+  const [videoDisplaySize, setVideoDisplaySize] = useState({ width: 0, height: 0 });
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateSizes = () => {
+      if (videoContainerRef.current && videoRef.current) {
+        const containerRect = videoContainerRef.current.getBoundingClientRect();
+        const videoRect = videoRef.current.getBoundingClientRect();
+        
+        setContainerSize({
+          width: containerRect.width,
+          height: containerRect.height
+        });
+        
+        setVideoDisplaySize({
+          width: videoRect.width,
+          height: videoRect.height
+        });
+      }
+    };
+
+    updateSizes();
+    window.addEventListener('resize', updateSizes);
+    
+    const observer = new MutationObserver(updateSizes);
+    if (containerRef.current) {
+      observer.observe(containerRef.current, { 
+        childList: true, 
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateSizes);
+      observer.disconnect();
+    };
+  }, [isStreaming, currentAspectRatio, isFullscreen]);
 
   useEffect(() => {
     if (playSound) {
@@ -123,6 +163,25 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       setIsStreaming(false);
     }
   }, []);
+
+  const calculateOverlayPosition = (overlay: PhotoOverlay, index: number) => {
+    if (!overlay || !overlay.position) return { x: 0, y: 0 };
+    
+    const videoEl = videoRef.current;
+    const containerEl = videoContainerRef.current;
+    if (!videoEl || !containerEl) return overlay.position;
+    
+    const videoRect = videoEl.getBoundingClientRect();
+    const containerRect = containerEl.getBoundingClientRect();
+    
+    const videoViewportWidth = videoRect.width;
+    const videoViewportHeight = videoRect.height;
+    
+    const x = (overlay.position.x / 100) * videoViewportWidth;
+    const y = (overlay.position.y / 100) * videoViewportHeight;
+    
+    return { x, y };
+  };
 
   const captureImage = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
@@ -211,15 +270,20 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           
           if (overlayImg) {
             const scale = overlay.scale || 1;
-            const posX = overlay.position?.x || 0;
-            const posY = overlay.position?.y || 0;
+            
+            const videoRect = video.getBoundingClientRect();
+            const posX = (overlay.position.x / 100) * canvas.width;
+            const posY = (overlay.position.y / 100) * canvas.height;
             
             const overlayWidth = overlayImg.width * scale;
             const overlayHeight = overlayImg.height * scale;
             
             ctx.drawImage(
               overlayImg,
-              posX, posY, overlayWidth, overlayHeight
+              posX - (overlayWidth / 2),
+              posY - (overlayHeight / 2),
+              overlayWidth,
+              overlayHeight
             );
           }
         }
@@ -441,6 +505,17 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   };
 
+  const getOverlayPositionInPercentages = (overlay: PhotoOverlay) => {
+    if (!overlay || !overlay.position) return { x: 50, y: 50 };
+    
+    const position = {
+      x: (overlay.position.x / (videoDisplaySize.width || 1)) * 100,
+      y: (overlay.position.y / (videoDisplaySize.height || 1)) * 100,
+    };
+    
+    return position;
+  };
+
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
   return (
@@ -454,118 +529,122 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         )}
         
         <div style={getContainerStyle()}>
-          <video 
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`${getFilterClassName()}`}
-            style={getVideoStyle()}
-          />
-          
-          <div 
-            className="absolute pointer-events-none"
-            style={{ 
-              boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
-              ...getAspectRatioRect(),
-              aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
-                          currentAspectRatio === '1:1' ? '1/1' : 
-                          currentAspectRatio === '3:2' ? '3/2' : '4/5',
-              margin: 'auto',
-              inset: 0,
-            }}
-          />
-          
-          {showGrid && (
+          <div className="relative w-full h-full" ref={videoContainerRef}>
+            <video 
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`${getFilterClassName()}`}
+              style={getVideoStyle()}
+            />
+            
             <div 
               className="absolute pointer-events-none"
               style={{ 
+                boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
                 ...getAspectRatioRect(),
                 aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
                             currentAspectRatio === '1:1' ? '1/1' : 
                             currentAspectRatio === '3:2' ? '3/2' : '4/5',
                 margin: 'auto',
                 inset: 0,
-                backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
-                backgroundSize: '33.33% 33.33%',
-                backgroundPosition: 'center',
               }}
             />
-          )}
-          
-          {photoOverlays && 
-           photoOverlays[photoCount] && 
-           photoOverlays[photoCount].url && 
-           photoOverlays[photoCount].url !== "/placeholder.svg" && 
-           !inCaptureMode && (
-            <div style={getCroppedOverlayContainerStyle()}>
-              <img 
-                src={photoOverlays[photoCount].url} 
-                alt="Photo overlay"
-                style={{
-                  position: 'absolute',
-                  left: `${photoOverlays[photoCount].position.x}px`,
-                  top: `${photoOverlays[photoCount].position.y}px`,
-                  transform: `scale(${photoOverlays[photoCount].scale})`,
-                  transformOrigin: 'top left',
-                  pointerEvents: 'none'
+            
+            {showGrid && (
+              <div 
+                className="absolute pointer-events-none"
+                style={{ 
+                  ...getAspectRatioRect(),
+                  aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
+                              currentAspectRatio === '1:1' ? '1/1' : 
+                              currentAspectRatio === '3:2' ? '3/2' : '4/5',
+                  margin: 'auto',
+                  inset: 0,
+                  backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
+                  backgroundSize: '33.33% 33.33%',
+                  backgroundPosition: 'center',
                 }}
               />
-            </div>
-          )}
-          
-          <canvas ref={canvasRef} className="hidden" />
-          
-          {countdownValue && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <span className="text-7xl font-bold text-white animate-pulse-slight">
-                {countdownValue}
-              </span>
-            </div>
-          )}
-          
-          {photoCount > 0 && photoCount < photoLimit && !countdownValue && (
-            <div className="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded-full z-10">
-              <span className="text-sm font-bold text-white">
-                Photo {photoCount} of {photoLimit}
-              </span>
-            </div>
-          )}
-          
-          {!inCaptureMode && (
-            <>
-              <button 
-                onClick={toggleMirror}
-                className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
-              >
-                <FlipHorizontal className="w-5 h-5 text-white" />
-              </button>
-              
-              <button 
-                onClick={toggleFullscreen}
-                className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
-              >
-                {isFullscreen ? 
-                  <Minimize className="w-5 h-5 text-white" /> : 
-                  <Maximize className="w-5 h-5 text-white" />
-                }
-              </button>
-              
-              <button
-                onClick={cycleAspectRatio}
-                className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
-              >
-                <span className="text-xs font-bold text-white">{currentAspectRatio}</span>
-              </button>
-              
-              <button 
-                onClick={toggleGrid}
-                className="absolute bottom-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
-              >
-                <Grid3X3 className={`w-5 h-5 ${showGrid ? 'text-idol-gold' : 'text-white'}`} />
-              </button>
-            </>
-          )}
+            )}
+            
+            {photoOverlays && 
+             photoOverlays[photoCount] && 
+             photoOverlays[photoCount].url && 
+             photoOverlays[photoCount].url !== "/placeholder.svg" && 
+             !inCaptureMode && (
+              <div style={getCroppedOverlayContainerStyle()}>
+                <img 
+                  src={photoOverlays[photoCount].url} 
+                  alt="Photo overlay"
+                  style={{
+                    position: 'absolute',
+                    left: `${getOverlayPositionInPercentages(photoOverlays[photoCount]).x}%`,
+                    top: `${getOverlayPositionInPercentages(photoOverlays[photoCount]).y}%`,
+                    transform: `translate(-50%, -50%) scale(${photoOverlays[photoCount].scale})`,
+                    transformOrigin: 'center',
+                    pointerEvents: 'none',
+                    maxWidth: '60%',
+                    maxHeight: '60%',
+                  }}
+                />
+              </div>
+            )}
+            
+            <canvas ref={canvasRef} className="hidden" />
+            
+            {countdownValue && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <span className="text-7xl font-bold text-white animate-pulse-slight">
+                  {countdownValue}
+                </span>
+              </div>
+            )}
+            
+            {photoCount > 0 && photoCount < photoLimit && !countdownValue && (
+              <div className="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded-full z-10">
+                <span className="text-sm font-bold text-white">
+                  Photo {photoCount} of {photoLimit}
+                </span>
+              </div>
+            )}
+            
+            {!inCaptureMode && (
+              <>
+                <button 
+                  onClick={toggleMirror}
+                  className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
+                >
+                  <FlipHorizontal className="w-5 h-5 text-white" />
+                </button>
+                
+                <button 
+                  onClick={toggleFullscreen}
+                  className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
+                >
+                  {isFullscreen ? 
+                    <Minimize className="w-5 h-5 text-white" /> : 
+                    <Maximize className="w-5 h-5 text-white" />
+                  }
+                </button>
+                
+                <button
+                  onClick={cycleAspectRatio}
+                  className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
+                >
+                  <span className="text-xs font-bold text-white">{currentAspectRatio}</span>
+                </button>
+                
+                <button 
+                  onClick={toggleGrid}
+                  className="absolute bottom-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
+                >
+                  <Grid3X3 className={`w-5 h-5 ${showGrid ? 'text-idol-gold' : 'text-white'}`} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
       

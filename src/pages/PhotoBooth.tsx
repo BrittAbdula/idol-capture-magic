@@ -26,14 +26,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { getTemplate } from '../data/templates';
-import { Position, PhotoOverlay } from '../contexts/PhotoStripContext';
+import { Position, PhotoOverlay, defaultAspectRatios } from '../contexts/PhotoStripContext';
 
 const PhotoBooth: React.FC = () => {
-  // Get template parameter from URL query
   const [searchParams] = useSearchParams();
   const templateFromQuery = searchParams.get('template');
   
-  // State for photo booth
   const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const [filter, setFilter] = useState('Normal');
@@ -44,17 +42,15 @@ const PhotoBooth: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState('general');
   
-  // State for photoOverlays
   const [currentPhotoOverlays, setCurrentPhotoOverlays] = useState<PhotoOverlay[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedOverlayIndex, setDraggedOverlayIndex] = useState<number | null>(null);
   const [overlayPreviews, setOverlayPreviews] = useState<{ [key: number]: string }>({});
   const overlayPreviewRefs = useRef<(HTMLDivElement | null)[]>([]);
-  
+
   const { photoStripData, setPhotoStripData, updatePhotos, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   
-  // Load template settings on mount
   useEffect(() => {
     const loadTemplateSettings = () => {
       if (templateFromQuery) {
@@ -63,7 +59,6 @@ const PhotoBooth: React.FC = () => {
         if (template) {
           setCurrentTemplate(template);
           
-          // Apply template photo booth settings
           const settings = template.photoBoothSettings;
           setAspectRatio(settings.aspectRatio);
           setPhotoNum(settings.photoNum);
@@ -72,12 +67,10 @@ const PhotoBooth: React.FC = () => {
           if (settings.lightColor) setLightColor(settings.lightColor);
           setPlaySound(settings.sound);
           
-          // Load photoOverlays
           if (template.photoOverlays && template.photoOverlays.length > 0) {
             setCurrentPhotoOverlays(template.photoOverlays);
           }
           
-          // Create a new photo strip data based on template
           const newPhotoStripData = {
             photoStripId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
             templateId: template.templateId,
@@ -107,7 +100,6 @@ const PhotoBooth: React.FC = () => {
     loadTemplateSettings();
   }, [templateFromQuery, setCurrentTemplate, setPhotoStripData, filter, lightColor, playSound]);
   
-  // Update photo booth settings when user changes them
   useEffect(() => {
     if (photoStripData) {
       const updatedSettings = {
@@ -128,31 +120,22 @@ const PhotoBooth: React.FC = () => {
     }
   }, [aspectRatio, photoNum, countdown, filter, lightColor, playSound, photoStripData, setPhotoStripData, currentPhotoOverlays]);
   
-  // Enhanced cleanup when navigating away from this page
   useEffect(() => {
-    // This will run when the component unmounts
     return () => {
-      // Find and stop all active media tracks
-      const stopAllMediaTracks = () => {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-              stream.getTracks().forEach(track => track.stop());
-            })
-            .catch(err => console.log('No camera to stop'));
-        }
-      };
-      
-      stopAllMediaTracks();
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            stream.getTracks().forEach(track => track.stop());
+          })
+          .catch(err => console.log('No camera to stop'));
+      }
     };
   }, []);
   
-  // Set up overlay preview refs
   useEffect(() => {
     overlayPreviewRefs.current = Array(photoNum).fill(null);
   }, [photoNum]);
   
-  // Handle user photo capture from webcam
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
     setPhotoStripImages(images);
     updatePhotos(images);
@@ -161,13 +144,11 @@ const PhotoBooth: React.FC = () => {
       setAspectRatio(selectedAspectRatio);
     }
     
-    // If we have enough photos, navigate to the photo strip page
     if (images.length >= photoNum) {
       navigate('/photo-strip');
     }
   };
   
-  // Render polaroid photo display
   const renderPolaroidPhotos = () => {
     if (photoStripImages.length === 0) {
       return (
@@ -186,7 +167,7 @@ const PhotoBooth: React.FC = () => {
               className="polaroid-frame bg-white shadow-lg p-2 pb-6 transform transition-transform hover:rotate-1"
               style={{ 
                 maxWidth: '180px',
-                order: photoStripImages.length - index // Reverse order so new photos appear on the right
+                order: photoStripImages.length - index
               }}
             >
               <div className="mb-2 overflow-hidden">
@@ -206,7 +187,6 @@ const PhotoBooth: React.FC = () => {
     );
   };
   
-  // Handle file upload for photo overlays
   const handlePhotoOverlayUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -214,35 +194,24 @@ const PhotoBooth: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        // Get the current container dimensions to center the image
         const previewContainer = overlayPreviewRefs.current[index];
-        let centerX = 0;
-        let centerY = 0;
+        const position = { x: 50, y: 50 };
         
-        if (previewContainer) {
-          centerX = previewContainer.clientWidth / 2;
-          centerY = previewContainer.clientHeight / 2;
-        }
-        
-        // Create a new overlay with the uploaded image
         const newOverlay: PhotoOverlay = {
           url: e.target.result as string,
-          position: { x: centerX, y: centerY },
+          position: position,
           scale: 1.0
         };
         
-        // Set the preview
         setOverlayPreviews({
           ...overlayPreviews,
           [index]: e.target.result as string
         });
         
-        // Update the overlays array
         const updatedOverlays = [...currentPhotoOverlays];
         updatedOverlays[index] = newOverlay;
         setCurrentPhotoOverlays(updatedOverlays);
         
-        // Update the photoStripData
         if (photoStripData) {
           setPhotoStripData({
             ...photoStripData,
@@ -256,7 +225,6 @@ const PhotoBooth: React.FC = () => {
     reader.readAsDataURL(file);
   };
   
-  // Handle dragging of overlays in the preview
   const handleOverlayMouseDown = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
     setIsDragging(true);
@@ -273,24 +241,25 @@ const PhotoBooth: React.FC = () => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Update the position of the dragged overlay
+    const xPercent = (x / rect.width) * 100;
+    const yPercent = (y / rect.height) * 100;
+    
     const updatedOverlays = [...currentPhotoOverlays];
     if (!updatedOverlays[draggedOverlayIndex]) {
       updatedOverlays[draggedOverlayIndex] = {
         url: overlayPreviews[draggedOverlayIndex] || "/placeholder.svg",
-        position: { x, y },
+        position: { x: xPercent, y: yPercent },
         scale: 1.0
       };
     } else {
       updatedOverlays[draggedOverlayIndex] = {
         ...updatedOverlays[draggedOverlayIndex],
-        position: { x, y }
+        position: { x: xPercent, y: yPercent }
       };
     }
     
     setCurrentPhotoOverlays(updatedOverlays);
     
-    // Update the photoStripData
     if (photoStripData) {
       setPhotoStripData({
         ...photoStripData,
@@ -314,19 +283,9 @@ const PhotoBooth: React.FC = () => {
   const handleScaleChange = (index: number, newScale: number) => {
     const updatedOverlays = [...currentPhotoOverlays];
     if (!updatedOverlays[index]) {
-      // Create overlay if it doesn't exist
-      const previewContainer = overlayPreviewRefs.current[index];
-      let centerX = 0;
-      let centerY = 0;
-      
-      if (previewContainer) {
-        centerX = previewContainer.clientWidth / 2;
-        centerY = previewContainer.clientHeight / 2;
-      }
-      
       updatedOverlays[index] = {
         url: overlayPreviews[index] || "/placeholder.svg",
-        position: { x: centerX, y: centerY },
+        position: { x: 50, y: 50 },
         scale: newScale
       };
     } else {
@@ -338,7 +297,6 @@ const PhotoBooth: React.FC = () => {
     
     setCurrentPhotoOverlays(updatedOverlays);
     
-    // Update the photoStripData
     if (photoStripData) {
       setPhotoStripData({
         ...photoStripData,
@@ -347,20 +305,17 @@ const PhotoBooth: React.FC = () => {
     }
   };
   
-  // Create empty overlays if needed
   useEffect(() => {
     if (photoStripData && photoNum > 0 && (!currentPhotoOverlays || currentPhotoOverlays.length < photoNum)) {
-      // Create default overlays for each photo if they don't exist
       const updatedOverlays = [...currentPhotoOverlays];
       while (updatedOverlays.length < photoNum) {
         const index = updatedOverlays.length;
-        // Keep existing overlay or create a placeholder
         if (index < currentPhotoOverlays.length) {
           updatedOverlays.push(currentPhotoOverlays[index]);
         } else {
           updatedOverlays.push({
             url: "/placeholder.svg",
-            position: { x: 0, y: 0 },  // Will be properly centered later when container is available
+            position: { x: 50, y: 50 },
             scale: 1.0
           });
         }
@@ -370,7 +325,6 @@ const PhotoBooth: React.FC = () => {
     }
   }, [photoNum, photoStripData, currentPhotoOverlays]);
   
-  // Generate overlay preview components
   const renderOverlayPreviews = () => {
     const previews = [];
     
@@ -392,19 +346,17 @@ const PhotoBooth: React.FC = () => {
             onMouseUp={handleOverlayMouseUp}
             onMouseLeave={handleOverlayMouseLeave}
           >
-            {/* This is where we simulate the camera viewport */}
             <div className="absolute inset-0 flex items-center justify-center text-white opacity-30">
               Camera Preview
             </div>
             
-            {/* Only show the overlay if it exists and has a valid URL */}
             {currentPhotoOverlays[i] && currentPhotoOverlays[i].url && currentPhotoOverlays[i].url !== "/placeholder.svg" && (
               <div 
                 className="absolute cursor-move"
                 style={{
-                  left: `${currentPhotoOverlays[i].position.x}px`,
-                  top: `${currentPhotoOverlays[i].position.y}px`,
-                  transform: `scale(${currentPhotoOverlays[i].scale})`,
+                  left: `${currentPhotoOverlays[i].position.x}%`,
+                  top: `${currentPhotoOverlays[i].position.y}%`,
+                  transform: `translate(-50%, -50%) scale(${currentPhotoOverlays[i].scale})`,
                   transformOrigin: 'center',
                   zIndex: draggedOverlayIndex === i ? 100 : 10
                 }}
@@ -459,7 +411,7 @@ const PhotoBooth: React.FC = () => {
             </div>
             
             <div className="text-sm text-gray-500">
-              <p>Position: {Math.round(currentPhotoOverlays[i]?.position.x || 0)}px, {Math.round(currentPhotoOverlays[i]?.position.y || 0)}px</p>
+              <p>Position: {Math.round(currentPhotoOverlays[i]?.position.x || 0)}%, {Math.round(currentPhotoOverlays[i]?.position.y || 0)}%</p>
               <p className="italic mt-1 text-xs">Drag image above to position</p>
             </div>
           </div>
