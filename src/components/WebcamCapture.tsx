@@ -44,6 +44,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const [showGrid, setShowGrid] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const photoOverlayRefs = useRef<(HTMLImageElement | null)[]>([]);
+  const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (playSound) {
@@ -91,6 +92,16 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            setVideoSize({
+              width: videoRef.current.videoWidth,
+              height: videoRef.current.videoHeight
+            });
+          }
+        };
+        
         setIsStreaming(true);
       }
     } catch (err) {
@@ -389,6 +400,47 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   };
 
+  const getCroppedOverlayContainerStyle = () => {
+    const aspectRatioRect = getAspectRatioRect();
+    
+    return {
+      position: 'absolute' as const,
+      pointerEvents: 'none' as const,
+      ...aspectRatioRect,
+      margin: 'auto',
+      inset: 0,
+    };
+  };
+
+  const getAspectRatioRect = () => {
+    let width, height;
+    
+    if (isFullscreen) {
+      if (currentAspectRatio === '1:1') {
+        const size = Math.min(window.innerWidth, window.innerHeight);
+        width = `${size}px`;
+        height = `${size}px`;
+      } else if (currentAspectRatio === '4:3') {
+        height = '100vh';
+        width = 'calc(100vh * 4 / 3)';
+      } else if (currentAspectRatio === '3:2') {
+        height = '100vh';
+        width = 'calc(100vh * 3 / 2)';
+      } else if (currentAspectRatio === '4:5') {
+        height = '100vh';
+        width = 'calc(100vh * 4 / 5)';
+      }
+    } else {
+      width = '100%';
+      height = '100%';
+    }
+    
+    return {
+      width,
+      height,
+    };
+  };
+
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
   return (
@@ -415,22 +467,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             className="absolute pointer-events-none"
             style={{ 
               boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
+              ...getAspectRatioRect(),
               aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
                           currentAspectRatio === '1:1' ? '1/1' : 
                           currentAspectRatio === '3:2' ? '3/2' : '4/5',
-              width: isFullscreen ? 
-                (currentAspectRatio === '1:1' ? 
-                  `${Math.min(window.innerWidth, window.innerHeight)}px` : 'auto') 
-                : '100%',
-              height: isFullscreen ? 
-                (currentAspectRatio === '1:1' ? 
-                  `${Math.min(window.innerWidth, window.innerHeight)}px` : '100vh') 
-                : 'auto',
-              maxWidth: isFullscreen ? (
-                currentAspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
-                currentAspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' :
-                currentAspectRatio === '4:5' ? 'calc(100vh * 4 / 5)' : '100vh'
-              ) : '100%',
               margin: 'auto',
               inset: 0,
             }}
@@ -440,22 +480,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             <div 
               className="absolute pointer-events-none"
               style={{ 
+                ...getAspectRatioRect(),
                 aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
                             currentAspectRatio === '1:1' ? '1/1' : 
                             currentAspectRatio === '3:2' ? '3/2' : '4/5',
-                width: isFullscreen ? 
-                  (currentAspectRatio === '1:1' ? 
-                    `${Math.min(window.innerWidth, window.innerHeight)}px` : 'auto') 
-                  : '100%',
-                height: isFullscreen ? 
-                  (currentAspectRatio === '1:1' ? 
-                    `${Math.min(window.innerWidth, window.innerHeight)}px` : '100vh') 
-                  : 'auto',
-                maxWidth: isFullscreen ? (
-                  currentAspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
-                  currentAspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' :
-                  currentAspectRatio === '4:5' ? 'calc(100vh * 4 / 5)' : '100vh'
-                ) : '100%',
                 margin: 'auto',
                 inset: 0,
                 backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
@@ -465,30 +493,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             />
           )}
           
-          {photoOverlays && photoOverlays[photoCount] && !inCaptureMode && (
-            <div 
-              className="absolute pointer-events-none"
-              style={{ 
-                aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
-                            currentAspectRatio === '1:1' ? '1/1' : 
-                            currentAspectRatio === '3:2' ? '3/2' : '4/5',
-                width: isFullscreen ? 
-                  (currentAspectRatio === '1:1' ? 
-                    `${Math.min(window.innerWidth, window.innerHeight)}px` : 'auto') 
-                  : '100%',
-                height: isFullscreen ? 
-                  (currentAspectRatio === '1:1' ? 
-                    `${Math.min(window.innerWidth, window.innerHeight)}px` : '100vh') 
-                  : 'auto',
-                maxWidth: isFullscreen ? (
-                  currentAspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
-                  currentAspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' :
-                  currentAspectRatio === '4:5' ? 'calc(100vh * 4 / 5)' : '100vh'
-                ) : '100%',
-                margin: 'auto',
-                inset: 0,
-              }}
-            >
+          {photoOverlays && 
+           photoOverlays[photoCount] && 
+           photoOverlays[photoCount].url && 
+           photoOverlays[photoCount].url !== "/placeholder.svg" && 
+           !inCaptureMode && (
+            <div style={getCroppedOverlayContainerStyle()}>
               <img 
                 src={photoOverlays[photoCount].url} 
                 alt="Photo overlay"

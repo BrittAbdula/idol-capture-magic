@@ -397,8 +397,8 @@ const PhotoBooth: React.FC = () => {
               Camera Preview
             </div>
             
-            {/* Show the overlay */}
-            {currentPhotoOverlays[i] && (
+            {/* Only show the overlay if it exists and has a valid URL */}
+            {currentPhotoOverlays[i] && currentPhotoOverlays[i].url && currentPhotoOverlays[i].url !== "/placeholder.svg" && (
               <div 
                 className="absolute cursor-move"
                 style={{
@@ -419,7 +419,7 @@ const PhotoBooth: React.FC = () => {
               </div>
             )}
             
-            {(!currentPhotoOverlays[i] || currentPhotoOverlays[i].url === "/placeholder.svg") && (
+            {(!currentPhotoOverlays[i] || !currentPhotoOverlays[i].url || currentPhotoOverlays[i].url === "/placeholder.svg") && (
               <div className="absolute inset-0 flex items-center justify-center text-white">
                 <div className="text-center">
                   <p className="text-sm">No overlay image</p>
