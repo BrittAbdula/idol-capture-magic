@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, FlipHorizontal, Maximize, Minimize, Grid3X3 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -191,7 +192,16 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, []);
 
-  const calculateOverlayPosition = (overlay: PhotoOverlay, index: number) => {
+  // This helper ensures we use the correct overlay for the current photo count
+  const getCurrentOverlay = useCallback(() => {
+    if (!photoOverlays || photoOverlays.length === 0) return null;
+    
+    // Make sure we don't go out of bounds
+    const overlayIndex = Math.min(photoCount, photoOverlays.length - 1);
+    return photoOverlays[overlayIndex];
+  }, [photoOverlays, photoCount]);
+
+  const calculateOverlayPosition = useCallback((overlay: PhotoOverlay, index: number) => {
     if (!overlay || !overlay.position) return { x: 0, y: 0 };
     
     const videoEl = videoRef.current;
@@ -218,7 +228,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     const scaledY = absoluteY * heightRatio;
     
     return { x: scaledX, y: scaledY };
-  };
+  }, []);
 
   const captureImage = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
@@ -298,49 +308,47 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           );
         }
         
-        const currentOverlayIndex = photoCount;
-        if (photoOverlays && photoOverlays[currentOverlayIndex] && overlayImages[currentOverlayIndex]) {
+        // Get the correct overlay for the current photo
+        const currentOverlay = photoOverlays && photoOverlays[photoCount];
+        const currentOverlayImg = overlayImages[photoCount];
+        
+        if (currentOverlay && currentOverlayImg && currentOverlay.url && currentOverlay.url !== "/placeholder.svg") {
           ctx.resetTransform();
           
-          const overlay = photoOverlays[currentOverlayIndex];
-          const overlayImg = overlayImages[currentOverlayIndex];
+          const scale = currentOverlay.scale || 1;
           
-          if (overlayImg) {
-            const scale = overlay.scale || 1;
+          const photoPosition = currentOverlay.photoPosition;
+          if (photoPosition) {
+            const widthRatio = canvas.width / photoPosition.width;
+            const heightRatio = canvas.height / photoPosition.height;
             
-            const photoPosition = overlay.photoPosition;
-            if (photoPosition) {
-              const widthRatio = canvas.width / photoPosition.width;
-              const heightRatio = canvas.height / photoPosition.height;
-              
-              const posX = overlay.position.x * widthRatio;
-              const posY = overlay.position.y * heightRatio;
-              
-              const overlayWidth = overlayImg.width * scale;
-              const overlayHeight = overlayImg.height * scale;
-              
-              ctx.drawImage(
-                overlayImg,
-                posX - (overlayWidth / 2),
-                posY - (overlayHeight / 2),
-                overlayWidth,
-                overlayHeight
-              );
-            } else {
-              const posX = (overlay.position.x / 100) * canvas.width;
-              const posY = (overlay.position.y / 100) * canvas.height;
-              
-              const overlayWidth = overlayImg.width * scale;
-              const overlayHeight = overlayImg.height * scale;
-              
-              ctx.drawImage(
-                overlayImg,
-                posX - (overlayWidth / 2),
-                posY - (overlayHeight / 2),
-                overlayWidth,
-                overlayHeight
-              );
-            }
+            const posX = currentOverlay.position.x * widthRatio;
+            const posY = currentOverlay.position.y * heightRatio;
+            
+            const overlayWidth = currentOverlayImg.width * scale;
+            const overlayHeight = currentOverlayImg.height * scale;
+            
+            ctx.drawImage(
+              currentOverlayImg,
+              posX - (overlayWidth / 2),
+              posY - (overlayHeight / 2),
+              overlayWidth,
+              overlayHeight
+            );
+          } else {
+            const posX = (currentOverlay.position.x / 100) * canvas.width;
+            const posY = (currentOverlay.position.y / 100) * canvas.height;
+            
+            const overlayWidth = currentOverlayImg.width * scale;
+            const overlayHeight = currentOverlayImg.height * scale;
+            
+            ctx.drawImage(
+              currentOverlayImg,
+              posX - (overlayWidth / 2),
+              posY - (overlayHeight / 2),
+              overlayWidth,
+              overlayHeight
+            );
           }
         }
         
@@ -606,6 +614,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
+  // Get the current overlay based on photoCount
+  const currentOverlay = photoOverlays && photoCount < photoLimit ? photoOverlays[photoCount] : null;
+
   return (
     <div className="flex flex-col overflow-hidden rounded-lg shadow-lg" ref={containerRef}>
       <div className="relative bg-black mb-4">
@@ -657,15 +668,15 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
               />
             )}
             
-            {photoOverlays && 
-             photoOverlays[photoCount] && 
-             photoOverlays[photoCount].url && 
-             photoOverlays[photoCount].url !== "/placeholder.svg" && (
+            {/* Always display the current overlay regardless of capture mode */}
+            {currentOverlay && 
+             currentOverlay.url && 
+             currentOverlay.url !== "/placeholder.svg" && (
               <div style={getCroppedOverlayContainerStyle()}>
                 <img 
-                  src={photoOverlays[photoCount].url} 
+                  src={currentOverlay.url} 
                   alt="Photo overlay"
-                  style={getOverlayPositionStyle(photoOverlays[photoCount])}
+                  style={getOverlayPositionStyle(currentOverlay)}
                 />
               </div>
             )}
