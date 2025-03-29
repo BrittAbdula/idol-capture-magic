@@ -175,7 +175,7 @@ const PhotoStripPage: React.FC = () => {
       function drawRemainingElements() {
         if (photoStripData.photos && photoStripData.photos.length > 0) {
           photoStripData.photos.forEach((photoUrl, index) => {
-            if (index < photoStripData.photoPositions.length) {
+            if (index < photoStripData.photoPositions.length && index < loadedPhotos.length) {
               const pos = photoStripData.photoPositions[index];
               
               const borderWidth = 5 * scale;
@@ -188,7 +188,7 @@ const PhotoStripPage: React.FC = () => {
               );
               
               ctx.drawImage(
-                photoUrl, 
+                loadedPhotos[index], 
                 pos.x * scale, 
                 pos.y * scale, 
                 pos.width * scale, 
