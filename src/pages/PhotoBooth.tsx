@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -49,7 +48,8 @@ const PhotoBooth: React.FC = () => {
   const [currentPhotoOverlays, setCurrentPhotoOverlays] = useState<PhotoOverlay[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedOverlayIndex, setDraggedOverlayIndex] = useState<number | null>(null);
-  const overlayContainerRef = useRef<HTMLDivElement>(null);
+  const [overlayPreviews, setOverlayPreviews] = useState<{ [key: number]: string }>({});
+  const overlayPreviewRefs = useRef<(HTMLDivElement | null)[]>([]);
   
   const { photoStripData, setPhotoStripData, updatePhotos, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
@@ -147,6 +147,11 @@ const PhotoBooth: React.FC = () => {
     };
   }, []);
   
+  // Set up overlay preview refs
+  useEffect(() => {
+    overlayPreviewRefs.current = Array(photoNum).fill(null);
+  }, [photoNum]);
+  
   // Handle user photo capture from webcam
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
     setPhotoStripImages(images);
@@ -209,12 +214,28 @@ const PhotoBooth: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
+        // Get the current container dimensions to center the image
+        const previewContainer = overlayPreviewRefs.current[index];
+        let centerX = 0;
+        let centerY = 0;
+        
+        if (previewContainer) {
+          centerX = previewContainer.clientWidth / 2;
+          centerY = previewContainer.clientHeight / 2;
+        }
+        
         // Create a new overlay with the uploaded image
         const newOverlay: PhotoOverlay = {
           url: e.target.result as string,
-          position: currentPhotoOverlays[index]?.position || { x: 50, y: 50 }, // Center if no position
-          scale: currentPhotoOverlays[index]?.scale || 1.0
+          position: { x: centerX, y: centerY },
+          scale: 1.0
         };
+        
+        // Set the preview
+        setOverlayPreviews({
+          ...overlayPreviews,
+          [index]: e.target.result as string
+        });
         
         // Update the overlays array
         const updatedOverlays = [...currentPhotoOverlays];
@@ -235,25 +256,37 @@ const PhotoBooth: React.FC = () => {
     reader.readAsDataURL(file);
   };
   
-  // Handle dragging of overlays
+  // Handle dragging of overlays in the preview
   const handleOverlayMouseDown = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
     setIsDragging(true);
     setDraggedOverlayIndex(index);
   };
   
   const handleOverlayMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || draggedOverlayIndex === null || !overlayContainerRef.current) return;
+    if (!isDragging || draggedOverlayIndex === null) return;
     
-    const containerRect = overlayContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - containerRect.left;
-    const y = e.clientY - containerRect.top;
+    const containerRef = overlayPreviewRefs.current[draggedOverlayIndex];
+    if (!containerRef) return;
+    
+    const rect = containerRef.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     
     // Update the position of the dragged overlay
     const updatedOverlays = [...currentPhotoOverlays];
-    updatedOverlays[draggedOverlayIndex] = {
-      ...updatedOverlays[draggedOverlayIndex],
-      position: { x, y }
-    };
+    if (!updatedOverlays[draggedOverlayIndex]) {
+      updatedOverlays[draggedOverlayIndex] = {
+        url: overlayPreviews[draggedOverlayIndex] || "/placeholder.svg",
+        position: { x, y },
+        scale: 1.0
+      };
+    } else {
+      updatedOverlays[draggedOverlayIndex] = {
+        ...updatedOverlays[draggedOverlayIndex],
+        position: { x, y }
+      };
+    }
     
     setCurrentPhotoOverlays(updatedOverlays);
     
@@ -271,49 +304,38 @@ const PhotoBooth: React.FC = () => {
     setDraggedOverlayIndex(null);
   };
   
+  const handleOverlayMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      setDraggedOverlayIndex(null);
+    }
+  };
+  
   const handleScaleChange = (index: number, newScale: number) => {
     const updatedOverlays = [...currentPhotoOverlays];
-    updatedOverlays[index] = {
-      ...updatedOverlays[index],
-      scale: newScale
-    };
-    
-    setCurrentPhotoOverlays(updatedOverlays);
-    
-    // Update the photoStripData
-    if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
-        photoOverlays: updatedOverlays
-      });
+    if (!updatedOverlays[index]) {
+      // Create overlay if it doesn't exist
+      const previewContainer = overlayPreviewRefs.current[index];
+      let centerX = 0;
+      let centerY = 0;
+      
+      if (previewContainer) {
+        centerX = previewContainer.clientWidth / 2;
+        centerY = previewContainer.clientHeight / 2;
+      }
+      
+      updatedOverlays[index] = {
+        url: overlayPreviews[index] || "/placeholder.svg",
+        position: { x: centerX, y: centerY },
+        scale: newScale
+      };
+    } else {
+      updatedOverlays[index] = {
+        ...updatedOverlays[index],
+        scale: newScale
+      };
     }
-  };
-  
-  const addNewOverlay = () => {
-    // Create a center position based on the container size
-    const containerWidth = overlayContainerRef.current?.clientWidth || 300;
-    const containerHeight = overlayContainerRef.current?.clientHeight || 300;
     
-    const newOverlay: PhotoOverlay = {
-      url: "/placeholder.svg", // Default placeholder
-      position: { x: containerWidth / 2, y: containerHeight / 2 },
-      scale: 1.0
-    };
-    
-    const updatedOverlays = [...currentPhotoOverlays, newOverlay];
-    setCurrentPhotoOverlays(updatedOverlays);
-    
-    // Update the photoStripData
-    if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
-        photoOverlays: updatedOverlays
-      });
-    }
-  };
-  
-  const deleteOverlay = (index: number) => {
-    const updatedOverlays = currentPhotoOverlays.filter((_, i) => i !== index);
     setCurrentPhotoOverlays(updatedOverlays);
     
     // Update the photoStripData
@@ -328,19 +350,125 @@ const PhotoBooth: React.FC = () => {
   // Create empty overlays if needed
   useEffect(() => {
     if (photoStripData && photoNum > 0 && (!currentPhotoOverlays || currentPhotoOverlays.length < photoNum)) {
-      // Create default overlays for each photo
-      const containerWidth = overlayContainerRef.current?.clientWidth || 300;
-      const containerHeight = overlayContainerRef.current?.clientHeight || 300;
+      // Create default overlays for each photo if they don't exist
+      const updatedOverlays = [...currentPhotoOverlays];
+      while (updatedOverlays.length < photoNum) {
+        const index = updatedOverlays.length;
+        // Keep existing overlay or create a placeholder
+        if (index < currentPhotoOverlays.length) {
+          updatedOverlays.push(currentPhotoOverlays[index]);
+        } else {
+          updatedOverlays.push({
+            url: "/placeholder.svg",
+            position: { x: 0, y: 0 },  // Will be properly centered later when container is available
+            scale: 1.0
+          });
+        }
+      }
       
-      const defaultOverlays: PhotoOverlay[] = Array(photoNum).fill(0).map((_, i) => ({
-        url: "/placeholder.svg",
-        position: { x: containerWidth / 2, y: containerHeight / 2 },
-        scale: 1.0
-      }));
-      
-      setCurrentPhotoOverlays(defaultOverlays);
+      setCurrentPhotoOverlays(updatedOverlays.slice(0, photoNum));
     }
   }, [photoNum, photoStripData, currentPhotoOverlays]);
+  
+  // Generate overlay preview components
+  const renderOverlayPreviews = () => {
+    const previews = [];
+    
+    for (let i = 0; i < photoNum; i++) {
+      previews.push(
+        <div key={i} className="mb-6 border rounded-lg bg-gray-50 p-4">
+          <h3 className="font-medium mb-3">Photo {i + 1} Overlay</h3>
+          
+          <div 
+            className="relative bg-black mb-4 overflow-hidden"
+            style={{ 
+              aspectRatio: aspectRatio === '4:3' ? '4/3' : 
+                          aspectRatio === '1:1' ? '1/1' : 
+                          aspectRatio === '3:2' ? '3/2' : '4/5',
+              maxHeight: '250px'
+            }}
+            ref={el => overlayPreviewRefs.current[i] = el}
+            onMouseMove={handleOverlayMouseMove}
+            onMouseUp={handleOverlayMouseUp}
+            onMouseLeave={handleOverlayMouseLeave}
+          >
+            {/* This is where we simulate the camera viewport */}
+            <div className="absolute inset-0 flex items-center justify-center text-white opacity-30">
+              Camera Preview
+            </div>
+            
+            {/* Show the overlay */}
+            {currentPhotoOverlays[i] && (
+              <div 
+                className="absolute cursor-move"
+                style={{
+                  left: `${currentPhotoOverlays[i].position.x}px`,
+                  top: `${currentPhotoOverlays[i].position.y}px`,
+                  transform: `scale(${currentPhotoOverlays[i].scale})`,
+                  transformOrigin: 'center',
+                  zIndex: draggedOverlayIndex === i ? 100 : 10
+                }}
+                onMouseDown={(e) => handleOverlayMouseDown(e, i)}
+              >
+                <img 
+                  src={currentPhotoOverlays[i].url} 
+                  alt={`Overlay ${i + 1}`} 
+                  className="max-w-[150px] max-h-[150px] object-contain pointer-events-none"
+                  draggable={false}
+                />
+              </div>
+            )}
+            
+            {(!currentPhotoOverlays[i] || currentPhotoOverlays[i].url === "/placeholder.svg") && (
+              <div className="absolute inset-0 flex items-center justify-center text-white">
+                <div className="text-center">
+                  <p className="text-sm">No overlay image</p>
+                  <p className="text-xs mt-1">Upload an image below</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-3">
+            <div>
+              <Label className="mb-1 block">Upload Image</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handlePhotoOverlayUpload(e, i)}
+                  className="text-sm w-full"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label className="mb-1 block">Scale</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0.1"
+                  max="2"
+                  step="0.1"
+                  value={currentPhotoOverlays[i]?.scale || 1.0}
+                  onChange={(e) => handleScaleChange(i, parseFloat(e.target.value))}
+                  className="flex-1"
+                />
+                <span className="w-10 text-center">{(currentPhotoOverlays[i]?.scale || 1.0).toFixed(1)}x</span>
+              </div>
+            </div>
+            
+            <div className="text-sm text-gray-500">
+              <p>Position: {Math.round(currentPhotoOverlays[i]?.position.x || 0)}px, {Math.round(currentPhotoOverlays[i]?.position.y || 0)}px</p>
+              <p className="italic mt-1 text-xs">Drag image above to position</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return previews;
+  };
   
   return (
     <div className="min-h-screen">
@@ -486,109 +614,12 @@ const PhotoBooth: React.FC = () => {
                   </TabsContent>
                   
                   <TabsContent value="overlays" className="py-4">
-                    <div 
-                      ref={overlayContainerRef}
-                      className="relative bg-gray-100 border rounded-lg p-4 mb-4 h-[300px] overflow-hidden"
-                      onMouseMove={handleOverlayMouseMove}
-                      onMouseUp={handleOverlayMouseUp}
-                      onMouseLeave={handleOverlayMouseUp}
-                    >
-                      {currentPhotoOverlays.map((overlay, index) => (
-                        <div 
-                          key={index}
-                          className="absolute cursor-move"
-                          style={{
-                            left: `${overlay.position.x}px`,
-                            top: `${overlay.position.y}px`,
-                            transform: `scale(${overlay.scale})`,
-                            transformOrigin: 'center',
-                            zIndex: draggedOverlayIndex === index ? 100 : 10
-                          }}
-                          onMouseDown={(e) => handleOverlayMouseDown(e, index)}
-                        >
-                          <div className="relative group">
-                            <img 
-                              src={overlay.url} 
-                              alt={`Overlay ${index + 1}`} 
-                              className="max-w-[150px] max-h-[150px] object-contain"
-                              draggable={false}
-                            />
-                            <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button 
-                                variant="destructive" 
-                                size="icon" 
-                                className="h-6 w-6" 
-                                onClick={() => deleteOverlay(index)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {currentPhotoOverlays.length === 0 && (
-                        <div className="flex items-center justify-center h-full text-gray-400">
-                          No overlays added yet. Click "Add Overlay" below.
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <Button 
-                        onClick={addNewOverlay}
-                        className="w-full"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Add Overlay
-                      </Button>
+                    <div className="space-y-6">
+                      <p className="text-sm text-gray-500">
+                        Upload and position overlay images for each photo. These will appear over your photos when captured.
+                      </p>
                       
-                      {currentPhotoOverlays.map((overlay, index) => (
-                        <div key={index} className="p-4 border rounded-lg">
-                          <h3 className="font-medium mb-2">Overlay #{index + 1}</h3>
-                          
-                          <div className="grid grid-cols-2 gap-4 mb-2">
-                            <div>
-                              <Label className="mb-1 block">Upload Image</Label>
-                              <div className="flex items-center gap-2">
-                                <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-                                  <img 
-                                    src={overlay.url} 
-                                    alt={`Preview ${index + 1}`}
-                                    className="max-w-full max-h-full"
-                                  />
-                                </div>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="text-sm"
-                                  onChange={(e) => handlePhotoOverlayUpload(e, index)}
-                                />
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <Label className="mb-1 block">Scale</Label>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="range"
-                                  min="0.1"
-                                  max="2"
-                                  step="0.1"
-                                  value={overlay.scale}
-                                  onChange={(e) => handleScaleChange(index, parseFloat(e.target.value))}
-                                  className="flex-1"
-                                />
-                                <span className="w-10 text-center">{overlay.scale.toFixed(1)}x</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="text-sm text-gray-500 mt-2">
-                            Position: X: {Math.round(overlay.position.x)}, Y: {Math.round(overlay.position.y)}
-                            <span className="ml-2 italic">(Drag overlay above to adjust position)</span>
-                          </div>
-                        </div>
-                      ))}
+                      {renderOverlayPreviews()}
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -610,7 +641,7 @@ const PhotoBooth: React.FC = () => {
                 defaultFilter={filter}
                 lightColor={lightColor}
                 playSound={playSound}
-                photoOverlays={photoStripData?.photoOverlays}
+                photoOverlays={currentPhotoOverlays}
               />
             </div>
             

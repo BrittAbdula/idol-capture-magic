@@ -522,14 +522,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             </div>
           )}
           
-          {photoCount < photoLimit && !countdownValue && photoOverlays && photoOverlays[photoCount] && (
-            <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full z-10">
-              <span className="text-xs font-bold text-white">
-                Pose {photoCount + 1}
-              </span>
-            </div>
-          )}
-          
           {!inCaptureMode && (
             <>
               <button 
@@ -618,31 +610,3 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 };
 
 export default WebcamCapture;
-
-function getContainerStyle() {
-  return {};
-}
-
-function getVideoStyle() {
-  return {};
-}
-
-function getFilterClassName() {
-  return '';
-}
-
-function toggleMirror() {
-  return;
-}
-
-function toggleFullscreen() {
-  return;
-}
-
-function cycleAspectRatio() {
-  return;
-}
-
-function toggleGrid() {
-  return;
-}
