@@ -73,7 +73,7 @@ const PhotoStrip: React.FC = () => {
           canvasSize: template.canvasSize,
           background: template.background,
           photoPositions: template.photoPositions,
-          idolOverlay: template.idolOverlay,
+          photoOverlays: template.photoOverlays,
           decoration: template.decoration,
           photoBoothSettings: template.photoBoothSettings
         };

@@ -195,14 +195,14 @@ const TemplateCreator: React.FC = () => {
         color: '#FFFFFF'
       },
       photoPositions: photoPositions.slice(0, photoCount).map(({id, ...rest}) => rest),
-      idolOverlay: decorations.length > 0 ? {
+      photoOverlays: decorations.length > 0 ? decorations.map((_, i) => ({
         url: "/placeholder.svg",
         position: {
-          x: 50,
-          y: 100
+          x: 50 + (i * 5),
+          y: 100 + (i * 5)
         },
-        scale: 1.2
-      } : undefined,
+        scale: 1.2 - (i * 0.1)
+      })) : undefined,
       decoration: decorations.map(decoration => ({
         type: decoration.type,
         url: decoration.url,
