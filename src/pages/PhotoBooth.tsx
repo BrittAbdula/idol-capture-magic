@@ -68,7 +68,14 @@ const PhotoBooth: React.FC = () => {
           setPlaySound(settings.sound);
           
           if (template.photoOverlays && template.photoOverlays.length > 0) {
-            setCurrentPhotoOverlays(template.photoOverlays);
+            const enhancedOverlays = template.photoOverlays.map((overlay, index) => {
+              return {
+                ...overlay,
+                canvasSize: template.canvasSize,
+                photoPosition: template.photoPositions[index] || null
+              };
+            });
+            setCurrentPhotoOverlays(enhancedOverlays);
           }
           
           const newPhotoStripData = {
@@ -101,24 +108,26 @@ const PhotoBooth: React.FC = () => {
   }, [templateFromQuery, setCurrentTemplate, setPhotoStripData, filter, lightColor, playSound]);
   
   useEffect(() => {
-    if (photoStripData) {
-      const updatedSettings = {
-        ...photoStripData.photoBoothSettings,
-        aspectRatio,
-        photoNum,
-        countdown,
-        filter,
-        lightColor,
-        sound: playSound
-      };
+    if (photoStripData && photoNum > 0 && (!currentPhotoOverlays || currentPhotoOverlays.length < photoNum)) {
+      const updatedOverlays = [...currentPhotoOverlays];
+      while (updatedOverlays.length < photoNum) {
+        const index = updatedOverlays.length;
+        if (index < currentPhotoOverlays.length) {
+          updatedOverlays.push(currentPhotoOverlays[index]);
+        } else {
+          updatedOverlays.push({
+            url: "/placeholder.svg",
+            position: { x: 50, y: 50 },
+            scale: 1.0,
+            canvasSize: photoStripData.canvasSize,
+            photoPosition: photoStripData.photoPositions[index] || null
+          });
+        }
+      }
       
-      setPhotoStripData({
-        ...photoStripData,
-        photoBoothSettings: updatedSettings,
-        photoOverlays: currentPhotoOverlays
-      });
+      setCurrentPhotoOverlays(updatedOverlays.slice(0, photoNum));
     }
-  }, [aspectRatio, photoNum, countdown, filter, lightColor, playSound, photoStripData, setPhotoStripData, currentPhotoOverlays]);
+  }, [photoNum, photoStripData, currentPhotoOverlays]);
   
   useEffect(() => {
     return () => {
@@ -200,7 +209,9 @@ const PhotoBooth: React.FC = () => {
         const newOverlay: PhotoOverlay = {
           url: e.target.result as string,
           position: position,
-          scale: 1.0
+          scale: 1.0,
+          canvasSize: photoStripData?.canvasSize,
+          photoPosition: photoStripData?.photoPositions[index] || null
         };
         
         setOverlayPreviews({
@@ -241,20 +252,34 @@ const PhotoBooth: React.FC = () => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    const xPercent = (x / rect.width) * 100;
-    const yPercent = (y / rect.height) * 100;
+    let absoluteX = x;
+    let absoluteY = y;
+    
+    if (photoStripData && photoStripData.photoPositions[draggedOverlayIndex]) {
+      const photoPosition = photoStripData.photoPositions[draggedOverlayIndex];
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
+      
+      const widthRatio = photoPosition.width / containerWidth;
+      const heightRatio = photoPosition.height / containerHeight;
+      
+      absoluteX = x * widthRatio;
+      absoluteY = y * heightRatio;
+    }
     
     const updatedOverlays = [...currentPhotoOverlays];
     if (!updatedOverlays[draggedOverlayIndex]) {
       updatedOverlays[draggedOverlayIndex] = {
         url: overlayPreviews[draggedOverlayIndex] || "/placeholder.svg",
-        position: { x: xPercent, y: yPercent },
-        scale: 1.0
+        position: { x: absoluteX, y: absoluteY },
+        scale: 1.0,
+        canvasSize: photoStripData?.canvasSize,
+        photoPosition: photoStripData?.photoPositions[draggedOverlayIndex] || null
       };
     } else {
       updatedOverlays[draggedOverlayIndex] = {
         ...updatedOverlays[draggedOverlayIndex],
-        position: { x: xPercent, y: yPercent }
+        position: { x: absoluteX, y: absoluteY }
       };
     }
     
@@ -305,26 +330,6 @@ const PhotoBooth: React.FC = () => {
     }
   };
   
-  useEffect(() => {
-    if (photoStripData && photoNum > 0 && (!currentPhotoOverlays || currentPhotoOverlays.length < photoNum)) {
-      const updatedOverlays = [...currentPhotoOverlays];
-      while (updatedOverlays.length < photoNum) {
-        const index = updatedOverlays.length;
-        if (index < currentPhotoOverlays.length) {
-          updatedOverlays.push(currentPhotoOverlays[index]);
-        } else {
-          updatedOverlays.push({
-            url: "/placeholder.svg",
-            position: { x: 50, y: 50 },
-            scale: 1.0
-          });
-        }
-      }
-      
-      setCurrentPhotoOverlays(updatedOverlays.slice(0, photoNum));
-    }
-  }, [photoNum, photoStripData, currentPhotoOverlays]);
-  
   const renderOverlayPreviews = () => {
     const previews = [];
     
@@ -354,8 +359,8 @@ const PhotoBooth: React.FC = () => {
               <div 
                 className="absolute cursor-move"
                 style={{
-                  left: `${currentPhotoOverlays[i].position.x}%`,
-                  top: `${currentPhotoOverlays[i].position.y}%`,
+                  left: `${currentPhotoOverlays[i].position.x}px`,
+                  top: `${currentPhotoOverlays[i].position.y}px`,
                   transform: `translate(-50%, -50%) scale(${currentPhotoOverlays[i].scale})`,
                   transformOrigin: 'center',
                   zIndex: draggedOverlayIndex === i ? 100 : 10
@@ -411,7 +416,7 @@ const PhotoBooth: React.FC = () => {
             </div>
             
             <div className="text-sm text-gray-500">
-              <p>Position: {Math.round(currentPhotoOverlays[i]?.position.x || 0)}%, {Math.round(currentPhotoOverlays[i]?.position.y || 0)}%</p>
+              <p>Position: {Math.round(currentPhotoOverlays[i]?.position.x || 0)}px, {Math.round(currentPhotoOverlays[i]?.position.y || 0)}px</p>
               <p className="italic mt-1 text-xs">Drag image above to position</p>
             </div>
           </div>

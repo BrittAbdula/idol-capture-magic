@@ -48,6 +48,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const [videoDisplaySize, setVideoDisplaySize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const [templateDimensions, setTemplateDimensions] = useState({
+    width: 0,
+    height: 0
+  });
 
   useEffect(() => {
     const updateSizes = () => {
@@ -85,6 +89,18 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       observer.disconnect();
     };
   }, [isStreaming, currentAspectRatio, isFullscreen]);
+
+  useEffect(() => {
+    if (photoOverlays && photoOverlays.length > 0 && photoOverlays[0]) {
+      const canvasSizeFromContext = photoOverlays[0].canvasSize;
+      if (canvasSizeFromContext) {
+        setTemplateDimensions({
+          width: canvasSizeFromContext.width,
+          height: canvasSizeFromContext.height
+        });
+      }
+    }
+  }, [photoOverlays]);
 
   useEffect(() => {
     if (playSound) {
@@ -172,15 +188,25 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     if (!videoEl || !containerEl) return overlay.position;
     
     const videoRect = videoEl.getBoundingClientRect();
-    const containerRect = containerEl.getBoundingClientRect();
+    
+    const photoPosition = overlay.photoPosition;
+    if (!photoPosition) {
+      return overlay.position;
+    }
     
     const videoViewportWidth = videoRect.width;
     const videoViewportHeight = videoRect.height;
     
-    const x = (overlay.position.x / 100) * videoViewportWidth;
-    const y = (overlay.position.y / 100) * videoViewportHeight;
+    const widthRatio = videoViewportWidth / photoPosition.width;
+    const heightRatio = videoViewportHeight / photoPosition.height;
     
-    return { x, y };
+    const absoluteX = overlay.position.x;
+    const absoluteY = overlay.position.y;
+    
+    const scaledX = absoluteX * widthRatio;
+    const scaledY = absoluteY * heightRatio;
+    
+    return { x: scaledX, y: scaledY };
   };
 
   const captureImage = useCallback(() => {
@@ -271,20 +297,39 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           if (overlayImg) {
             const scale = overlay.scale || 1;
             
-            const videoRect = video.getBoundingClientRect();
-            const posX = (overlay.position.x / 100) * canvas.width;
-            const posY = (overlay.position.y / 100) * canvas.height;
-            
-            const overlayWidth = overlayImg.width * scale;
-            const overlayHeight = overlayImg.height * scale;
-            
-            ctx.drawImage(
-              overlayImg,
-              posX - (overlayWidth / 2),
-              posY - (overlayHeight / 2),
-              overlayWidth,
-              overlayHeight
-            );
+            const photoPosition = overlay.photoPosition;
+            if (photoPosition) {
+              const widthRatio = canvas.width / photoPosition.width;
+              const heightRatio = canvas.height / photoPosition.height;
+              
+              const posX = overlay.position.x * widthRatio;
+              const posY = overlay.position.y * heightRatio;
+              
+              const overlayWidth = overlayImg.width * scale;
+              const overlayHeight = overlayImg.height * scale;
+              
+              ctx.drawImage(
+                overlayImg,
+                posX - (overlayWidth / 2),
+                posY - (overlayHeight / 2),
+                overlayWidth,
+                overlayHeight
+              );
+            } else {
+              const posX = (overlay.position.x / 100) * canvas.width;
+              const posY = (overlay.position.y / 100) * canvas.height;
+              
+              const overlayWidth = overlayImg.width * scale;
+              const overlayHeight = overlayImg.height * scale;
+              
+              ctx.drawImage(
+                overlayImg,
+                posX - (overlayWidth / 2),
+                posY - (overlayHeight / 2),
+                overlayWidth,
+                overlayHeight
+              );
+            }
           }
         }
         
@@ -516,6 +561,38 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return position;
   };
 
+  const getOverlayPositionStyle = (overlay: PhotoOverlay) => {
+    if (!overlay || !overlay.position) return {};
+    
+    const photoPosition = overlay.photoPosition;
+    if (photoPosition && videoDisplaySize.width && videoDisplaySize.height) {
+      const widthRatio = videoDisplaySize.width / photoPosition.width;
+      const heightRatio = videoDisplaySize.height / photoPosition.height;
+      
+      return {
+        position: 'absolute' as const,
+        left: `${overlay.position.x * widthRatio}px`,
+        top: `${overlay.position.y * heightRatio}px`,
+        transform: `translate(-50%, -50%) scale(${overlay.scale})`,
+        transformOrigin: 'center',
+        pointerEvents: 'none' as const,
+        maxWidth: '60%',
+        maxHeight: '60%',
+      };
+    }
+    
+    return {
+      position: 'absolute' as const,
+      left: `${overlay.position.x}%`,
+      top: `${overlay.position.y}%`,
+      transform: `translate(-50%, -50%) scale(${overlay.scale})`,
+      transformOrigin: 'center',
+      pointerEvents: 'none' as const,
+      maxWidth: '60%',
+      maxHeight: '60%',
+    };
+  };
+
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
   return (
@@ -578,16 +655,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
                 <img 
                   src={photoOverlays[photoCount].url} 
                   alt="Photo overlay"
-                  style={{
-                    position: 'absolute',
-                    left: `${getOverlayPositionInPercentages(photoOverlays[photoCount]).x}%`,
-                    top: `${getOverlayPositionInPercentages(photoOverlays[photoCount]).y}%`,
-                    transform: `translate(-50%, -50%) scale(${photoOverlays[photoCount].scale})`,
-                    transformOrigin: 'center',
-                    pointerEvents: 'none',
-                    maxWidth: '60%',
-                    maxHeight: '60%',
-                  }}
+                  style={getOverlayPositionStyle(photoOverlays[photoCount])}
                 />
               </div>
             )}

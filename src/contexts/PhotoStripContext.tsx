@@ -15,6 +15,11 @@ export interface PhotoOverlay {
   url: string;
   position: Position;
   scale: number;
+  canvasSize?: {
+    width: number;
+    height: number;
+  };
+  photoPosition?: PhotoPosition | null;
 }
 
 export interface Decoration {
