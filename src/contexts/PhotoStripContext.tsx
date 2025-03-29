@@ -31,6 +31,7 @@ export interface Background {
   type: 'color' | 'image';
   color?: string;
   imageUrl?: string;
+  url?: string; // Add url property
 }
 
 export interface Decoration {
@@ -38,6 +39,14 @@ export interface Decoration {
   url: string;
   position?: Position;
   scale?: number;
+}
+
+export interface TextConfig {
+  content: string;
+  font?: string;
+  size?: number;
+  color?: string;
+  position?: Position;
 }
 
 export interface PhotoBoothSettings {
@@ -60,9 +69,12 @@ export interface Template {
   previewUrl?: string;
   photoOverlays?: PhotoOverlay[];
   decoration?: Decoration[];
+  photos?: string[]; // Add photos property
+  text?: TextConfig; // Add text property
+  caption?: string; // Add caption property for backward compatibility
 }
 
-export const defaultAspectRatios = {
+export const defaultAspectRatios: Record<string, number> = {
   '1:1': 1,
   '4:3': 4/3,
   '3:2': 3/2,
@@ -85,7 +97,7 @@ interface PhotoStripContextProps {
   updatePhotos: (photos: string[]) => void;
   updatePhotoOverlays: (overlays: PhotoOverlay[]) => void;
   updateBackground: (background: Background) => void;
-  updateText: (text: string) => void;
+  updateText: (text: TextConfig | string) => void; // Change type to support both string and TextConfig
   updateDecoration: (decorations: Decoration[]) => void;
   currentTemplate: Template | null;
   setCurrentTemplate: (template: Template | null) => void;
@@ -116,46 +128,55 @@ export const PhotoStripProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setPhotos(newPhotos);
     
     if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
+      setPhotoStripData(prevData => ({
+        ...prevData,
         photos: newPhotos
-      });
+      }));
     }
   }, [photoStripData]);
 
   const updatePhotoOverlays = useCallback((overlays: PhotoOverlay[]) => {
     if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
+      setPhotoStripData(prevData => ({
+        ...prevData,
         photoOverlays: overlays
-      });
+      }));
     }
   }, [photoStripData]);
 
   const updateBackground = useCallback((background: Background) => {
     if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
+      setPhotoStripData(prevData => ({
+        ...prevData,
         background
-      });
+      }));
     }
   }, [photoStripData]);
 
-  const updateText = useCallback((text: string) => {
+  const updateText = useCallback((text: TextConfig | string) => {
     if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
-        caption: text
-      } as Template); // Type assertion as Template since caption isn't in our interface
+      if (typeof text === 'string') {
+        // Handle the case where text is a string (backwards compatibility)
+        setPhotoStripData(prevData => ({
+          ...prevData,
+          caption: text
+        }));
+      } else {
+        // Handle the case where text is a TextConfig object
+        setPhotoStripData(prevData => ({
+          ...prevData,
+          text
+        }));
+      }
     }
   }, [photoStripData]);
 
   const updateDecoration = useCallback((decorations: Decoration[]) => {
     if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
+      setPhotoStripData(prevData => ({
+        ...prevData,
         decoration: decorations
-      });
+      }));
     }
   }, [photoStripData]);
 

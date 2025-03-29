@@ -157,7 +157,8 @@ const PhotoStripPage: React.FC = () => {
       ctx.fillStyle = photoStripData.background.color || '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      if (photoStripData.background.type === 'image' && photoStripData.background.url) {
+      if (photoStripData.background.type === 'image' && 
+          (photoStripData.background.url || photoStripData.background.imageUrl)) {
         const bgImg = new Image();
         bgImg.onload = () => {
           ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
@@ -166,34 +167,36 @@ const PhotoStripPage: React.FC = () => {
         bgImg.onerror = () => {
           drawRemainingElements();
         };
-        bgImg.src = photoStripData.background.url;
+        bgImg.src = photoStripData.background.url || photoStripData.background.imageUrl || '';
       } else {
         drawRemainingElements();
       }
       
       function drawRemainingElements() {
-        loadedPhotos.forEach((img, index) => {
-          if (index < photoStripData.photoPositions.length) {
-            const pos = photoStripData.photoPositions[index];
-            
-            const borderWidth = 5 * scale;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(
-              pos.x * scale - borderWidth, 
-              pos.y * scale - borderWidth, 
-              pos.width * scale + (borderWidth * 2), 
-              pos.height * scale + (borderWidth * 2)
-            );
-            
-            ctx.drawImage(
-              img, 
-              pos.x * scale, 
-              pos.y * scale, 
-              pos.width * scale, 
-              pos.height * scale
-            );
-          }
-        });
+        if (photoStripData.photos && photoStripData.photos.length > 0) {
+          photoStripData.photos.forEach((photoUrl, index) => {
+            if (index < photoStripData.photoPositions.length) {
+              const pos = photoStripData.photoPositions[index];
+              
+              const borderWidth = 5 * scale;
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(
+                pos.x * scale - borderWidth, 
+                pos.y * scale - borderWidth, 
+                pos.width * scale + (borderWidth * 2), 
+                pos.height * scale + (borderWidth * 2)
+              );
+              
+              ctx.drawImage(
+                photoUrl, 
+                pos.x * scale, 
+                pos.y * scale, 
+                pos.width * scale, 
+                pos.height * scale
+              );
+            }
+          });
+        }
         
         if (photoStripData.decoration && loadedDecorations.length > 0) {
           photoStripData.decoration.forEach((dec, index) => {
@@ -213,8 +216,8 @@ const PhotoStripPage: React.FC = () => {
         
         if (photoStripData.text) {
           const text = photoStripData.text;
-          ctx.fillStyle = text.color;
-          ctx.font = `${text.size * scale}px ${text.font || 'Arial'}`;
+          ctx.fillStyle = text.color || '#000000';
+          ctx.font = `${text.size || 24 * scale}px ${text.font || 'Arial'}`;
           ctx.textAlign = 'center';
           
           const textX = text.position ? text.position.x * scale : canvas.width / 2;
@@ -278,7 +281,7 @@ const PhotoStripPage: React.FC = () => {
   }, [customText, selectedColor, updateText, updateBackground, photoStripData]);
 
   const handleDownload = () => {
-    if (!photoStripData || photoStripData.photos.length === 0) {
+    if (!photoStripData || !photoStripData.photos || photoStripData.photos.length === 0) {
       toast.error("No photos to download");
       return;
     }
@@ -309,7 +312,7 @@ const PhotoStripPage: React.FC = () => {
   };
 
   const handlePrint = () => {
-    if (!photoStripData || photoStripData.photos.length === 0) {
+    if (!photoStripData || !photoStripData.photos || photoStripData.photos.length === 0) {
       toast.error("No photos to print");
       return;
     }
@@ -380,7 +383,7 @@ const PhotoStripPage: React.FC = () => {
   };
 
   const handleShare = async () => {
-    if (!photoStripData || photoStripData.photos.length === 0) {
+    if (!photoStripData || !photoStripData.photos || photoStripData.photos.length === 0) {
       toast.error("No photos to share");
       return;
     }
