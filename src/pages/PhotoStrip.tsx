@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
@@ -21,7 +22,7 @@ import { templates } from '../data/templates';
 import PhotoStrip from '../components/PhotoStrip';
 
 const PhotoStripPage: React.FC = () => {
-  const { photoStripData, updatePhotos, updateBackground, updateText, updateDecoration, currentTemplate, setCurrentTemplate } = usePhotoStrip();
+  const { photoStripData, setPhotoStripData, updatePhotos, updateBackground, updateText, updateDecoration, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
@@ -76,7 +77,7 @@ const PhotoStripPage: React.FC = () => {
           decoration: template.decoration,
           photoBoothSettings: template.photoBoothSettings
         };
-        updateBackground(template.background);
+        setPhotoStripData(newPhotoStripData);
       }
     }
   };
@@ -239,23 +240,25 @@ const PhotoStripPage: React.FC = () => {
   }, [photoStripData, selectedColor, customText, showDate, isMobile]);
 
   useEffect(() => {
-    if (customText) {
+    if (customText && photoStripData) {
       updateText({
         content: customText,
         font: 'Arial',
         size: 24,
         color: '#FF4081',
         position: {
-          x: photoStripData?.canvasSize.width ? photoStripData.canvasSize.width / 2 : 600,
-          y: photoStripData?.canvasSize.height ? photoStripData.canvasSize.height - 100 : 1500
+          x: photoStripData.canvasSize.width ? photoStripData.canvasSize.width / 2 : 600,
+          y: photoStripData.canvasSize.height ? photoStripData.canvasSize.height - 100 : 1500
         }
       });
     }
 
-    updateBackground({
-      type: 'color',
-      color: selectedColor
-    });
+    if (photoStripData) {
+      updateBackground({
+        type: 'color',
+        color: selectedColor
+      });
+    }
   }, [customText, selectedColor, updateText, updateBackground, photoStripData]);
 
   const handleDownload = () => {

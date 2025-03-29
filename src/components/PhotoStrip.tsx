@@ -9,14 +9,14 @@ interface PhotoStripProps {
   images: string[];
   filter: string;
   showControls?: boolean;
-  photoOverlays?: PhotoOverlay[]; // Added photoOverlays prop
+  photoOverlays?: PhotoOverlay[];
 }
 
 const PhotoStrip: React.FC<PhotoStripProps> = ({ 
   images, 
   filter, 
   showControls = true,
-  photoOverlays // Added photoOverlays prop
+  photoOverlays
 }) => {
   const getFilterClassName = () => {
     switch (filter) {
@@ -101,8 +101,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
         
         // If we have an overlay for this photo, draw it
-        // Note: The overlay should already be included in the photo since it was captured that way
-        // This is just a safeguard in case we need to re-apply them
         if (photoOverlays && photoOverlays[index] && overlayImages[index]) {
           const overlay = photoOverlays[index];
           const overlayImg = overlayImages[index];

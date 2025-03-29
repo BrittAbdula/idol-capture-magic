@@ -69,7 +69,7 @@ export interface Template {
   };
   photoPositions: PhotoPosition[];
   previewUrl?: string;
-  photoOverlays?: PhotoOverlay[]; // Changed from idolOverlay to photoOverlays
+  photoOverlays?: PhotoOverlay[]; 
   decoration?: Decoration[];
 }
 
@@ -90,7 +90,7 @@ export interface PhotoStrip {
   };
   photoPositions: PhotoPosition[];
   photos: string[];
-  photoOverlays?: PhotoOverlay[]; // Changed from idolOverlay to photoOverlays
+  photoOverlays?: PhotoOverlay[];
   decoration?: Decoration[];
   text?: TextConfig;
   photoBoothSettings: PhotoBoothSettings;
@@ -121,6 +121,7 @@ interface PhotoStripContextType {
   updateBackground: (background: { type: string; url?: string; color: string }) => void;
   updateText: (text: TextConfig) => void;
   updateDecoration: (decorations: Decoration[]) => void;
+  updatePhotoOverlays: (overlays: PhotoOverlay[]) => void;
   currentTemplate: Template | null;
   setCurrentTemplate: React.Dispatch<React.SetStateAction<Template | null>>;
 }
@@ -187,6 +188,15 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const updatePhotoOverlays = (overlays: PhotoOverlay[]) => {
+    if (photoStripData) {
+      setPhotoStripData({
+        ...photoStripData,
+        photoOverlays: overlays
+      });
+    }
+  };
+
   return (
     <PhotoStripContext.Provider 
       value={{ 
@@ -196,6 +206,7 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
         updateBackground, 
         updateText,
         updateDecoration,
+        updatePhotoOverlays,
         currentTemplate,
         setCurrentTemplate
       }}
