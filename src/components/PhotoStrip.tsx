@@ -1,9 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { PhotoOverlay } from '@/contexts/PhotoStripContext';
+import { processPhotoStripData } from '@/lib/imageProcessing';
 
 interface PhotoStripProps {
   images: string[];
@@ -19,12 +20,45 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   photoOverlays
 }) => {
   const [loaded, setLoaded] = useState(false);
+  const [renderedImages, setRenderedImages] = useState<string[]>([]);
+  const [renderedOverlays, setRenderedOverlays] = useState<PhotoOverlay[]>([]);
+  const stripRef = useRef<HTMLDivElement>(null);
 
+  // Process incoming images and set them for rendering
   useEffect(() => {
-    console.log("PhotoStrip component - Images:", images?.length || 0);
-    console.log("PhotoStrip component - Overlays:", photoOverlays?.length || 0);
-    if (images && images.length > 0) {
-      setLoaded(true);
+    console.log("PhotoStrip component - Images received:", images?.length || 0);
+    console.log("PhotoStrip component - Overlays received:", photoOverlays?.length || 0);
+    
+    // Validate images array
+    if (Array.isArray(images) && images.length > 0) {
+      console.log("PhotoStrip - Valid images array found");
+      
+      // Filter out any empty strings or non-string values
+      const validImages = images.filter(img => typeof img === 'string' && img.trim() !== '');
+      
+      if (validImages.length > 0) {
+        console.log("PhotoStrip - Setting", validImages.length, "valid images");
+        setRenderedImages(validImages);
+        setLoaded(true);
+      } else {
+        console.error("PhotoStrip - No valid images found in array");
+        setLoaded(false);
+      }
+    } else {
+      console.error("PhotoStrip - Invalid or empty images array", images);
+      setLoaded(false);
+    }
+    
+    // Process overlays if they exist
+    if (photoOverlays && photoOverlays.length > 0) {
+      const validOverlays = photoOverlays.filter(overlay => 
+        overlay && overlay.url && overlay.url !== "/placeholder.svg"
+      );
+      
+      console.log("PhotoStrip - Setting", validOverlays.length, "valid overlays");
+      setRenderedOverlays(validOverlays);
+    } else {
+      setRenderedOverlays([]);
     }
   }, [images, photoOverlays]);
 
@@ -44,29 +78,36 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    if (!ctx || images.length === 0) {
+    if (!ctx || renderedImages.length === 0) {
       toast.error("No photos to download");
       return;
     }
     
     // We'll need to load the images first
-    const loadImages = images.map(src => {
-      return new Promise<HTMLImageElement>((resolve) => {
+    const loadImages = renderedImages.map(src => {
+      return new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
+        img.onerror = () => {
+          console.error(`Failed to load image: ${src}`);
+          reject(new Error(`Failed to load image: ${src}`));
+        };
         img.src = src;
       });
     });
     
     // If we have photo overlays, preload them too
-    const loadOverlays = photoOverlays ? photoOverlays.map(overlay => {
+    const loadOverlays = renderedOverlays.length > 0 ? renderedOverlays.map(overlay => {
       if (!overlay || !overlay.url || overlay.url === "/placeholder.svg") {
         return Promise.resolve(null);
       }
-      return new Promise<HTMLImageElement | null>((resolve) => {
+      return new Promise<HTMLImageElement | null>((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
+        img.onerror = () => {
+          console.error(`Failed to load overlay: ${overlay.url}`);
+          resolve(null);
+        };
         img.src = overlay.url;
       });
     }) : [];
@@ -78,9 +119,9 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       }
       
       // Separate loaded images and overlays
-      const photoImages = loadedImages.slice(0, images.length) as HTMLImageElement[];
+      const photoImages = loadedImages.slice(0, renderedImages.length) as HTMLImageElement[];
       const overlayImages = loadOverlays.length > 0 ? 
-                            loadedImages.slice(images.length).filter(Boolean) as HTMLImageElement[] : [];
+                            loadedImages.slice(renderedImages.length).filter(Boolean) as HTMLImageElement[] : [];
       
       // Set canvas size - vertical receipt-like strip format
       const imgWidth = photoImages[0].width;
@@ -117,8 +158,8 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
         
         // If we have an overlay for this photo, draw it
-        if (photoOverlays && photoOverlays[index] && overlayImages[index]) {
-          const overlay = photoOverlays[index];
+        if (renderedOverlays[index] && overlayImages[index]) {
+          const overlay = renderedOverlays[index];
           const overlayImg = overlayImages[index];
           
           if (overlayImg) {
@@ -216,9 +257,16 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     });
   };
 
+  // Force a repaint of the component when loaded changes
+  useEffect(() => {
+    if (stripRef.current) {
+      const forceRepaint = stripRef.current.offsetHeight;
+    }
+  }, [loaded, renderedImages]);
+
   return (
-    <div className="flex flex-col items-center">
-      {!loaded || !images || images.length === 0 ? (
+    <div className="flex flex-col items-center" ref={stripRef}>
+      {!loaded || renderedImages.length === 0 ? (
         <div className="text-center text-gray-400 p-4">
           <p>Take photos to see your photo strip here</p>
         </div>
@@ -231,7 +279,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
               boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
             }}
           >
-            {images.map((image, index) => (
+            {renderedImages.map((image, index) => (
               <div key={index} className="mb-4">
                 <div className={`${getFilterClassName()} overflow-hidden relative`}>
                   <img 
@@ -242,18 +290,18 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                     onError={() => console.error(`Failed to load photo ${index + 1}`)}
                   />
                   
-                  {photoOverlays && photoOverlays[index] && photoOverlays[index].url && 
-                   photoOverlays[index].url !== "/placeholder.svg" && (
+                  {renderedOverlays[index] && renderedOverlays[index].url && 
+                   renderedOverlays[index].url !== "/placeholder.svg" && (
                     <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
                       <img 
-                        src={photoOverlays[index].url}
+                        src={renderedOverlays[index].url}
                         alt={`Overlay ${index + 1}`}
                         style={{
                           position: 'absolute',
-                          left: `${photoOverlays[index].position.x}px`,
-                          top: `${photoOverlays[index].position.y}px`,
-                          transform: `scale(${photoOverlays[index].scale})`,
-                          transformOrigin: 'top left'
+                          left: `${renderedOverlays[index].position.x}px`,
+                          top: `${renderedOverlays[index].position.y}px`,
+                          transform: `translate(-50%, -50%) scale(${renderedOverlays[index].scale || 1})`,
+                          transformOrigin: 'center'
                         }}
                         onLoad={() => console.log(`Overlay ${index + 1} loaded`)}
                         onError={() => console.error(`Failed to load overlay ${index + 1}`)}
@@ -264,7 +312,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                 <div className="pt-2 text-xs text-gray-600 font-mono">
                   {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                 </div>
-                {index < images.length - 1 && (
+                {index < renderedImages.length - 1 && (
                   <div className="w-full border-t border-gray-300 my-4"></div>
                 )}
               </div>
@@ -276,7 +324,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         </div>
       )}
       
-      {showControls && loaded && images && images.length > 0 && (
+      {showControls && loaded && renderedImages.length > 0 && (
         <div className="mt-4 flex justify-center gap-2">
           <button 
             onClick={handleDownload}

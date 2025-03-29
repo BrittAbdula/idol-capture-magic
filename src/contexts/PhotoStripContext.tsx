@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { validatePhotoData } from '@/lib/imageProcessing';
+import { toast } from 'sonner';
 
 export interface Resolution {
   width: number;
@@ -158,15 +160,37 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
       // Try to load saved photoStripData from localStorage
       const savedPhotoStripData = localStorage.getItem('photoStripData');
       if (savedPhotoStripData) {
+        console.log("Loading photoStripData from localStorage");
         const parsedData = JSON.parse(savedPhotoStripData);
+        
         // Validate data has required properties
-        if (parsedData && parsedData.photoStripId && Array.isArray(parsedData.photos)) {
-          console.log("Loaded photoStripData from localStorage:", parsedData.photos.length, "photos");
-          setPhotoStripData(parsedData);
+        if (parsedData && parsedData.photoStripId) {
+          // Check if there are photos
+          if (Array.isArray(parsedData.photos) && parsedData.photos.length > 0) {
+            console.log("Loaded photoStripData from localStorage with", parsedData.photos.length, "photos");
+            
+            // Ensure photoOverlays are properly structured if they exist
+            if (parsedData.photoOverlays) {
+              console.log("Found", parsedData.photoOverlays.length, "overlays in localStorage data");
+            }
+            
+            setPhotoStripData(parsedData);
+          } else {
+            console.log("Found photoStripData in localStorage but no photos. Using default.");
+            setPhotoStripData(defaultPhotoStrip);
+          }
+        } else {
+          console.log("Invalid photoStripData in localStorage. Using default.");
+          setPhotoStripData(defaultPhotoStrip);
         }
+      } else {
+        console.log("No photoStripData in localStorage. Using default.");
+        setPhotoStripData(defaultPhotoStrip);
       }
     } catch (error) {
       console.error("Error loading photoStripData from localStorage:", error);
+      toast.error("Error loading saved photo data");
+      setPhotoStripData(defaultPhotoStrip);
     }
   }, []);
 
@@ -174,10 +198,20 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (photoStripData) {
       try {
-        localStorage.setItem('photoStripData', JSON.stringify(photoStripData));
-        console.log("Saved photoStripData to localStorage:", photoStripData.photos.length, "photos");
+        // Only save if we have valid data to save
+        if (photoStripData.photoStripId) {
+          const hasPhotos = Array.isArray(photoStripData.photos) && photoStripData.photos.length > 0;
+          
+          console.log(`Saving photoStripData to localStorage: ${hasPhotos ? photoStripData.photos.length : 0} photos`);
+          localStorage.setItem('photoStripData', JSON.stringify(photoStripData));
+          
+          if (hasPhotos) {
+            console.log("Photos in saved data:", photoStripData.photos);
+          }
+        }
       } catch (error) {
         console.error("Error saving photoStripData to localStorage:", error);
+        toast.error("Error saving photo data");
       }
     }
   }, [photoStripData]);
@@ -185,10 +219,26 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
   const updatePhotos = (photos: string[]) => {
     if (photoStripData) {
       console.log(`Updating photos in context. Count: ${photos.length}`);
-      setPhotoStripData({
-        ...photoStripData,
-        photos
+      if (photos.length > 0) {
+        console.log("First photo URL length:", photos[0].substring(0, 50) + "...");
+      }
+      
+      setPhotoStripData(prev => {
+        if (!prev) return null;
+        
+        // Create a new object to ensure state update is detected
+        const updated = {
+          ...prev,
+          photos
+        };
+        
+        // Log it for debugging
+        console.log("Updated photoStripData with", photos.length, "photos");
+        
+        return updated;
       });
+    } else {
+      console.error("Cannot update photos: photoStripData is null");
     }
   };
 
