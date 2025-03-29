@@ -29,6 +29,38 @@ const Navbar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  // Schema.org structured data for better SEO
+  useEffect(() => {
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "IdolBooth.com",
+      "url": "https://idolbooth.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://idolbooth.com/template?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "description": "Free online photo booth to take virtual photos with your favorite idols, anime characters, and celebrities."
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(schemaData);
+    
+    // Check if the script already exists
+    const existingScript = document.querySelector('script[type="application/ld+json"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
+    document.head.appendChild(script);
+    
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -36,7 +68,7 @@ const Navbar = () => {
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center gap-2 group" aria-label="IdolBooth Home">
           <div className="relative w-10 h-10 flex items-center justify-center">
             <div className="absolute inset-0 border-2 border-idol-gold opacity-80 group-hover:opacity-100 transition-opacity"></div>
             <Camera className="w-6 h-6 text-idol-gold group-hover:scale-110 transition-transform" />
@@ -57,9 +89,6 @@ const Navbar = () => {
           <Link to="/template" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : ''}`}>
             Templates
           </Link>
-          {/* <Link to="/template-creator" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : ''}`}>
-            Create Template
-          </Link> */}
           <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
             Photo Strip
           </Link>
@@ -68,7 +97,7 @@ const Navbar = () => {
           </Link>
         </nav>
 
-        <button className="md:hidden" onClick={toggleMobileMenu}>
+        <button className="md:hidden" onClick={toggleMobileMenu} aria-label="Toggle Menu">
           <Menu className="h-6 w-6" />
         </button>
 
@@ -77,7 +106,7 @@ const Navbar = () => {
           isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}>
           <div className="flex justify-end p-4">
-            <button onClick={toggleMobileMenu}>
+            <button onClick={toggleMobileMenu} aria-label="Close Menu">
               <X className="h-6 w-6 text-white" />
             </button>
           </div>
