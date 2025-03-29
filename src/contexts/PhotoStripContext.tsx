@@ -160,7 +160,7 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
       if (savedPhotoStripData) {
         const parsedData = JSON.parse(savedPhotoStripData);
         // Validate data has required properties
-        if (parsedData && parsedData.photoStripId && parsedData.photos) {
+        if (parsedData && parsedData.photoStripId && Array.isArray(parsedData.photos)) {
           console.log("Loaded photoStripData from localStorage:", parsedData.photos.length, "photos");
           setPhotoStripData(parsedData);
         }

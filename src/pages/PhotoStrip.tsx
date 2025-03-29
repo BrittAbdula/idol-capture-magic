@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
@@ -37,7 +36,6 @@ const PhotoStripPage: React.FC = () => {
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
-  // Initialize UI state from photoStripData when it's available
   useEffect(() => {
     if (photoStripData) {
       console.log("PhotoStripPage - photoStripData loaded:", photoStripData);
@@ -62,6 +60,13 @@ const PhotoStripPage: React.FC = () => {
       console.log("PhotoStripPage - No photoStripData available");
     }
   }, [photoStripData]);
+
+  useEffect(() => {
+    if (photoStripData?.photos && photoStripData.photos.length > 0) {
+      console.log("Initial mount check - Photos found:", photoStripData.photos.length);
+      setShowUpload(false);
+    }
+  }, []);
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find(t => t.templateId === templateId);
@@ -443,58 +448,15 @@ const PhotoStripPage: React.FC = () => {
             Your Photo Strip
           </h1>
           
-          {showUpload ? (
-            <div className="max-w-4xl mx-auto">
-              <div className="glass-panel p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                  Choose a Template (Optional)
-                </h2>
-                <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                  <SelectTrigger className="w-full md:w-[300px]">
-                    <SelectValue placeholder="Select a template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default (4 photos, 4:3)</SelectItem>
-                    {templates.map((template) => (
-                      <SelectItem key={template.templateId} value={template.templateId}>
-                        {template.category} - {template.templateId} ({template.photoBoothSettings.photoNum} photos, {template.photoBoothSettings.aspectRatio})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <MultiPhotoUpload 
-                onComplete={handlePhotoUploadComplete}
-                template={currentTemplate}
-                aspectRatio={currentTemplate?.photoBoothSettings.aspectRatio || "4:3"}
-              />
-              
-              <div className="mt-6 text-center">
-                <Button
-                  onClick={() => navigate('/photo-booth')}
-                  variant="outline"
-                  className="idol-button-outline"
-                >
-                  Go to Photo Booth Instead
-                </Button>
-              </div>
-            </div>
-          ) : (
+          {photoStripData?.photos?.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col items-center">
                 <div className="mb-4 relative mx-auto">
-                  {photoStripData && photoStripData.photos && photoStripData.photos.length > 0 ? (
-                    <PhotoStrip 
-                      images={photoStripData.photos}
-                      filter={photoStripData.photoBoothSettings?.filter || 'Normal'}
-                      photoOverlays={photoStripData.photoOverlays}
-                    />
-                  ) : (
-                    <div className="text-center text-gray-400 p-4">
-                      <p>No photos available. Try taking photos in the photo booth.</p>
-                    </div>
-                  )}
+                  <PhotoStrip 
+                    images={photoStripData.photos}
+                    filter={photoStripData.photoBoothSettings?.filter || 'Normal'}
+                    photoOverlays={photoStripData.photoOverlays}
+                  />
                 </div>
               </div>
               
@@ -581,7 +543,7 @@ const PhotoStripPage: React.FC = () => {
                   <Button 
                     onClick={handleDownload}
                     className="flex-1 idol-button flex items-center justify-center gap-2 py-3"
-                    disabled={isGeneratingDownload || !photoStripData || !photoStripData.photos || photoStripData.photos.length === 0}
+                    disabled={isGeneratingDownload}
                   >
                     <Download className="w-5 h-5" />
                     <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
@@ -591,7 +553,7 @@ const PhotoStripPage: React.FC = () => {
                     onClick={handlePrint}
                     className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
                     variant="outline"
-                    disabled={isPrinting || !photoStripData || !photoStripData.photos || photoStripData.photos.length === 0}
+                    disabled={isPrinting}
                   >
                     <Printer className="w-5 h-5" />
                     <span>{isPrinting ? "Preparing..." : "Print"}</span>
@@ -601,7 +563,7 @@ const PhotoStripPage: React.FC = () => {
                     onClick={handleShare}
                     className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
                     variant="outline"
-                    disabled={isSharing || !photoStripData || !photoStripData.photos || photoStripData.photos.length === 0}
+                    disabled={isSharing}
                   >
                     <Share2 className="w-5 h-5" />
                     <span>{isSharing ? "Sharing..." : "Share"}</span>
@@ -625,6 +587,43 @@ const PhotoStripPage: React.FC = () => {
                     <span>Upload Photos</span>
                   </Button>
                 </div>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto">
+              <div className="glass-panel p-6 mb-6">
+                <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                  Choose a Template (Optional)
+                </h2>
+                <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+                  <SelectTrigger className="w-full md:w-[300px]">
+                    <SelectValue placeholder="Select a template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default (4 photos, 4:3)</SelectItem>
+                    {templates.map((template) => (
+                      <SelectItem key={template.templateId} value={template.templateId}>
+                        {template.category} - {template.templateId} ({template.photoBoothSettings.photoNum} photos, {template.photoBoothSettings.aspectRatio})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <MultiPhotoUpload 
+                onComplete={handlePhotoUploadComplete}
+                template={currentTemplate}
+                aspectRatio={currentTemplate?.photoBoothSettings.aspectRatio || "4:3"}
+              />
+              
+              <div className="mt-6 text-center">
+                <Button
+                  onClick={() => navigate('/photo-booth')}
+                  variant="outline"
+                  className="idol-button-outline"
+                >
+                  Go to Photo Booth Instead
+                </Button>
               </div>
             </div>
           )}
