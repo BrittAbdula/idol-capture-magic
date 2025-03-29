@@ -3,7 +3,7 @@ import { Camera, FlipHorizontal, Maximize, Minimize, Grid3X3 } from 'lucide-reac
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
-import { defaultAspectRatios, IdolOverlay } from "@/contexts/PhotoStripContext";
+import { defaultAspectRatios, PhotoOverlay } from "@/contexts/PhotoStripContext";
 
 interface WebcamCaptureProps {
   onCapture: (images: string[], aspectRatio?: string) => void;
@@ -13,7 +13,7 @@ interface WebcamCaptureProps {
   defaultFilter?: string;
   lightColor?: string;
   playSound?: boolean;
-  idolOverlay?: IdolOverlay;
+  photoOverlays?: PhotoOverlay[];
 }
 
 type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
@@ -27,7 +27,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   defaultFilter = 'Normal',
   lightColor = '#FFD700',
   playSound = false,
-  idolOverlay
+  photoOverlays
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,7 +43,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const [currentAspectRatio, setCurrentAspectRatio] = useState<AspectRatioType>(aspectRatio as AspectRatioType);
   const [showGrid, setShowGrid] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const idolOverlayRef = useRef<HTMLImageElement | null>(null);
+  const photoOverlayRefs = useRef<(HTMLImageElement | null)[]>([]);
 
   useEffect(() => {
     if (playSound) {
@@ -54,16 +54,22 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   }, [playSound]);
 
   useEffect(() => {
-    if (idolOverlay && idolOverlay.url) {
-      const img = new Image();
-      img.src = idolOverlay.url;
-      img.onload = () => {
-        idolOverlayRef.current = img;
-      };
+    if (photoOverlays && photoOverlays.length > 0) {
+      photoOverlayRefs.current = Array(photoOverlays.length).fill(null);
+      
+      photoOverlays.forEach((overlay, index) => {
+        if (overlay && overlay.url) {
+          const img = new Image();
+          img.src = overlay.url;
+          img.onload = () => {
+            photoOverlayRefs.current[index] = img;
+          };
+        }
+      });
     } else {
-      idolOverlayRef.current = null;
+      photoOverlayRefs.current = [];
     }
-  }, [idolOverlay]);
+  }, [photoOverlays]);
 
   useEffect(() => {
     setCurrentAspectRatio(aspectRatio as AspectRatioType);
@@ -185,20 +191,26 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           );
         }
         
-        if (idolOverlayRef.current && idolOverlay) {
+        const currentOverlayIndex = photoCount;
+        if (photoOverlays && photoOverlays[currentOverlayIndex] && photoOverlayRefs.current[currentOverlayIndex]) {
           ctx.resetTransform();
           
-          const scale = idolOverlay.scale || 1;
-          const posX = idolOverlay.position?.x || 0;
-          const posY = idolOverlay.position?.y || 0;
+          const overlay = photoOverlays[currentOverlayIndex];
+          const overlayImg = photoOverlayRefs.current[currentOverlayIndex];
           
-          const overlayWidth = idolOverlayRef.current.width * scale;
-          const overlayHeight = idolOverlayRef.current.height * scale;
-          
-          ctx.drawImage(
-            idolOverlayRef.current,
-            posX, posY, overlayWidth, overlayHeight
-          );
+          if (overlayImg) {
+            const scale = overlay.scale || 1;
+            const posX = overlay.position?.x || 0;
+            const posY = overlay.position?.y || 0;
+            
+            const overlayWidth = overlayImg.width * scale;
+            const overlayHeight = overlayImg.height * scale;
+            
+            ctx.drawImage(
+              overlayImg,
+              posX, posY, overlayWidth, overlayHeight
+            );
+          }
         }
         
         const imageDataURL = canvas.toDataURL('image/jpeg');
@@ -213,7 +225,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         setTimeout(() => setIsCapturing(false), 300);
       }
     }
-  }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, idolOverlay]);
+  }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays]);
 
   useEffect(() => {
     if (photoCount === photoLimit) {
@@ -453,6 +465,45 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             />
           )}
           
+          {photoOverlays && photoOverlays[photoCount] && !inCaptureMode && (
+            <div 
+              className="absolute pointer-events-none"
+              style={{ 
+                aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
+                            currentAspectRatio === '1:1' ? '1/1' : 
+                            currentAspectRatio === '3:2' ? '3/2' : '4/5',
+                width: isFullscreen ? 
+                  (currentAspectRatio === '1:1' ? 
+                    `${Math.min(window.innerWidth, window.innerHeight)}px` : 'auto') 
+                  : '100%',
+                height: isFullscreen ? 
+                  (currentAspectRatio === '1:1' ? 
+                    `${Math.min(window.innerWidth, window.innerHeight)}px` : '100vh') 
+                  : 'auto',
+                maxWidth: isFullscreen ? (
+                  currentAspectRatio === '4:3' ? 'calc(100vh * 4 / 3)' : 
+                  currentAspectRatio === '3:2' ? 'calc(100vh * 3 / 2)' :
+                  currentAspectRatio === '4:5' ? 'calc(100vh * 4 / 5)' : '100vh'
+                ) : '100%',
+                margin: 'auto',
+                inset: 0,
+              }}
+            >
+              <img 
+                src={photoOverlays[photoCount].url} 
+                alt="Photo overlay"
+                style={{
+                  position: 'absolute',
+                  left: `${photoOverlays[photoCount].position.x}px`,
+                  top: `${photoOverlays[photoCount].position.y}px`,
+                  transform: `scale(${photoOverlays[photoCount].scale})`,
+                  transformOrigin: 'top left',
+                  pointerEvents: 'none'
+                }}
+              />
+            </div>
+          )}
+          
           <canvas ref={canvasRef} className="hidden" />
           
           {countdownValue && (
@@ -467,6 +518,14 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             <div className="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded-full z-10">
               <span className="text-sm font-bold text-white">
                 Photo {photoCount} of {photoLimit}
+              </span>
+            </div>
+          )}
+          
+          {photoCount < photoLimit && !countdownValue && photoOverlays && photoOverlays[photoCount] && (
+            <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full z-10">
+              <span className="text-xs font-bold text-white">
+                Pose {photoCount + 1}
               </span>
             </div>
           )}
@@ -559,3 +618,31 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 };
 
 export default WebcamCapture;
+
+function getContainerStyle() {
+  return {};
+}
+
+function getVideoStyle() {
+  return {};
+}
+
+function getFilterClassName() {
+  return '';
+}
+
+function toggleMirror() {
+  return;
+}
+
+function toggleFullscreen() {
+  return;
+}
+
+function cycleAspectRatio() {
+  return;
+}
+
+function toggleGrid() {
+  return;
+}

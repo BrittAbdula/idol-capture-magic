@@ -72,7 +72,7 @@ const PhotoBooth: React.FC = () => {
             canvasSize: template.canvasSize,
             background: template.background,
             photoPositions: template.photoPositions,
-            idolOverlay: template.idolOverlay,
+            photoOverlays: template.photoOverlays, // Updated from idolOverlay to photoOverlays
             decoration: template.decoration,
             photos: [],
             photoBoothSettings: {
@@ -91,7 +91,7 @@ const PhotoBooth: React.FC = () => {
     };
     
     loadTemplateSettings();
-  }, [templateFromQuery, setCurrentTemplate, setPhotoStripData]);
+  }, [templateFromQuery, setCurrentTemplate, setPhotoStripData, filter, lightColor, playSound]);
   
   // Update photo booth settings when user changes them
   useEffect(() => {
@@ -340,7 +340,7 @@ const PhotoBooth: React.FC = () => {
                 defaultFilter={filter}
                 lightColor={lightColor}
                 playSound={playSound}
-                idolOverlay={currentTemplate?.idolOverlay}
+                photoOverlays={photoStripData?.photoOverlays} // Updated from idolOverlay to photoOverlays
               />
             </div>
             

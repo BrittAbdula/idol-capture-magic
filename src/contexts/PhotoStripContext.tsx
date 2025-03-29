@@ -11,7 +11,7 @@ export interface Position {
   y: number;
 }
 
-export interface IdolOverlay {
+export interface PhotoOverlay {
   url: string;
   position: Position;
   scale: number;
@@ -64,7 +64,7 @@ export interface Template {
   };
   photoPositions: PhotoPosition[];
   previewUrl?: string;
-  idolOverlay?: IdolOverlay;
+  photoOverlays?: PhotoOverlay[]; // Changed from idolOverlay to photoOverlays
   decoration?: Decoration[];
 }
 
@@ -85,7 +85,7 @@ export interface PhotoStrip {
   };
   photoPositions: PhotoPosition[];
   photos: string[];
-  idolOverlay?: IdolOverlay;
+  photoOverlays?: PhotoOverlay[]; // Changed from idolOverlay to photoOverlays
   decoration?: Decoration[];
   text?: TextConfig;
   photoBoothSettings: PhotoBoothSettings;

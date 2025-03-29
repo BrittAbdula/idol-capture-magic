@@ -3,14 +3,21 @@ import React from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { PhotoOverlay } from '@/contexts/PhotoStripContext';
 
 interface PhotoStripProps {
   images: string[];
   filter: string;
   showControls?: boolean;
+  photoOverlays?: PhotoOverlay[]; // Added photoOverlays prop
 }
 
-const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = true }) => {
+const PhotoStrip: React.FC<PhotoStripProps> = ({ 
+  images, 
+  filter, 
+  showControls = true,
+  photoOverlays // Added photoOverlays prop
+}) => {
   const getFilterClassName = () => {
     switch (filter) {
       case 'Warm': return 'sepia-[0.3] brightness-105';
@@ -38,19 +45,33 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
       });
     });
     
-    Promise.all(loadImages).then(loadedImages => {
+    // If we have photo overlays, preload them too
+    const loadOverlays = photoOverlays ? photoOverlays.map(overlay => {
+      return new Promise<HTMLImageElement>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = overlay.url;
+      });
+    }) : [];
+    
+    Promise.all([...loadImages, ...loadOverlays]).then(loadedImages => {
       if (loadedImages.length === 0) return;
       
+      // Separate loaded images and overlays
+      const photoImages = loadedImages.slice(0, images.length);
+      const overlayImages = loadOverlays.length > 0 ? 
+                            loadedImages.slice(images.length) : [];
+      
       // Set canvas size - vertical receipt-like strip format
-      const imgWidth = loadedImages[0].width;
-      const imgHeight = loadedImages[0].height;
+      const imgWidth = photoImages[0].width;
+      const imgHeight = photoImages[0].height;
       
       // Add some padding between photos and at the edges
       const padding = 20;
       const stripPadding = 30;
       
       canvas.width = imgWidth + (stripPadding * 2);
-      canvas.height = (imgHeight * loadedImages.length) + (padding * (loadedImages.length - 1)) + (stripPadding * 2);
+      canvas.height = (imgHeight * photoImages.length) + (padding * (photoImages.length - 1)) + (stripPadding * 2);
       
       // Fill with white background
       ctx.fillStyle = '#FFFFFF';
@@ -71,9 +92,43 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
       }
       
       // Draw each image on the canvas
-      loadedImages.forEach((img, index) => {
+      photoImages.forEach((img, index) => {
         const y = stripPadding + (index * (imgHeight + padding));
         ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
+        
+        // If we have an overlay for this photo, draw it
+        if (photoOverlays && photoOverlays[index] && overlayImages[index]) {
+          const overlay = photoOverlays[index];
+          const overlayImg = overlayImages[index];
+          
+          // Reset filter for overlay image
+          ctx.filter = 'none';
+          
+          const scale = overlay.scale || 1;
+          const posX = stripPadding + (overlay.position?.x || 0);
+          const posY = y + (overlay.position?.y || 0);
+          
+          const overlayWidth = overlayImg.width * scale;
+          const overlayHeight = overlayImg.height * scale;
+          
+          ctx.drawImage(
+            overlayImg,
+            posX, posY, overlayWidth, overlayHeight
+          );
+          
+          // Restore filter for next image
+          if (filter !== 'Normal') {
+            let filterStyle = '';
+            switch (filter) {
+              case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
+              case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
+              case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
+              case 'B&W': filterStyle = 'grayscale(1)'; break;
+              case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
+            }
+            ctx.filter = filterStyle;
+          }
+        }
         
         // Add timestamp under each photo
         ctx.filter = 'none'; // Reset filter for text
@@ -133,12 +188,29 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({ images, filter, showControls = 
           >
             {images.map((image, index) => (
               <div key={index} className="mb-4">
-                <div className={`${getFilterClassName()} overflow-hidden`}>
+                <div className={`${getFilterClassName()} overflow-hidden relative`}>
                   <img 
                     src={image} 
                     alt={`Photo ${index + 1}`} 
                     className="w-full mx-auto block" 
                   />
+                  
+                  {/* Display overlay image if available */}
+                  {photoOverlays && photoOverlays[index] && (
+                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                      <img 
+                        src={photoOverlays[index].url}
+                        alt={`Overlay ${index + 1}`}
+                        style={{
+                          position: 'absolute',
+                          left: `${photoOverlays[index].position.x}px`,
+                          top: `${photoOverlays[index].position.y}px`,
+                          transform: `scale(${photoOverlays[index].scale})`,
+                          transformOrigin: 'top left'
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="pt-2 text-xs text-gray-600 font-mono">
                   {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}

@@ -30,14 +30,28 @@ export const templates: Template[] = [
       { x: 600, y: 700, width: 400, height: 500 }
     ],
     previewUrl: "/placeholder.svg",
-    idolOverlay: {
-      url: "/placeholder.svg",
-      position: {
-        x: 50,
-        y: 100
+    photoOverlays: [
+      {
+        url: "/placeholder.svg",
+        position: { x: 50, y: 100 },
+        scale: 1.2
       },
-      scale: 1.2
-    },
+      {
+        url: "/placeholder.svg",
+        position: { x: 40, y: 120 },
+        scale: 1.1
+      },
+      {
+        url: "/placeholder.svg",
+        position: { x: 60, y: 90 },
+        scale: 1.3
+      },
+      {
+        url: "/placeholder.svg",
+        position: { x: 55, y: 110 },
+        scale: 1.0
+      }
+    ],
     decoration: [
       {
         type: "sticker",
@@ -81,14 +95,28 @@ export const templates: Template[] = [
       { x: 600, y: 600, width: 400, height: 400 }
     ],
     previewUrl: "/placeholder.svg",
-    idolOverlay: {
-      url: "/placeholder.svg",
-      position: {
-        x: 70,
-        y: 150
+    photoOverlays: [
+      {
+        url: "/placeholder.svg",
+        position: { x: 70, y: 150 },
+        scale: 1.0
       },
-      scale: 1.0
-    },
+      {
+        url: "/placeholder.svg",
+        position: { x: 75, y: 155 },
+        scale: 1.0
+      },
+      {
+        url: "/placeholder.svg",
+        position: { x: 65, y: 145 },
+        scale: 1.0
+      },
+      {
+        url: "/placeholder.svg",
+        position: { x: 80, y: 160 },
+        scale: 1.0
+      }
+    ],
     decoration: [
       {
         type: "sticker",
@@ -128,14 +156,28 @@ export const templates: Template[] = [
       { x: 650, y: 417, width: 500, height: 333 }
     ],
     previewUrl: "/placeholder.svg",
-    idolOverlay: {
-      url: "/placeholder.svg",
-      position: {
-        x: 100,
-        y: 200
+    photoOverlays: [
+      {
+        url: "/placeholder.svg",
+        position: { x: 100, y: 200 },
+        scale: 1.1
       },
-      scale: 1.1
-    }
+      {
+        url: "/placeholder.svg",
+        position: { x: 105, y: 205 },
+        scale: 1.1
+      },
+      {
+        url: "/placeholder.svg",
+        position: { x: 95, y: 195 },
+        scale: 1.1
+      },
+      {
+        url: "/placeholder.svg",
+        position: { x: 110, y: 210 },
+        scale: 1.1
+      }
+    ]
   },
   {
     templateId: "standard-01",
