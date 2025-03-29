@@ -27,6 +27,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { usePhotoStrip, PhotoOverlay } from '@/contexts/PhotoStripContext';
 
 interface PhotoResultProps {}
 
@@ -34,12 +35,14 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { photoStripData } = usePhotoStrip();
   const [images, setImages] = useState<string[]>([]);
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [showDate, setShowDate] = useState<boolean>(true);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
+  const [photoOverlays, setPhotoOverlays] = useState<PhotoOverlay[] | undefined>(undefined);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -54,10 +57,14 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       if (location.state.aspectRatio) {
         setAspectRatio(location.state.aspectRatio);
       }
+
+      if (photoStripData?.photoOverlays) {
+        setPhotoOverlays(photoStripData.photoOverlays);
+      }
     } else {
       navigate('/photo-booth');
     }
-  }, [location, navigate]);
+  }, [location, navigate, photoStripData]);
 
   useEffect(() => {
     if (dialogOpen && canvasRef.current) {
@@ -88,7 +95,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
     topMargin: number;
     stripWidth: number;
   } => {
-    // Default values
     let padding = 25;
     let sideMargin = 35;
     let topMargin = 35;
@@ -98,7 +104,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       case '1:1':
       case '4:3':
       case '3:2':
-        // All these aspect ratios now use the same settings
         sideMargin = 100;
         topMargin = 100;
         stripWidth = 480;
@@ -109,9 +114,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         topMargin = 35;
         stripWidth = 480;
     }
-
-    // No longer adjust padding based on the number of images
-    // since we want a consistent padding of 25px for all common aspect ratios
 
     return { padding, sideMargin, topMargin, stripWidth };
   };
@@ -132,59 +134,77 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       });
     });
     
-    Promise.all(loadImages).then(loadedImages => {
+    const loadOverlays = photoOverlays ? photoOverlays.map(overlay => {
+      return new Promise<HTMLImageElement>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = overlay.url;
+      });
+    }) : [];
+    
+    Promise.all([...loadImages, ...loadOverlays]).then(loadedImages => {
       if (loadedImages.length === 0) return;
       
-      const imgWidth = loadedImages[0].width * scale;
-      const imgHeight = loadedImages[0].height * scale;
+      const imageElements = loadedImages.slice(0, images.length);
+      const overlayElements = loadOverlays.length > 0 ? 
+                              loadedImages.slice(images.length) : [];
       
-      // Get optimal settings based on aspect ratio and image count
-      const { padding, sideMargin, topMargin, stripWidth } = getOptimalCanvasSettings(aspectRatio, loadedImages.length);
+      const imgWidth = imageElements[0].width * scale;
+      const imgHeight = imageElements[0].height * scale;
       
-      // Scale the settings
+      const { padding, sideMargin, topMargin, stripWidth } = getOptimalCanvasSettings(aspectRatio, imageElements.length);
+      
       const scaledPadding = padding * scale;
       const scaledSideMargin = sideMargin * scale;
       const scaledTopMargin = topMargin * scale;
       const scaledStripWidth = stripWidth * scale;
       
-      // Calculate the total height of all images with padding
-      const totalImagesHeight = (imgHeight * loadedImages.length) + 
-                          (scaledPadding * (loadedImages.length - 1));
+      const totalImagesHeight = (imgHeight * imageElements.length) + 
+                          (scaledPadding * (imageElements.length - 1));
       
-      // Add space for custom text and date at the bottom
       const textSpace = customText ? 120 * scale : 0;
       const dateSpace = showDate ? 80 * scale : 0;
       const extraSpace = textSpace + dateSpace + (scaledTopMargin * 2);
       
-      // Set the canvas dimensions
       const calculatedWidth = Math.max(scaledStripWidth, imgWidth + (scaledSideMargin * 2));
       canvas.width = calculatedWidth;
       canvas.height = totalImagesHeight + extraSpace;
       
-      // Fill the background
       ctx.fillStyle = selectedColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Draw each image
-      loadedImages.forEach((img, index) => {
+      imageElements.forEach((img, index) => {
         const y = scaledTopMargin + (index * (imgHeight + scaledPadding));
         
-        // Add white border around each photo
         const borderWidth = 5 * scale;
         ctx.fillStyle = '#FFFFFF';
         
-        // Center the image horizontally
         const xPos = (canvas.width - imgWidth) / 2 - borderWidth;
         
-        // Draw white border
         ctx.fillRect(xPos, y - borderWidth, 
                    imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
         
-        // Draw the image
         ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
+        
+        if (photoOverlays && photoOverlays[index] && overlayElements[index]) {
+          const overlay = photoOverlays[index];
+          const overlayImg = overlayElements[index];
+          
+          const scale = overlay.scale || 1;
+          
+          const posX = xPos + borderWidth + overlay.position.x * scale;
+          const posY = y + overlay.position.y * scale;
+          
+          const overlayWidth = overlayImg.width * scale;
+          const overlayHeight = overlayImg.height * scale;
+          
+          ctx.drawImage(
+            overlayImg,
+            posX, posY, overlayWidth, overlayHeight
+          );
+        }
       });
       
-      // Add custom text if provided
       if (customText) {
         const textY = canvas.height - (showDate ? 130 * scale : 60 * scale);
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
@@ -193,7 +213,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.fillText(customText, canvas.width / 2, textY);
       }
       
-      // Add date if enabled
       if (showDate) {
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
         ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
@@ -202,7 +221,6 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
         ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
       }
       
-      // Add IdolBooth branding
       ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
       ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
@@ -215,7 +233,7 @@ const PhotoResult: React.FC<PhotoResultProps> = () => {
       const scale = isMobile ? 0.3 : 0.4;
       generatePhotoStrip(thumbnailCanvasRef.current, scale);
     }
-  }, [images, selectedColor, customText, showDate, isMobile, aspectRatio]);
+  }, [images, selectedColor, customText, showDate, isMobile, aspectRatio, photoOverlays]);
 
   const handleDownload = () => {
     setIsGeneratingDownload(true);
