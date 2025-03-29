@@ -16,7 +16,6 @@ import TemplateCreator from "./pages/TemplateCreator";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import GoogleAnalytics from "./components/GoogleAnalytics";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -67,8 +66,6 @@ const TitleUpdater = () => {
 const App = () => {
   return (
     <React.StrictMode>
-    {/* 添加分析工具 */}
-    <GoogleAnalytics />
       <QueryClientProvider client={queryClient}>
         <PhotoStripProvider>
           <TooltipProvider>

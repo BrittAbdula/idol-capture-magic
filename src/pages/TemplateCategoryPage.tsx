@@ -5,10 +5,20 @@ import { ArrowRight, ChevronLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getTemplatesByCategory, getTemplatesByIdol, getAllIdolsByCategory } from '../data/templates';
+import SEO from '../components/SEO'; 
 
 const TemplateCategoryPage: React.FC = () => {
   const { category, idol } = useParams<{ category: string; idol?: string }>();
+  // 动态生成标题和描述
+  const pageTitle = idol 
+    ? `${idol.charAt(0).toUpperCase() + idol.slice(1)} Photo Templates | IdolBooth.com` 
+    : `${category?.charAt(0).toUpperCase() + category?.slice(1)} Photo Templates | IdolBooth.com`;
   
+  const pageDescription = idol
+    ? `Take photos with ${idol} using our free online photo booth. Choose from multiple templates and create stunning memories.`
+    : `Browse our ${category} photo templates collection. Find the perfect template for your virtual photo experience.`;
+  
+    
   if (!category) {
     return <div>Category not found</div>;
   }
@@ -23,6 +33,10 @@ const TemplateCategoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+    <SEO 
+      title={pageTitle}
+      description={pageDescription}
+    />
       <Navbar />
       
       <main className="pt-32 pb-24 px-4">

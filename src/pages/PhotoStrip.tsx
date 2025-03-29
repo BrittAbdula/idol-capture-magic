@@ -20,6 +20,7 @@ import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { templates } from '../data/templates';
 import PhotoStrip from '../components/PhotoStrip';
 import { processPhotoStripData } from '@/lib/imageProcessing';
+import SEO from '../components/SEO'; 
 
 const PhotoStripPage: React.FC = () => {
   const { photoStripData, setPhotoStripData, updatePhotos, updateBackground, updateText, updateDecoration, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
@@ -462,6 +463,10 @@ const PhotoStripPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+    <SEO 
+      title="Create Stunning Photo Strips with Idols | IdolBooth.com"
+      description="Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator."
+    />
       <Navbar />
       
       <main className="pt-28 pb-20 px-4">

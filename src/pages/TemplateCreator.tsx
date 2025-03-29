@@ -37,7 +37,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Template } from '../contexts/PhotoStripContext';
 import PhotoStrip from '../components/PhotoStrip';
-
+import SEO from '../components/SEO';
 interface PhotoPosition {
   x: number;
   y: number;
@@ -339,6 +339,10 @@ const TemplateCreator: React.FC = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Create Stunning Photo Templates with Idols | IdolBooth.com"
+        description="Make beautiful photo templates with your idol photos. Download, share, and print your memories with our free online photo template creator."
+      />
       <Navbar />
       
       <main className="flex-grow pt-32 pb-24 px-4">

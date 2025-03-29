@@ -71,7 +71,8 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-2 group" aria-label="IdolBooth Home">
           <div className="relative w-10 h-10 flex items-center justify-center">
             <div className="absolute inset-0 border-2 border-idol-gold opacity-80 group-hover:opacity-100 transition-opacity"></div>
-            <Camera className="w-6 h-6 text-idol-gold group-hover:scale-110 transition-transform" />
+            {/* <Camera className="w-6 h-6 text-idol-gold group-hover:scale-110 transition-transform" /> */}
+            <img src="/logo.png" alt="IdolBooth Logo" className="w-10 h-10" />
             <div className="absolute top-0 left-0 w-full h-full bg-idol-gold/20 opacity-0 group-hover:opacity-100 animate-pulse-slight transition-opacity"></div>
           </div>
           <span className="text-xl font-montserrat font-semibold tracking-tight">

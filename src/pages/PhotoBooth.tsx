@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { getTemplate } from '../data/templates';
 import { Position, PhotoOverlay, defaultAspectRatios } from '../contexts/PhotoStripContext';
+import SEO from '../components/SEO'; 
 
 const PhotoBooth: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -498,6 +499,10 @@ const PhotoBooth: React.FC = () => {
   
   return (
     <div className="min-h-screen">
+    <SEO 
+      title="Take Photos with Your Favorite Idols | Free Online Photo Booth | IdolBooth.com"
+      description="Our free online Kpop photo booth lets you take virtual photos with your favorite idols. Easy to use, instant results. Try now at IdolBooth.com!"
+    />
       <Navbar />
       
       <main className="pt-32 pb-24 px-4">

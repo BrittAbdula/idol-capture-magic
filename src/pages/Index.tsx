@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Camera, Star, Image, Sparkles, ArrowRight, Upload, Download } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO'; 
 
 const Index = () => {
   const animatedElementsRef = useRef<HTMLDivElement>(null);
@@ -30,6 +31,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-white" ref={animatedElementsRef}>
+      <SEO 
+        title="Free Idol Photo Booth Online: Take a Virtual Photo with Your Favorite Idol | IdolBooth.com"
+        description="Use our free Idol Photo Booth online to take stunning virtual photos with your favorite Kpop idols, anime characters, and celebrities. Capture your special moments and print them instantly. Try IdolBooth now!"
+      />
       <Navbar />
       
       {/* Hero Section */}

@@ -2,10 +2,15 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 const TermsOfService: React.FC = () => {
   return (
     <div className="min-h-screen">
+      <SEO 
+        title="Privacy Policy | IdolBooth.com"
+        description="IdolBooth privacy policy. Learn about how we handle your data when using our virtual photo booth service."
+      />
       <Navbar />
       
       <main className="pt-28 pb-20 px-4">

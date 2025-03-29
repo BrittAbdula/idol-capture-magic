@@ -5,12 +5,17 @@ import { ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getAllCategories } from '../data/templates';
+import SEO from '@/components/SEO'; 
 
 const TemplateGallery: React.FC = () => {
   const categories = getAllCategories();
 
   return (
     <div className="min-h-screen">
+    <SEO 
+      title="Create Stunning Photo Strips with Idols | IdolBooth.com"
+      description="Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator."
+    />
       <Navbar />
       
       <main className="pt-32 pb-24 px-4">
