@@ -53,19 +53,19 @@ export interface Template {
   category: string;
   idol?: string;
   photoBoothSettings: PhotoBoothSettings;
-  idolOverlay?: IdolOverlay;
-  decoration?: Decoration[];
   canvasSize: {
     width: number;
     height: number;
   };
-  photoPositions: PhotoPosition[];
   background: {
     type: string;
     url?: string;
     color: string;
   };
+  photoPositions: PhotoPosition[];
   previewUrl?: string;
+  idolOverlay?: IdolOverlay;
+  decoration?: Decoration[];
 }
 
 export interface PhotoStrip {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, ChevronLeft } from 'lucide-react';
@@ -98,20 +99,20 @@ const TemplateCategoryPage: React.FC = () => {
                     
                     <div className="flex flex-wrap gap-2 mb-4">
                       <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                        {template.aspectRatio}
+                        {template.photoBoothSettings.aspectRatio}
                       </span>
-                      {template.filter && (
+                      {template.photoBoothSettings.filter && (
                         <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                          {template.filter}
+                          {template.photoBoothSettings.filter}
                         </span>
                       )}
                       <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                        {template.photoNum} photos
+                        {template.photoBoothSettings.photoNum} photos
                       </span>
                     </div>
                     
                     <Link 
-                      to={`/photo-booth/${category}/${template.idol || 'none'}/${template.templateId}`} 
+                      to={`/photo-booth?template=${template.templateId}`} 
                       className="idol-button w-full text-center py-2"
                     >
                       Use This Template

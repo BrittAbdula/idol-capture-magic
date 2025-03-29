@@ -145,8 +145,8 @@ export const templates: Template[] = [
       countdown: 3,
       photoNum: 4,
       filter: "Normal",
-      sound: false,
-      lightColor: "#FFFFFF"
+      lightColor: "#FFFFFF",
+      sound: false
     },
     canvasSize: {
       width: 1200,

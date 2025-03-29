@@ -20,8 +20,8 @@ const MultiPhotoUpload: React.FC<MultiPhotoUploadProps> = ({
   aspectRatio = "4:3"
 }) => {
   // Use template settings if available
-  const photoCount = template?.photoNum || requiredCount;
-  const templateAspectRatio = template?.aspectRatio || aspectRatio;
+  const photoCount = template?.photoBoothSettings?.photoNum || requiredCount;
+  const templateAspectRatio = template?.photoBoothSettings?.aspectRatio || aspectRatio;
   
   const [photos, setPhotos] = useState<string[]>(Array(photoCount).fill(''));
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>(Array(photoCount).fill(null));

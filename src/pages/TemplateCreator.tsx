@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -36,15 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from '@/components/ui/slider';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage
-} from '@/components/ui/form';
 import { Template } from '../contexts/PhotoStripContext';
 import PhotoStrip from '../components/PhotoStrip';
 
@@ -65,7 +55,6 @@ const TemplateCreator: React.FC = () => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [currentFilter, setCurrentFilter] = useState("Normal");
   
-  // Template data
   const [templateName, setTemplateName] = useState('my-custom-template');
   const [templateCategory, setTemplateCategory] = useState('custom');
   const [photoAspectRatio, setPhotoAspectRatio] = useState('4:3');
@@ -75,7 +64,6 @@ const TemplateCreator: React.FC = () => {
   const [lightColor, setLightColor] = useState('#FFD700');
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 1000 });
   
-  // Photo positions
   const [photoPositions, setPhotoPositions] = useState<PhotoPosition[]>([
     { id: '1', x: 100, y: 100, width: 250, height: 200 },
     { id: '2', x: 400, y: 100, width: 250, height: 200 },
@@ -85,13 +73,10 @@ const TemplateCreator: React.FC = () => {
   
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
   
-  // Decoration elements
   const [decorations, setDecorations] = useState<any[]>([]);
   
-  // Generate sample images for preview
   useEffect(() => {
     const generateSampleImages = () => {
-      // In a real app, you'd use actual placeholder images - using color blocks for simplicity
       const colors = ['#FFC0CB', '#87CEEB', '#98FB98', '#FFA07A', '#DDA0DD', '#B0E0E6'];
       const newSamplePhotos = Array(photoCount).fill(0).map((_, i) => {
         const canvas = document.createElement('canvas');
@@ -115,13 +100,11 @@ const TemplateCreator: React.FC = () => {
     generateSampleImages();
   }, [photoCount]);
   
-  // Update photo positions when photo count changes
   useEffect(() => {
     adjustPhotoPositions();
   }, [photoCount]);
   
   const adjustPhotoPositions = () => {
-    // Simple algorithm to lay out photos in a grid
     const containerWidth = canvasSize.width;
     const containerHeight = canvasSize.height;
     
@@ -154,13 +137,12 @@ const TemplateCreator: React.FC = () => {
   };
   
   const handleMouseDown = (e: React.MouseEvent, id: string) => {
-    if (e.button !== 0) return; // Only left mouse button
+    if (e.button !== 0) return;
     
     setIsDragging(true);
     setDraggedItem(id);
     setSelectedPosition(id);
     
-    // Prevent default behavior
     e.preventDefault();
   };
   
@@ -196,37 +178,43 @@ const TemplateCreator: React.FC = () => {
   };
   
   const saveTemplate = () => {
-    // Create template object
     const template: Template = {
       templateId: templateName,
       category: templateCategory,
-      aspectRatio: photoAspectRatio,
-      resolution: {
-        width: 960,
-        height: 720
+      photoBoothSettings: {
+        aspectRatio: photoAspectRatio,
+        countdown,
+        photoNum: photoCount,
+        filter: currentFilter,
+        lightColor,
+        sound: enableSound
       },
-      countdown,
-      photoNum: photoCount,
-      filter: currentFilter,
-      lightColor,
+      canvasSize,
+      background: {
+        type: 'color',
+        color: '#FFFFFF'
+      },
+      photoPositions: photoPositions.slice(0, photoCount).map(({id, ...rest}) => rest),
       idolOverlay: decorations.length > 0 ? {
-        url: "/placeholder.svg", // Would be real URL in production
+        url: "/placeholder.svg",
         position: {
           x: 50,
           y: 100
         },
         scale: 1.2
       } : undefined,
-      sound: enableSound
+      decoration: decorations.map(decoration => ({
+        type: decoration.type,
+        url: decoration.url,
+        position: decoration.position,
+        scale: decoration.scale
+      }))
     };
     
-    // In a real app, you would send this to your backend
-    // For now, we'll just pretend it worked
     console.log('Saving template:', template);
     
     toast.success('Template saved successfully!');
     
-    // Navigate to the photo booth with this template
     navigate(`/photo-booth?template=${templateName}`);
   };
   
@@ -234,7 +222,6 @@ const TemplateCreator: React.FC = () => {
     const templateData = {
       templateId: templateName,
       category: templateCategory,
-      aspectRatio: photoAspectRatio,
       photoNum: photoCount,
       countdown,
       photoPositions: photoPositions.map(({id, ...rest}) => rest),
@@ -364,7 +351,6 @@ const TemplateCreator: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Sidebar - Editor Tools */}
             <div className="lg:col-span-3">
               <Card>
                 <CardContent className="p-6">
@@ -694,7 +680,6 @@ const TemplateCreator: React.FC = () => {
               </Card>
             </div>
             
-            {/* Main Editor Canvas */}
             <div className="lg:col-span-6">
               <div className="bg-gray-50 rounded-lg p-4 h-full flex flex-col">
                 <div className="text-sm text-gray-500 mb-4">
@@ -710,7 +695,6 @@ const TemplateCreator: React.FC = () => {
               </div>
             </div>
             
-            {/* Right Sidebar - Preview */}
             <div className="lg:col-span-3">
               <Card>
                 <CardContent className="p-6">
