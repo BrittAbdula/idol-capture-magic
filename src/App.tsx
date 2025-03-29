@@ -15,31 +15,34 @@ import TemplateCategoryPage from "./pages/TemplateCategoryPage";
 import TemplateCreator from "./pages/TemplateCreator";
 import NotFound from "./pages/NotFound";
 
+// Create a client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <PhotoStripProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/photo-booth" element={<PhotoBooth />} />
-              <Route path="/photo-strip" element={<PhotoStrip />} />
-              <Route path="/template" element={<TemplateGallery />} />
-              <Route path="/template/:category" element={<TemplateCategoryPage />} />
-              <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
-              <Route path="/template-creator" element={<TemplateCreator />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </PhotoStripProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+const App = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <PhotoStripProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/photo-booth" element={<PhotoBooth />} />
+                <Route path="/photo-strip" element={<PhotoStrip />} />
+                <Route path="/template" element={<TemplateGallery />} />
+                <Route path="/template/:category" element={<TemplateCategoryPage />} />
+                <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
+                <Route path="/template-creator" element={<TemplateCreator />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </PhotoStripProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
