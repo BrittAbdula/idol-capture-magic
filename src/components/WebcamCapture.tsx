@@ -55,6 +55,11 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   });
   const [overlayImages, setOverlayImages] = useState<HTMLImageElement[]>([]);
 
+  // Update the current photoLimit when it changes from props
+  useEffect(() => {
+    console.log("PhotoLimit updated:", photoLimit);
+  }, [photoLimit]);
+
   useEffect(() => {
     const updateSizes = () => {
       if (videoContainerRef.current && videoRef.current) {
@@ -367,9 +372,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays, overlayImages]);
 
   useEffect(() => {
+    // Check if photoCount exactly equals photoLimit (not greater than)
     if (photoCount === photoLimit) {
+      console.log(`Photo strip complete! Took ${photoCount} of ${photoLimit} photos`);
       toast.success("Photo strip complete!");
     } else if (photoCount > 0 && photoCount < photoLimit) {
+      console.log(`Preparing for next photo: ${photoCount + 1} of ${photoLimit}`);
       const timer = setTimeout(() => {
         startCountdown();
       }, 1500);

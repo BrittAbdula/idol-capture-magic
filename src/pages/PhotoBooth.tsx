@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -48,7 +49,7 @@ const PhotoBooth: React.FC = () => {
   const [overlayPreviews, setOverlayPreviews] = useState<{ [key: number]: string }>({});
   const overlayPreviewRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const { photoStripData, setPhotoStripData, updatePhotos, currentTemplate, setCurrentTemplate } = usePhotoStrip();
+  const { photoStripData, setPhotoStripData, updatePhotos, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -126,8 +127,19 @@ const PhotoBooth: React.FC = () => {
       }
       
       setCurrentPhotoOverlays(updatedOverlays.slice(0, photoNum));
+      
+      // Update photoBoothSettings in photoStripData when photoNum changes
+      if (photoStripData.photoBoothSettings.photoNum !== photoNum) {
+        setPhotoStripData({
+          ...photoStripData,
+          photoBoothSettings: {
+            ...photoStripData.photoBoothSettings,
+            photoNum: photoNum
+          }
+        });
+      }
     }
-  }, [photoNum, photoStripData, currentPhotoOverlays]);
+  }, [photoNum, photoStripData, currentPhotoOverlays, setPhotoStripData]);
   
   useEffect(() => {
     return () => {
@@ -151,11 +163,7 @@ const PhotoBooth: React.FC = () => {
     updatePhotos(images);
     
     if (photoStripData && currentPhotoOverlays.length > 0) {
-      setPhotoStripData({
-        ...photoStripData,
-        photos: images,
-        photoOverlays: currentPhotoOverlays
-      });
+      updatePhotoOverlays(currentPhotoOverlays);
     }
     
     if (selectedAspectRatio) {
