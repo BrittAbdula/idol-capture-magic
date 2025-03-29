@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera, FlipHorizontal, Maximize, Minimize, Grid3X3 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -46,7 +45,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const idolOverlayRef = useRef<HTMLImageElement | null>(null);
 
-  // Create sound effect if enabled
   useEffect(() => {
     if (playSound) {
       audioRef.current = new Audio('/audio/camera-shutter.mp3');
@@ -55,7 +53,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [playSound]);
 
-  // Load idol overlay image if provided
   useEffect(() => {
     if (idolOverlay && idolOverlay.url) {
       const img = new Image();
@@ -68,12 +65,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, [idolOverlay]);
 
-  // Update aspect ratio when prop changes
   useEffect(() => {
     setCurrentAspectRatio(aspectRatio as AspectRatioType);
   }, [aspectRatio]);
 
-  // Update filter when prop changes
   useEffect(() => {
     setActiveFilter(defaultFilter as FilterType || 'Normal');
   }, [defaultFilter]);
@@ -117,7 +112,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Play sound if enabled
       if (audioRef.current) {
         audioRef.current.play().catch(e => console.log("Audio play failed", e));
       }
@@ -127,7 +121,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       let offsetX = 0;
       let offsetY = 0;
       
-      // Apply the correct aspect ratio cropping
       if (currentAspectRatio === '1:1') {
         const size = Math.min(width, height);
         offsetX = (width - size) / 2;
@@ -160,7 +153,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           0, 0, width, height
         );
         
-        // Apply selected filter
         if (activeFilter !== 'Normal') {
           switch (activeFilter) {
             case 'Warm':
@@ -193,9 +185,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           );
         }
         
-        // Draw idol overlay if available
         if (idolOverlayRef.current && idolOverlay) {
-          ctx.resetTransform(); // Reset transform before drawing overlay
+          ctx.resetTransform();
           
           const scale = idolOverlay.scale || 1;
           const posX = idolOverlay.position?.x || 0;
@@ -218,7 +209,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         
         onCapture(newCapturedImages, currentAspectRatio);
         
-        // Flash effect
         setIsCapturing(true);
         setTimeout(() => setIsCapturing(false), 300);
       }
@@ -296,7 +286,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   }, [startWebcam, stopWebcam]);
 
-  // New handler for cycling through aspect ratios
   const cycleAspectRatio = useCallback(() => {
     setCurrentAspectRatio(prev => {
       switch (prev) {
@@ -309,7 +298,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     });
   }, []);
 
-  // Toggle grid visibility
   const toggleGrid = useCallback(() => {
     setShowGrid(prev => !prev);
   }, []);
@@ -326,7 +314,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       alignItems: 'center',
     };
 
-    // Set correct aspect ratio constraints for non-fullscreen mode
     if (!isFullscreen) {
       if (currentAspectRatio === '4:3') {
         containerStyle.aspectRatio = '4/3';
@@ -343,13 +330,11 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   };
 
   const getVideoStyle = () => {
-    // Default style for video element
     let videoStyle: React.CSSProperties = {
       transform: mirrored ? 'scaleX(-1)' : 'none',
       objectFit: 'cover',
     };
 
-    // In fullscreen mode, maintain aspect ratio while filling the container
     if (isFullscreen) {
       if (currentAspectRatio === '4:3') {
         videoStyle.width = 'auto';
@@ -374,7 +359,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         videoStyle.objectFit = 'contain';
       }
     } else {
-      // Non-fullscreen mode: Fill the container while respecting aspect ratio
       videoStyle.width = '100%';
       videoStyle.height = '100%';
     }
@@ -397,7 +381,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 
   return (
     <div className="flex flex-col overflow-hidden rounded-lg shadow-lg" ref={containerRef}>
-      {/* TOP SECTION - Video Stream */}
       <div className="relative bg-black mb-4">
         {isCapturing && (
           <div 
@@ -416,7 +399,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             style={getVideoStyle()}
           />
           
-          {/* Aspect ratio crop guide with corrected dimensions */}
           <div 
             className="absolute pointer-events-none"
             style={{ 
@@ -442,7 +424,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
             }}
           />
           
-          {/* Grid overlay with corrected dimensions */}
           {showGrid && (
             <div 
               className="absolute pointer-events-none"
@@ -492,7 +473,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           
           {!inCaptureMode && (
             <>
-              {/* Control buttons */}
               <button 
                 onClick={toggleMirror}
                 className="absolute top-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
@@ -528,7 +508,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         </div>
       </div>
       
-      {/* CAPTURE BUTTON - Always visible */}
       <div className={`py-4 flex justify-center ${isFullscreen ? 'fixed bottom-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-sm' : ''}`}>
         {!inCaptureMode && (
           <div className="flex gap-4">
@@ -544,7 +523,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         )}
       </div>
       
-      {/* FILTERS - Only shown in non-fullscreen mode */}
       {!isFullscreen && (
         <div className="p-3 bg-transparent mt-2 mb-4">
           <div className="flex justify-center">

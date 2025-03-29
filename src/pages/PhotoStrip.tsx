@@ -21,7 +21,7 @@ import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { templates } from '../data/templates';
 
 const PhotoStrip: React.FC = () => {
-  const { photoStripData, updatePhotos, updateBackground, updateText, currentTemplate, setCurrentTemplate } = usePhotoStrip();
+  const { photoStripData, updatePhotos, updateBackground, updateText, updateDecoration, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
@@ -62,6 +62,23 @@ const PhotoStrip: React.FC = () => {
     if (template) {
       setSelectedTemplate(templateId);
       setCurrentTemplate(template);
+      
+      // Create a new photo strip based on the template
+      if (photoStripData) {
+        const newPhotoStripData = {
+          ...photoStripData,
+          templateId: template.templateId,
+          category: template.category,
+          idol: template.idol,
+          canvasSize: template.canvasSize,
+          background: template.background,
+          photoPositions: template.photoPositions,
+          idolOverlay: template.idolOverlay,
+          decoration: template.decoration,
+          photoBoothSettings: template.photoBoothSettings
+        };
+        updateBackground(template.background);
+      }
     }
   };
 
@@ -96,67 +113,125 @@ const PhotoStrip: React.FC = () => {
       });
     });
     
-    Promise.all(loadImages).then(loadedImages => {
-      if (loadedImages.length === 0) return;
+    // Load decorations if available
+    const loadDecorations = photoStripData.decoration ? 
+      photoStripData.decoration.map(dec => {
+        if (!dec.url) return Promise.resolve(null);
+        return new Promise<HTMLImageElement | null>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = dec.url;
+        });
+      }) : [];
+    
+    Promise.all([...loadImages, ...loadDecorations]).then(loadedAssets => {
+      if (loadedAssets.length === 0) return;
       
-      const imgWidth = loadedImages[0].width * scale;
-      const imgHeight = loadedImages[0].height * scale;
+      const loadedPhotos = loadedAssets.slice(0, photoStripData.photos.length) as HTMLImageElement[];
+      const loadedDecorations = loadedAssets.slice(photoStripData.photos.length) as (HTMLImageElement | null)[];
       
-      const { padding, sideMargin, topMargin, stripWidth } = getOptimalCanvasSettings();
+      if (loadedPhotos.length === 0) return;
       
-      const scaledPadding = padding * scale;
-      const scaledSideMargin = sideMargin * scale;
-      const scaledTopMargin = topMargin * scale;
-      const scaledStripWidth = stripWidth * scale;
+      // Set canvas dimensions based on photoStripData
+      const canvasWidth = photoStripData.canvasSize.width * scale;
+      const canvasHeight = photoStripData.canvasSize.height * scale;
       
-      const totalImagesHeight = (imgHeight * loadedImages.length) + 
-                          (scaledPadding * (loadedImages.length - 1));
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       
-      const textSpace = customText ? 120 * scale : 0;
-      const dateSpace = showDate ? 80 * scale : 0;
-      const extraSpace = textSpace + dateSpace + (scaledTopMargin * 2);
-      
-      const calculatedWidth = Math.max(scaledStripWidth, imgWidth + (scaledSideMargin * 2));
-      canvas.width = calculatedWidth;
-      canvas.height = totalImagesHeight + extraSpace;
-      
-      ctx.fillStyle = selectedColor;
+      // Draw background
+      ctx.fillStyle = photoStripData.background.color || '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      loadedImages.forEach((img, index) => {
-        const y = scaledTopMargin + (index * (imgHeight + scaledPadding));
-        
-        const borderWidth = 5 * scale;
-        ctx.fillStyle = '#FFFFFF';
-        
-        const xPos = (canvas.width - imgWidth) / 2 - borderWidth;
-        
-        ctx.fillRect(xPos, y - borderWidth, 
-                   imgWidth + (borderWidth * 2), imgHeight + (borderWidth * 2));
-        
-        ctx.drawImage(img, xPos + borderWidth, y, imgWidth, imgHeight);
-      });
+      // Draw background image if available
+      if (photoStripData.background.type === 'image' && photoStripData.background.url) {
+        const bgImg = new Image();
+        bgImg.onload = () => {
+          ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+          drawRemainingElements();
+        };
+        bgImg.onerror = () => {
+          drawRemainingElements();
+        };
+        bgImg.src = photoStripData.background.url;
+      } else {
+        drawRemainingElements();
+      }
       
-      if (customText) {
-        const textY = canvas.height - (showDate ? 130 * scale : 60 * scale);
+      function drawRemainingElements() {
+        // Draw each photo at its position
+        loadedPhotos.forEach((img, index) => {
+          if (index < photoStripData.photoPositions.length) {
+            const pos = photoStripData.photoPositions[index];
+            
+            // Draw white border
+            const borderWidth = 5 * scale;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(
+              pos.x * scale - borderWidth, 
+              pos.y * scale - borderWidth, 
+              pos.width * scale + (borderWidth * 2), 
+              pos.height * scale + (borderWidth * 2)
+            );
+            
+            // Draw the photo
+            ctx.drawImage(
+              img, 
+              pos.x * scale, 
+              pos.y * scale, 
+              pos.width * scale, 
+              pos.height * scale
+            );
+          }
+        });
+        
+        // Draw decorations if available
+        if (photoStripData.decoration && loadedDecorations.length > 0) {
+          photoStripData.decoration.forEach((dec, index) => {
+            const img = loadedDecorations[index];
+            if (img && dec.position) {
+              const decScale = dec.scale || 1;
+              ctx.drawImage(
+                img,
+                dec.position.x * scale,
+                dec.position.y * scale,
+                img.width * decScale * scale,
+                img.height * decScale * scale
+              );
+            }
+          });
+        }
+        
+        // Draw text if available
+        if (photoStripData.text) {
+          const text = photoStripData.text;
+          ctx.fillStyle = text.color;
+          ctx.font = `${text.size * scale}px ${text.font || 'Arial'}`;
+          ctx.textAlign = 'center';
+          
+          // Position text at the specified location or centered at the bottom
+          const textX = text.position ? text.position.x * scale : canvas.width / 2;
+          const textY = text.position ? text.position.y * scale : canvas.height - 100 * scale;
+          
+          ctx.fillText(text.content, textX, textY);
+        }
+        
+        // Add date if requested
+        if (showDate) {
+          ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
+          ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
+          ctx.textAlign = 'center';
+          const dateText = new Date().toLocaleDateString();
+          ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
+        }
+        
+        // Add IdolBooth watermark
         ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-        ctx.font = `bold ${Math.max(24, 28 * scale)}px sans-serif`;
+        ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(customText, canvas.width / 2, textY);
+        ctx.fillText("IdolBooth", canvas.width / 2, canvas.height - 35 * scale);
       }
-      
-      if (showDate) {
-        ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
-        ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
-        ctx.textAlign = 'center';
-        const dateText = new Date().toLocaleDateString();
-        ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
-      }
-      
-      ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-      ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText("IdolBooth", canvas.width / 2, canvas.height - 35 * scale);
     });
   };
 
@@ -184,8 +259,8 @@ const PhotoStrip: React.FC = () => {
         size: 24,
         color: '#FF4081',
         position: {
-          x: 100,
-          y: 1500
+          x: photoStripData?.canvasSize.width ? photoStripData.canvasSize.width / 2 : 600,
+          y: photoStripData?.canvasSize.height ? photoStripData.canvasSize.height - 100 : 1500
         }
       });
     }
@@ -194,7 +269,7 @@ const PhotoStrip: React.FC = () => {
       type: 'color',
       color: selectedColor
     });
-  }, [customText, selectedColor, updateText, updateBackground]);
+  }, [customText, selectedColor, updateText, updateBackground, photoStripData]);
 
   const handleDownload = () => {
     if (!photoStripData || photoStripData.photos.length === 0) {
@@ -383,7 +458,7 @@ const PhotoStrip: React.FC = () => {
                     <SelectItem value="default">Default (4 photos, 4:3)</SelectItem>
                     {templates.map((template) => (
                       <SelectItem key={template.templateId} value={template.templateId}>
-                        {template.category} - {template.templateId} ({template.photoNum} photos, {template.aspectRatio})
+                        {template.category} - {template.templateId} ({template.photoBoothSettings.photoNum} photos, {template.photoBoothSettings.aspectRatio})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -393,7 +468,7 @@ const PhotoStrip: React.FC = () => {
               <MultiPhotoUpload 
                 onComplete={handlePhotoUploadComplete}
                 template={currentTemplate}
-                aspectRatio={currentTemplate?.aspectRatio || "4:3"}
+                aspectRatio={currentTemplate?.photoBoothSettings.aspectRatio || "4:3"}
               />
               
               <div className="mt-6 text-center">

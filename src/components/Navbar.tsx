@@ -63,7 +63,7 @@ const Navbar = () => {
           <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
             Photo Strip
           </Link>
-          <Link to="/" className="idol-button-square text-sm py-2">
+          <Link to="/photo-booth" className="idol-button-square text-sm py-2">
             Try Now
           </Link>
         </nav>

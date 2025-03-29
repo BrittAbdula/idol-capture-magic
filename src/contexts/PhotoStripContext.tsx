@@ -39,19 +39,33 @@ export interface TextConfig {
   position: Position;
 }
 
-export interface Template {
-  templateId: string;
-  category: string;
-  idol?: string;
+export interface PhotoBoothSettings {
   aspectRatio: string;
-  resolution: Resolution;
   countdown: number;
   photoNum: number;
   filter?: string;
   lightColor?: string;
+  sound: boolean;
+}
+
+export interface Template {
+  templateId: string;
+  category: string;
+  idol?: string;
+  photoBoothSettings: PhotoBoothSettings;
   idolOverlay?: IdolOverlay;
   decoration?: Decoration[];
-  sound: boolean;
+  canvasSize: {
+    width: number;
+    height: number;
+  };
+  photoPositions: PhotoPosition[];
+  background: {
+    type: string;
+    url?: string;
+    color: string;
+  };
+  previewUrl?: string;
 }
 
 export interface PhotoStrip {
@@ -63,6 +77,7 @@ export interface PhotoStrip {
     width: number;
     height: number;
   };
+  previewUrl?: string;
   background: {
     type: string;
     url?: string;
@@ -70,16 +85,10 @@ export interface PhotoStrip {
   };
   photoPositions: PhotoPosition[];
   photos: string[];
-  frame?: {
-    url: string;
-  };
-  stickers?: {
-    url: string;
-    x: number;
-    y: number;
-    scale: number;
-  }[];
+  idolOverlay?: IdolOverlay;
+  decoration?: Decoration[];
   text?: TextConfig;
+  photoBoothSettings: PhotoBoothSettings;
 }
 
 // Default aspect ratios
@@ -90,12 +99,23 @@ export const defaultAspectRatios = {
   "4:5": { width: 576, height: 720 }
 };
 
+// Default photo booth settings
+const defaultPhotoBoothSettings: PhotoBoothSettings = {
+  aspectRatio: "4:3",
+  countdown: 3,
+  photoNum: 4,
+  filter: "Normal",
+  lightColor: "#FFD700",
+  sound: false
+};
+
 interface PhotoStripContextType {
   photoStripData: PhotoStrip | null;
   setPhotoStripData: React.Dispatch<React.SetStateAction<PhotoStrip | null>>;
   updatePhotos: (photos: string[]) => void;
   updateBackground: (background: { type: string; url?: string; color: string }) => void;
   updateText: (text: TextConfig) => void;
+  updateDecoration: (decorations: Decoration[]) => void;
   currentTemplate: Template | null;
   setCurrentTemplate: React.Dispatch<React.SetStateAction<Template | null>>;
 }
@@ -116,7 +136,8 @@ const defaultPhotoStrip: PhotoStrip = {
     { x: 100, y: 700, width: 400, height: 500 },
     { x: 600, y: 700, width: 400, height: 500 }
   ],
-  photos: []
+  photos: [],
+  photoBoothSettings: defaultPhotoBoothSettings
 };
 
 const PhotoStripContext = createContext<PhotoStripContextType | undefined>(undefined);
@@ -152,6 +173,15 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const updateDecoration = (decorations: Decoration[]) => {
+    if (photoStripData) {
+      setPhotoStripData({
+        ...photoStripData,
+        decoration: decorations
+      });
+    }
+  };
+
   return (
     <PhotoStripContext.Provider 
       value={{ 
@@ -160,6 +190,7 @@ export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) 
         updatePhotos, 
         updateBackground, 
         updateText,
+        updateDecoration,
         currentTemplate,
         setCurrentTemplate
       }}

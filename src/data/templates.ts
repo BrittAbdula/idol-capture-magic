@@ -7,15 +7,29 @@ export const templates: Template[] = [
     templateId: "classic-01",
     category: "kpop",
     idol: "momo",
-    aspectRatio: "4:3",
-    resolution: {
-      width: 960,
-      height: 720
+    photoBoothSettings: {
+      aspectRatio: "4:3",
+      countdown: 3,
+      photoNum: 4,
+      filter: "Warm",
+      lightColor: "#FFD700",
+      sound: true
     },
-    countdown: 3,
-    photoNum: 4,
-    filter: "Warm",
-    lightColor: "#FFD700",
+    canvasSize: {
+      width: 1200,
+      height: 1600
+    },
+    background: {
+      type: "color",
+      color: "#ffffff"
+    },
+    photoPositions: [
+      { x: 100, y: 100, width: 400, height: 500 },
+      { x: 600, y: 100, width: 400, height: 500 },
+      { x: 100, y: 700, width: 400, height: 500 },
+      { x: 600, y: 700, width: 400, height: 500 }
+    ],
+    previewUrl: "/placeholder.svg",
     idolOverlay: {
       url: "/placeholder.svg",
       position: {
@@ -38,22 +52,35 @@ export const templates: Template[] = [
         type: "frame",
         url: "/placeholder.svg"
       }
-    ],
-    sound: true
+    ]
   },
   {
     templateId: "cute-01",
     category: "kpop",
     idol: "lisa",
-    aspectRatio: "1:1",
-    resolution: {
-      width: 720,
-      height: 720
+    photoBoothSettings: {
+      aspectRatio: "1:1",
+      countdown: 5,
+      photoNum: 4,
+      filter: "Vintage",
+      lightColor: "#FF9999",
+      sound: true
     },
-    countdown: 5,
-    photoNum: 4,
-    filter: "Vintage",
-    lightColor: "#FF9999",
+    canvasSize: {
+      width: 1200,
+      height: 1200
+    },
+    background: {
+      type: "color",
+      color: "#FFF0F5"
+    },
+    photoPositions: [
+      { x: 100, y: 100, width: 400, height: 400 },
+      { x: 600, y: 100, width: 400, height: 400 },
+      { x: 100, y: 600, width: 400, height: 400 },
+      { x: 600, y: 600, width: 400, height: 400 }
+    ],
+    previewUrl: "/placeholder.svg",
     idolOverlay: {
       url: "/placeholder.svg",
       position: {
@@ -72,22 +99,35 @@ export const templates: Template[] = [
         },
         scale: 1.0
       }
-    ],
-    sound: true
+    ]
   },
   {
     templateId: "cool-01",
     category: "kpop",
     idol: "jimin",
-    aspectRatio: "3:2",
-    resolution: {
-      width: 1080,
-      height: 720
+    photoBoothSettings: {
+      aspectRatio: "3:2",
+      countdown: 3,
+      photoNum: 4,
+      filter: "Cool",
+      lightColor: "#99CCFF",
+      sound: false
     },
-    countdown: 3,
-    photoNum: 4,
-    filter: "Cool",
-    lightColor: "#99CCFF",
+    canvasSize: {
+      width: 1200,
+      height: 800
+    },
+    background: {
+      type: "color",
+      color: "#F0F8FF"
+    },
+    photoPositions: [
+      { x: 50, y: 50, width: 500, height: 333 },
+      { x: 650, y: 50, width: 500, height: 333 },
+      { x: 50, y: 417, width: 500, height: 333 },
+      { x: 650, y: 417, width: 500, height: 333 }
+    ],
+    previewUrl: "/placeholder.svg",
     idolOverlay: {
       url: "/placeholder.svg",
       position: {
@@ -95,21 +135,34 @@ export const templates: Template[] = [
         y: 200
       },
       scale: 1.1
-    },
-    sound: false
+    }
   },
   {
     templateId: "standard-01",
     category: "general",
-    aspectRatio: "4:3",
-    resolution: {
-      width: 960,
-      height: 720
+    photoBoothSettings: {
+      aspectRatio: "4:3",
+      countdown: 3,
+      photoNum: 4,
+      filter: "Normal",
+      sound: false,
+      lightColor: "#FFFFFF"
     },
-    countdown: 3,
-    photoNum: 4,
-    filter: "Normal",
-    sound: false
+    canvasSize: {
+      width: 1200,
+      height: 1600
+    },
+    background: {
+      type: "color",
+      color: "#FFFFFF"
+    },
+    photoPositions: [
+      { x: 100, y: 100, width: 400, height: 500 },
+      { x: 600, y: 100, width: 400, height: 500 },
+      { x: 100, y: 700, width: 400, height: 500 },
+      { x: 600, y: 700, width: 400, height: 500 }
+    ],
+    previewUrl: "/placeholder.svg"
   }
 ];
 

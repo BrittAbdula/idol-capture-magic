@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -52,13 +53,15 @@ const PhotoBooth: React.FC = () => {
         
         if (template) {
           setCurrentTemplate(template);
-          // Apply template settings
-          setAspectRatio(template.aspectRatio);
-          setPhotoNum(template.photoNum);
-          setCountdown(template.countdown);
-          if (template.filter) setFilter(template.filter);
-          if (template.lightColor) setLightColor(template.lightColor);
-          setPlaySound(template.sound);
+          
+          // Apply template photo booth settings
+          const settings = template.photoBoothSettings;
+          setAspectRatio(settings.aspectRatio);
+          setPhotoNum(settings.photoNum);
+          setCountdown(settings.countdown);
+          if (settings.filter) setFilter(settings.filter);
+          if (settings.lightColor) setLightColor(settings.lightColor);
+          setPlaySound(settings.sound);
           
           // Create a new photo strip data based on template
           const newPhotoStripData = {
@@ -66,21 +69,18 @@ const PhotoBooth: React.FC = () => {
             templateId: template.templateId,
             category: template.category,
             idol: template.idol,
-            canvasSize: {
-              width: 1200,
-              height: 1600
-            },
-            background: {
-              type: 'color',
-              color: '#FFFFFF'
-            },
-            photoPositions: [
-              { x: 100, y: 100, width: 400, height: 500 },
-              { x: 600, y: 100, width: 400, height: 500 },
-              { x: 100, y: 700, width: 400, height: 500 },
-              { x: 600, y: 700, width: 400, height: 500 }
-            ],
-            photos: []
+            canvasSize: template.canvasSize,
+            background: template.background,
+            photoPositions: template.photoPositions,
+            idolOverlay: template.idolOverlay,
+            decoration: template.decoration,
+            photos: [],
+            photoBoothSettings: {
+              ...settings,
+              filter,
+              lightColor,
+              sound: playSound
+            }
           };
           
           setPhotoStripData(newPhotoStripData);
@@ -92,6 +92,26 @@ const PhotoBooth: React.FC = () => {
     
     loadTemplateSettings();
   }, [templateFromQuery, setCurrentTemplate, setPhotoStripData]);
+  
+  // Update photo booth settings when user changes them
+  useEffect(() => {
+    if (photoStripData) {
+      const updatedSettings = {
+        ...photoStripData.photoBoothSettings,
+        aspectRatio,
+        photoNum,
+        countdown,
+        filter,
+        lightColor,
+        sound: playSound
+      };
+      
+      setPhotoStripData({
+        ...photoStripData,
+        photoBoothSettings: updatedSettings
+      });
+    }
+  }, [aspectRatio, photoNum, countdown, filter, lightColor, playSound, photoStripData, setPhotoStripData]);
   
   // Enhanced cleanup when navigating away from this page
   useEffect(() => {
