@@ -54,8 +54,11 @@ const Navbar = () => {
           <Link to="/photo-booth" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : ''}`}>
             Photo Booth
           </Link>
-          <Link to="/template" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') ? 'text-idol-gold' : ''}`}>
+          <Link to="/template" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : ''}`}>
             Templates
+          </Link>
+          <Link to="/template-creator" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : ''}`}>
+            Create Template
           </Link>
           <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
             Photo Strip
@@ -85,8 +88,11 @@ const Navbar = () => {
             <Link to="/photo-booth" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : 'text-white'}`}>
               Photo Booth
             </Link>
-            <Link to="/template" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/template') ? 'text-idol-gold' : 'text-white'}`}>
+            <Link to="/template" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : 'text-white'}`}>
               Templates
+            </Link>
+            <Link to="/template-creator" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : 'text-white'}`}>
+              Create Template
             </Link>
             <Link to="/photo-strip" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : 'text-white'}`}>
               Photo Strip

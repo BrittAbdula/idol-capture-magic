@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Settings2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -28,8 +27,7 @@ import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { getTemplate } from '../data/templates';
 
 const PhotoBooth: React.FC = () => {
-  // Get template parameters from URL
-  const { category, idol, templateId } = useParams<{ category?: string; idol?: string; templateId?: string }>();
+  // Get template parameter from URL query
   const [searchParams] = useSearchParams();
   const templateFromQuery = searchParams.get('template');
   
@@ -49,10 +47,8 @@ const PhotoBooth: React.FC = () => {
   // Load template settings on mount
   useEffect(() => {
     const loadTemplateSettings = () => {
-      const templateToLoad = templateId || templateFromQuery;
-      
-      if (templateToLoad) {
-        const template = getTemplate(templateToLoad);
+      if (templateFromQuery) {
+        const template = getTemplate(templateFromQuery);
         
         if (template) {
           setCurrentTemplate(template);
@@ -95,7 +91,7 @@ const PhotoBooth: React.FC = () => {
     };
     
     loadTemplateSettings();
-  }, [templateId, templateFromQuery, setCurrentTemplate, setPhotoStripData]);
+  }, [templateFromQuery, setCurrentTemplate, setPhotoStripData]);
   
   // Enhanced cleanup when navigating away from this page
   useEffect(() => {

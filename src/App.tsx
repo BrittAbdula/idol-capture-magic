@@ -12,6 +12,7 @@ import PhotoBooth from "./pages/PhotoBooth";
 import PhotoStrip from "./pages/PhotoStrip";
 import TemplateGallery from "./pages/TemplateGallery";
 import TemplateCategoryPage from "./pages/TemplateCategoryPage";
+import TemplateCreator from "./pages/TemplateCreator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,11 +28,11 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/photo-booth" element={<PhotoBooth />} />
-              <Route path="/photo-booth/:category/:idol/:templateId" element={<PhotoBooth />} />
               <Route path="/photo-strip" element={<PhotoStrip />} />
               <Route path="/template" element={<TemplateGallery />} />
               <Route path="/template/:category" element={<TemplateCategoryPage />} />
               <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
+              <Route path="/template-creator" element={<TemplateCreator />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
