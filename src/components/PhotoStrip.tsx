@@ -106,8 +106,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
           
           // Use exact position from the overlay position data
           const scale = overlay.scale || 1;
-          const posX = stripPadding + overlay.position.x;
-          const posY = y + overlay.position.y;
+          
+          // Calculate the exact position within the photo
+          const posX = stripPadding + (overlay.position.x);
+          const posY = y + (overlay.position.y);
           
           const overlayWidth = overlayImg.width * scale;
           const overlayHeight = overlayImg.height * scale;
@@ -197,7 +199,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                   />
                   
                   {/* Display overlay image if available with absolute positioning */}
-                  {photoOverlays && photoOverlays[index] && (
+                  {photoOverlays && photoOverlays[index] && photoOverlays[index].url && (
                     <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
                       <img 
                         src={photoOverlays[index].url}
