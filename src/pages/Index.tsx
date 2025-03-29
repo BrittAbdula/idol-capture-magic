@@ -53,7 +53,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-full py-1 px-4 mb-8 animate-fade-in">
               <Star className="w-4 h-4 text-idol-gold mr-2" />
-              <span className="text-sm text-white/90">Free AI Idol Photo Booth Online</span>
+              <span className="text-sm text-white/90">Free Idol Photo Booth Online</span>
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-up font-montserrat">
@@ -67,17 +67,17 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-200">
-              <Link to="/photo-booth" className="idol-button">
+              <Link to="/template" className="idol-button">
                 <span className="flex items-center">
                   <Image className="w-5 h-5 mr-2" />
-                  <span>选择偶像照片 & 拍照</span>
+                  <span>With Idol</span>
                 </span>
               </Link>
               
               <Link to="/photo-booth" className="idol-button-outline">
                 <span className="flex items-center">
                   <Camera className="w-5 h-5 mr-2" />
-                  <span>直接拍照</span>
+                  <span>Quick Shot</span>
                 </span>
               </Link>
             </div>
@@ -212,7 +212,7 @@ const Index = () => {
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-on-scroll font-montserrat">
-              定格偶像瞬间，留住闪耀回忆
+            Idol Concert
             </h2>
             <p className="text-xl text-white/80 mb-8 animate-on-scroll">
               Capture the Moment, Cherish the Star

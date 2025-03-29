@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -471,6 +470,31 @@ const PhotoBooth: React.FC = () => {
     
     return previews;
   };
+  
+  useEffect(() => {
+    if (!photoStripData) {
+      // 创建默认photoStripData
+      const defaultData = {
+        templateId: "default",
+        category: "general",
+        photoBoothSettings: {
+          aspectRatio: aspectRatio,
+          countdown: countdown,
+          photoNum: photoNum,
+          filter: filter,
+          lightColor: lightColor,
+          sound: playSound
+        },
+        canvasSize: { width: 480, height: 1390 },
+        background: { type: "color" as const, color: "#FFFFFF" },
+        photoPositions: [
+          // 生成默认位置
+        ],
+        photos: [] // 空数组，稍后会填充
+      };
+      setPhotoStripData(defaultData);
+    }
+  }, []);
   
   return (
     <div className="min-h-screen">

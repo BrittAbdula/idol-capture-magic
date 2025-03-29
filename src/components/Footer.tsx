@@ -22,7 +22,7 @@ const Footer = () => {
               Capture the Moment, Cherish the Star
             </p>
             <p className="text-gray-400 text-sm mt-4">
-              定格偶像瞬间，留住闪耀回忆
+              Idol Concert
             </p>
           </div>
 
@@ -95,10 +95,10 @@ const Footer = () => {
             © {new Date().getFullYear()} IdolBooth.com. All rights reserved.
           </p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <Link to="/" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+            <Link to="/privacy" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
               Privacy Policy
             </Link>
-            <Link to="/" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+            <Link to="/terms" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
               Terms of Service
             </Link>
           </div>

@@ -37,37 +37,51 @@ const PhotoStripPage: React.FC = () => {
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
+  console.log("------PhotoStripPage - photoStripData:", photoStripData);
 
   const processedData = useMemo(() => {
     if (!photoStripData) return { hasValidPhotos: false, processedPhotos: [], processedOverlays: undefined };
-    return processPhotoStripData(photoStripData);
-  }, [photoStripData]);
+    
+    const data = processPhotoStripData(photoStripData);
+    return {
+      hasValidPhotos: data.hasValidPhotos,
+      processedPhotos: data.processedPhotos,
+      processedOverlays: data.processedOverlays
+    };
+  }, [photoStripData?.photos]);
 
   useEffect(() => {
     if (!dataInitialized && photoStripData) {
       console.log("PhotoStripPage - Initial data loading");
-      const { hasValidPhotos, processedPhotos } = processedData;
+      const processed = processPhotoStripData(photoStripData);
       
-      if (hasValidPhotos && processedPhotos.length > 0) {
-        console.log("PhotoStripPage - Valid photos found:", processedPhotos.length);
-        setShowUpload(false);
+      const updates = {} as any;
+      
+      if (processed.hasValidPhotos && processed.processedPhotos.length > 0) {
+        updates.showUpload = false;
       } else {
-        console.log("PhotoStripPage - No valid photos found, showing upload");
-        setShowUpload(true);
+        updates.showUpload = true;
       }
       
       if (photoStripData.background.color) {
-        setSelectedColor(photoStripData.background.color);
-        setCustomColorInput(photoStripData.background.color);
+        updates.selectedColor = photoStripData.background.color;
+        updates.customColorInput = photoStripData.background.color;
       }
       
       if (photoStripData.text?.content) {
-        setCustomText(photoStripData.text.content);
+        updates.customText = photoStripData.text.content;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        setShowUpload(updates.showUpload);
+        if (updates.selectedColor) setSelectedColor(updates.selectedColor);
+        if (updates.customColorInput) setCustomColorInput(updates.customColorInput);
+        if (updates.customText) setCustomText(updates.customText);
       }
       
       setDataInitialized(true);
     }
-  }, [photoStripData, processedData, dataInitialized]);
+  }, [photoStripData, dataInitialized]);
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find(t => t.templateId === templateId);
@@ -259,7 +273,7 @@ const PhotoStripPage: React.FC = () => {
   }, [photoStripData, selectedColor, customText, showDate, isMobile]);
 
   useEffect(() => {
-    if (customText && photoStripData) {
+    if (customText && photoStripData && photoStripData.text?.content !== customText) {
       updateText({
         content: customText,
         font: 'Arial',
@@ -272,9 +286,9 @@ const PhotoStripPage: React.FC = () => {
       });
     }
 
-    if (photoStripData) {
+    if (photoStripData && photoStripData.background.color !== selectedColor) {
       updateBackground({
-        type: 'color',
+        type: 'color' as const,
         color: selectedColor
       });
     }

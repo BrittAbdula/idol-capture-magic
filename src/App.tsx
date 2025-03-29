@@ -14,6 +14,8 @@ import TemplateGallery from "./pages/TemplateGallery";
 import TemplateCategoryPage from "./pages/TemplateCategoryPage";
 import TemplateCreator from "./pages/TemplateCreator";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -25,21 +27,27 @@ const TitleUpdater = () => {
   useEffect(() => {
     const updateTitle = () => {
       const path = location.pathname;
-      let title = "Free Idol Photo Booth Online | IdolBooth.com";
+      let title = "Free Idol Photo Booth Online | IdolBooth";
       let description = "Use our free Idol Photo Booth online to take stunning virtual photos with your favorite Kpop idols. Capture special moments instantly!";
       
       if (path === "/") {
-        title = "Free Idol Photo Booth Online: Take a Virtual Photo with Your Favorite Idol | IdolBooth.com";
-        description = "Use our free Idol Photo Booth online to take stunning virtual photos with your favorite Kpop idols, anime characters, and celebrities. Capture your special moments and print them instantly. Try IdolBooth now!";
+        title = "Free Idol Photo Booth: Take Photos with Your Idol | IdolBooth";
+        description = "Use our free Idol Photo Booth online to take stunning photos with your favorite Kpop idols. Capture your special moments. Try IdolBooth now!";
       } else if (path === "/photo-booth") {
-        title = "Take Photos with Your Favorite Idols | Free Online Photo Booth | IdolBooth.com";
+        title = "Take Photos with Your Favorite Idols | Free Online Photo Booth | IdolBooth";
         description = "Our free online Kpop photo booth lets you take virtual photos with your favorite idols. Easy to use, instant results. Try now at IdolBooth.com!";
       } else if (path === "/photo-strip") {
-        title = "Create Stunning Photo Strips with Idols | IdolBooth.com";
+        title = "Create Stunning Photo Strips with Idols | IdolBooth";
         description = "Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator.";
       } else if (path.includes("/template")) {
-        title = "Idol Photo Templates | Choose from Kpop & Anime Templates | IdolBooth.com";
+        title = "Idol Photo Templates | Choose from Kpop & Anime Templates | IdolBooth";
         description = "Browse our collection of Kpop idol, anime, and celebrity photo templates. Find the perfect template for your virtual photo booth experience.";
+      } else if (path === "/privacy") {
+        title = "Privacy Policy | IdolBooth";
+        description = "Read our privacy policy to understand how we collect and use your data. Your privacy is important to us.";
+      } else if (path === "/terms") {
+        title = "Terms of Service | IdolBooth";
+        description = "Read our terms of service to understand how we operate our service. By using IdolBooth, you agree to these terms.";
       }
       
       document.title = title;
@@ -73,6 +81,8 @@ const App = () => {
                 <Route path="/template/:category" element={<TemplateCategoryPage />} />
                 <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
                 {/* <Route path="/template-creator" element={<TemplateCreator />} /> */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
