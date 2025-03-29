@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Resolution {
   width: number;
@@ -151,6 +151,36 @@ const PhotoStripContext = createContext<PhotoStripContextType | undefined>(undef
 export const PhotoStripProvider = ({ children }: { children: React.ReactNode }) => {
   const [photoStripData, setPhotoStripData] = useState<PhotoStrip | null>(defaultPhotoStrip);
   const [currentTemplate, setCurrentTemplate] = useState<Template | null>(null);
+
+  // This effect ensures photoStrip data is loaded from localStorage (if exists)
+  useEffect(() => {
+    try {
+      // Try to load saved photoStripData from localStorage
+      const savedPhotoStripData = localStorage.getItem('photoStripData');
+      if (savedPhotoStripData) {
+        const parsedData = JSON.parse(savedPhotoStripData);
+        // Validate data has required properties
+        if (parsedData && parsedData.photoStripId && parsedData.photos) {
+          console.log("Loaded photoStripData from localStorage:", parsedData.photos.length, "photos");
+          setPhotoStripData(parsedData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading photoStripData from localStorage:", error);
+    }
+  }, []);
+
+  // This effect saves photoStripData to localStorage whenever it changes
+  useEffect(() => {
+    if (photoStripData) {
+      try {
+        localStorage.setItem('photoStripData', JSON.stringify(photoStripData));
+        console.log("Saved photoStripData to localStorage:", photoStripData.photos.length, "photos");
+      } catch (error) {
+        console.error("Error saving photoStripData to localStorage:", error);
+      }
+    }
+  }, [photoStripData]);
 
   const updatePhotos = (photos: string[]) => {
     if (photoStripData) {

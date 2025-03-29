@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -18,6 +18,16 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   showControls = true,
   photoOverlays
 }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    console.log("PhotoStrip component - Images:", images?.length || 0);
+    console.log("PhotoStrip component - Overlays:", photoOverlays?.length || 0);
+    if (images && images.length > 0) {
+      setLoaded(true);
+    }
+  }, [images, photoOverlays]);
+
   const getFilterClassName = () => {
     switch (filter) {
       case 'Warm': return 'sepia-[0.3] brightness-105';
@@ -34,7 +44,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    if (!ctx || images.length === 0) return;
+    if (!ctx || images.length === 0) {
+      toast.error("No photos to download");
+      return;
+    }
     
     // We'll need to load the images first
     const loadImages = images.map(src => {
@@ -59,7 +72,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     }) : [];
     
     Promise.all([...loadImages, ...loadOverlays]).then(loadedImages => {
-      if (loadedImages.length === 0) return;
+      if (loadedImages.length === 0) {
+        toast.error("Failed to load images");
+        return;
+      }
       
       // Separate loaded images and overlays
       const photoImages = loadedImages.slice(0, images.length) as HTMLImageElement[];
@@ -202,7 +218,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
 
   return (
     <div className="flex flex-col items-center">
-      {images.length === 0 ? (
+      {!loaded || !images || images.length === 0 ? (
         <div className="text-center text-gray-400 p-4">
           <p>Take photos to see your photo strip here</p>
         </div>
@@ -222,10 +238,10 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                     src={image} 
                     alt={`Photo ${index + 1}`} 
                     className="w-full mx-auto block" 
+                    onLoad={() => console.log(`Photo ${index + 1} loaded`)}
+                    onError={() => console.error(`Failed to load photo ${index + 1}`)}
                   />
                   
-                  {/* Note: The overlay should already be in the captured image,
-                      but we can render it here for clarity if needed */}
                   {photoOverlays && photoOverlays[index] && photoOverlays[index].url && 
                    photoOverlays[index].url !== "/placeholder.svg" && (
                     <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -239,6 +255,8 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                           transform: `scale(${photoOverlays[index].scale})`,
                           transformOrigin: 'top left'
                         }}
+                        onLoad={() => console.log(`Overlay ${index + 1} loaded`)}
+                        onError={() => console.error(`Failed to load overlay ${index + 1}`)}
                       />
                     </div>
                   )}
@@ -258,7 +276,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         </div>
       )}
       
-      {showControls && images.length > 0 && (
+      {showControls && loaded && images && images.length > 0 && (
         <div className="mt-4 flex justify-center gap-2">
           <button 
             onClick={handleDownload}

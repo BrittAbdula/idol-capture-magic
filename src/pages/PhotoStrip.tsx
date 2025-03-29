@@ -37,16 +37,19 @@ const PhotoStripPage: React.FC = () => {
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
-  useEffect(() => {
-    if (photoStripData && photoStripData.photos.length > 0) {
-      setShowUpload(false);
-    } else {
-      setShowUpload(true);
-    }
-  }, [photoStripData]);
-
+  // Initialize UI state from photoStripData when it's available
   useEffect(() => {
     if (photoStripData) {
+      console.log("PhotoStripPage - photoStripData loaded:", photoStripData);
+      
+      if (photoStripData.photos && photoStripData.photos.length > 0) {
+        console.log("PhotoStripPage - Photos available:", photoStripData.photos.length);
+        setShowUpload(false);
+      } else {
+        console.log("PhotoStripPage - No photos available, showing upload");
+        setShowUpload(true);
+      }
+      
       if (photoStripData.background.color) {
         setSelectedColor(photoStripData.background.color);
         setCustomColorInput(photoStripData.background.color);
@@ -55,6 +58,8 @@ const PhotoStripPage: React.FC = () => {
       if (photoStripData.text?.content) {
         setCustomText(photoStripData.text.content);
       }
+    } else {
+      console.log("PhotoStripPage - No photoStripData available");
     }
   }, [photoStripData]);
 
@@ -83,6 +88,7 @@ const PhotoStripPage: React.FC = () => {
   };
 
   const handlePhotoUploadComplete = (photos: string[]) => {
+    console.log("Upload complete with", photos.length, "photos");
     updatePhotos(photos);
     setShowUpload(false);
     toast.success("Photos uploaded successfully!");
@@ -424,6 +430,9 @@ const PhotoStripPage: React.FC = () => {
     '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
   ];
 
+  console.log("PhotoStripPage render - showUpload:", showUpload);
+  console.log("PhotoStripPage render - photoStripData:", photoStripData?.photos?.length || 0, "photos");
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -475,12 +484,16 @@ const PhotoStripPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col items-center">
                 <div className="mb-4 relative mx-auto">
-                  {photoStripData && photoStripData.photos.length > 0 && (
+                  {photoStripData && photoStripData.photos && photoStripData.photos.length > 0 ? (
                     <PhotoStrip 
                       images={photoStripData.photos}
                       filter={photoStripData.photoBoothSettings?.filter || 'Normal'}
                       photoOverlays={photoStripData.photoOverlays}
                     />
+                  ) : (
+                    <div className="text-center text-gray-400 p-4">
+                      <p>No photos available. Try taking photos in the photo booth.</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -568,7 +581,7 @@ const PhotoStripPage: React.FC = () => {
                   <Button 
                     onClick={handleDownload}
                     className="flex-1 idol-button flex items-center justify-center gap-2 py-3"
-                    disabled={isGeneratingDownload || !photoStripData || photoStripData.photos.length === 0}
+                    disabled={isGeneratingDownload || !photoStripData || !photoStripData.photos || photoStripData.photos.length === 0}
                   >
                     <Download className="w-5 h-5" />
                     <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
@@ -578,7 +591,7 @@ const PhotoStripPage: React.FC = () => {
                     onClick={handlePrint}
                     className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
                     variant="outline"
-                    disabled={isPrinting || !photoStripData || photoStripData.photos.length === 0}
+                    disabled={isPrinting || !photoStripData || !photoStripData.photos || photoStripData.photos.length === 0}
                   >
                     <Printer className="w-5 h-5" />
                     <span>{isPrinting ? "Preparing..." : "Print"}</span>
@@ -588,7 +601,7 @@ const PhotoStripPage: React.FC = () => {
                     onClick={handleShare}
                     className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
                     variant="outline"
-                    disabled={isSharing || !photoStripData || photoStripData.photos.length === 0}
+                    disabled={isSharing || !photoStripData || !photoStripData.photos || photoStripData.photos.length === 0}
                   >
                     <Share2 className="w-5 h-5" />
                     <span>{isSharing ? "Sharing..." : "Share"}</span>
