@@ -34,7 +34,7 @@ const App = () => {
                 <Route path="/template" element={<TemplateGallery />} />
                 <Route path="/template/:category" element={<TemplateCategoryPage />} />
                 <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
-                <Route path="/template-creator" element={<TemplateCreator />} />
+                {/* <Route path="/template-creator" element={<TemplateCreator />} /> */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

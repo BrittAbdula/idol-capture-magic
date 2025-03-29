@@ -57,9 +57,9 @@ const Navbar = () => {
           <Link to="/template" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : ''}`}>
             Templates
           </Link>
-          <Link to="/template-creator" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : ''}`}>
+          {/* <Link to="/template-creator" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : ''}`}>
             Create Template
-          </Link>
+          </Link> */}
           <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
             Photo Strip
           </Link>

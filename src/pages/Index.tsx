@@ -46,6 +46,7 @@ const Index = () => {
           >
             <source src="https://assets.mixkit.co/videos/preview/mixkit-people-taking-pictures-in-a-concert-4839-large.mp4" type="video/mp4" />
           </video>
+          {/* <img src="/images/hero.png" className="w-full h-full object-cover" /> */}
         </div>
         
         <div className="container mx-auto px-4 md:px-6 relative z-10 pt-16">
