@@ -57,6 +57,7 @@ const PhotoBooth: React.FC = () => {
     const loadTemplateSettings = () => {
       if (templateFromQuery) {
         const template = getTemplate(templateFromQuery);
+        console.log('template', template);
         
         if (template) {
           setCurrentTemplate(template);

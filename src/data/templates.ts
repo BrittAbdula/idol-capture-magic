@@ -191,20 +191,21 @@ export const templates: Template[] = [
       sound: false
     },
     canvasSize: {
-      width: 1200,
-      height: 1600
+      width: 1080,
+      height: 3100
     },
     background: {
-      type: "color",
-      color: "#FFFFFF"
+      type: "image",
+      color: "#FFFFFF",
+      imageUrl: "/images/templates/template_1.png"
     },
     photoPositions: [
-      { x: 100, y: 100, width: 400, height: 500 },
-      { x: 600, y: 100, width: 400, height: 500 },
-      { x: 100, y: 700, width: 400, height: 500 },
-      { x: 600, y: 700, width: 400, height: 500 }
+      { x: 90, y: 240, width: 900, height: 675, borderRadius: 20 },
+      { x: 90, y: 945, width: 900, height: 675, borderRadius: 20 },
+      { x: 90, y: 1650, width: 900, height: 675, borderRadius: 20 },
+      { x: 90, y: 2355, width: 900, height: 675, borderRadius: 20 }
     ],
-    previewUrl: "/placeholder.svg"
+    previewUrl: "/images/templates/preview_1.png",
   }
 ];
 

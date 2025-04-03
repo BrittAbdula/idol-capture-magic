@@ -171,7 +171,6 @@ const PhotoStripPage: React.FC = () => {
       
       ctx.fillStyle = photoStripData.background.color || '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
       if (photoStripData.background.type === 'image' && 
           (photoStripData.background.url || photoStripData.background.imageUrl)) {
         const bgImg = new Image();
@@ -211,6 +210,16 @@ const PhotoStripPage: React.FC = () => {
               );
             }
           });
+
+          // 在用户照片上绘制背景图片
+          if (photoStripData.background.type === 'image' && 
+              (photoStripData.background.url || photoStripData.background.imageUrl)) {
+            const bgImg = new Image();
+            bgImg.onload = () => {
+              ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+            };
+            bgImg.src = photoStripData.background.url || photoStripData.background.imageUrl || '';
+          }
         }
         
         if (photoStripData.decoration && loadedDecorations.length > 0) {
@@ -483,6 +492,14 @@ const PhotoStripPage: React.FC = () => {
                     images={processedData.processedPhotos}
                     filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
                     photoOverlays={processedData.processedOverlays}
+                    // 添加必要的属性以确保预览图与最终生成的照片条一致
+                    background={photoStripData?.background}
+                    decoration={photoStripData?.decoration}
+                    text={photoStripData?.text}
+                    showDate={showDate}
+                    canvasSize={photoStripData?.canvasSize}
+                    photoPositions={photoStripData?.photoPositions}
+                    selectedColor={selectedColor}
                   />
                 </div>
               </div>

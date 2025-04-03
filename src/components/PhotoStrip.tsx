@@ -10,18 +10,49 @@ interface PhotoStripProps {
   filter: string;
   showControls?: boolean;
   photoOverlays?: PhotoOverlay[];
+  // 添加新的属性
+  background?: {
+    type: string;
+    color?: string;
+    url?: string;
+    imageUrl?: string;
+  };
+  decoration?: {
+    url?: string;
+    position?: { x: number; y: number };
+    scale?: number;
+  }[];
+  text?: {
+    content: string;
+    font?: string;
+    size?: number;
+    color?: string;
+    position?: { x: number; y: number };
+  };
+  showDate?: boolean;
+  canvasSize?: { width: number; height: number };
+  photoPositions?: { x: number; y: number; width: number; height: number }[];
+  selectedColor?: string;
 }
 
 const PhotoStrip: React.FC<PhotoStripProps> = ({ 
   images, 
   filter, 
   showControls = true,
-  photoOverlays
+  photoOverlays,
+  background,
+  decoration,
+  text,
+  showDate,
+  canvasSize,
+  photoPositions,
+  selectedColor
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [renderedImages, setRenderedImages] = useState<string[]>([]);
   const [renderedOverlays, setRenderedOverlays] = useState<PhotoOverlay[]>([]);
   const stripRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Process incoming images and set them for rendering - with stable dependency array
   useEffect(() => {
@@ -63,6 +94,189 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       setRenderedOverlays([]);
     }
   }, [photoOverlays]); // Only depend on photoOverlays
+
+  // 渲染预览图到画布
+  useEffect(() => {
+    if (canvasRef.current && loaded && renderedImages.length > 0) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) return;
+      
+      // 设置画布尺寸
+      const width = canvasSize?.width || 480;
+      const height = canvasSize?.height || 640;
+      canvas.width = width;
+      canvas.height = height;
+      
+      // 绘制背景
+      ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+      
+      // 如果有背景图片，加载并绘制
+      if (background?.type === 'image' && (background.url || background.imageUrl)) {
+        const bgImg = new Image();
+        bgImg.onload = () => {
+          ctx.drawImage(bgImg, 0, 0, width, height);
+          drawRemainingElements();
+        };
+        bgImg.onerror = () => {
+          drawRemainingElements();
+        };
+        bgImg.src = background.url || background.imageUrl || '';
+      } else {
+        drawRemainingElements();
+      }
+      
+      function drawRemainingElements() {
+        // 加载并绘制照片
+        const loadImages = renderedImages.map(src => {
+          return new Promise<HTMLImageElement>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null as unknown as HTMLImageElement);
+            img.src = src;
+          });
+        });
+        
+        // 加载装饰元素
+        const loadDecorations = decoration ? 
+          decoration.map(dec => {
+            if (!dec.url) return Promise.resolve(null);
+            return new Promise<HTMLImageElement | null>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve(img);
+              img.onerror = () => resolve(null);
+              img.src = dec.url;
+            });
+          }) : [];
+        
+        Promise.all([...loadImages, ...loadDecorations]).then(loadedAssets => {
+          if (loadedAssets.length === 0) return;
+          
+          const loadedPhotos = loadedAssets.slice(0, renderedImages.length) as HTMLImageElement[];
+          const loadedDecorations = loadedAssets.slice(renderedImages.length) as (HTMLImageElement | null)[];
+          
+          if (loadedPhotos.length === 0) return;
+          
+          // 应用滤镜效果
+          if (filter !== 'Normal') {
+            let filterStyle = '';
+            switch (filter) {
+              case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
+              case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
+              case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
+              case 'B&W': filterStyle = 'grayscale(1)'; break;
+              case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
+            }
+            ctx.filter = filterStyle;
+          }
+          
+          // 绘制照片
+          if (photoPositions && photoPositions.length > 0) {
+            loadedPhotos.forEach((photo, index) => {
+              if (index < photoPositions.length && photo) {
+                const pos = photoPositions[index];
+                
+                // 绘制白色边框
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(
+                  pos.x - 5, 
+                  pos.y - 5, 
+                  pos.width + 10, 
+                  pos.height + 10
+                );
+                
+                // 绘制照片
+                ctx.drawImage(
+                  photo, 
+                  pos.x, 
+                  pos.y, 
+                  pos.width, 
+                  pos.height
+                );
+              }
+            });
+          } else {
+            // 如果没有指定位置，使用默认布局
+            const imgWidth = width * 0.8;
+            const imgHeight = imgWidth * 0.75;
+            const padding = 20;
+            const startY = 50;
+            
+            loadedPhotos.forEach((photo, index) => {
+              if (photo) {
+                const y = startY + (index * (imgHeight + padding));
+                ctx.drawImage(
+                  photo, 
+                  (width - imgWidth) / 2, 
+                  y, 
+                  imgWidth, 
+                  imgHeight
+                );
+              }
+            });
+          }
+          
+          // 在照片上绘制背景图片（如果需要）
+          if (background?.type === 'image' && (background.url || background.imageUrl)) {
+            const bgImg = new Image();
+            bgImg.onload = () => {
+              ctx.globalCompositeOperation = 'source-atop';
+              ctx.drawImage(bgImg, 0, 0, width, height);
+              ctx.globalCompositeOperation = 'source-over';
+            };
+            bgImg.src = background.url || background.imageUrl || '';
+          }
+          
+          // 绘制装饰元素
+          ctx.filter = 'none'; // 重置滤镜
+          if (decoration && loadedDecorations.length > 0) {
+            decoration.forEach((dec, index) => {
+              const img = loadedDecorations[index];
+              if (img && dec.position) {
+                const decScale = dec.scale || 1;
+                ctx.drawImage(
+                  img,
+                  dec.position.x,
+                  dec.position.y,
+                  img.width * decScale,
+                  img.height * decScale
+                );
+              }
+            });
+          }
+          
+          // 绘制文本
+          if (text && text.content) {
+            ctx.fillStyle = text.color || '#000000';
+            ctx.font = `${text.size || 24}px ${text.font || 'Arial'}`;
+            ctx.textAlign = 'center';
+            
+            const textX = text.position ? text.position.x : width / 2;
+            const textY = text.position ? text.position.y : height - 100;
+            
+            ctx.fillText(text.content, textX, textY);
+          }
+          
+          // 绘制日期
+          if (showDate) {
+            ctx.fillStyle = '#00000080';
+            ctx.font = '20px monospace';
+            ctx.textAlign = 'center';
+            const dateText = new Date().toLocaleDateString();
+            ctx.fillText(dateText, width / 2, height - 80);
+          }
+          
+          // 绘制水印
+          ctx.fillStyle = '#000000';
+          ctx.font = 'bold 26px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText("IdolBooth", width / 2, height - 35);
+        });
+      }
+    }
+  }, [loaded, renderedImages, renderedOverlays, background, decoration, text, showDate, canvasSize, photoPositions, selectedColor, filter]);
 
   const getFilterClassName = () => {
     switch (filter) {
@@ -137,7 +351,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       canvas.height = (imgHeight * photoImages.length) + (padding * (photoImages.length - 1)) + (stripPadding * 2);
       
       // Fill with white background
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Apply the filter effect if needed
@@ -273,57 +487,70 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
           <p>Take photos to see your photo strip here</p>
         </div>
       ) : (
-        <div className="flex flex-col items-center mt-4 max-w-full overflow-auto">
-          <div 
-            className="bg-white p-5 pb-10"
+        <>
+          {/* 使用Canvas渲染预览图 */}
+          <canvas 
+            ref={canvasRef} 
+            className="max-w-full" 
             style={{ 
-              maxWidth: '280px',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              maxWidth: '280px'
             }}
-          >
-            {renderedImages.map((image, index) => (
-              <div key={index} className="mb-4">
-                <div className={`${getFilterClassName()} overflow-hidden relative`}>
-                  <img 
-                    src={image} 
-                    alt={`Photo ${index + 1}`} 
-                    className="w-full mx-auto block" 
-                    onLoad={() => console.log(`Photo ${index + 1} loaded`)}
-                    onError={() => console.error(`Failed to load photo ${index + 1}`)}
-                  />
-                  
-                  {renderedOverlays[index] && renderedOverlays[index].url && 
-                   renderedOverlays[index].url !== "/placeholder.svg" && (
-                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                      <img 
-                        src={renderedOverlays[index].url}
-                        alt={`Overlay ${index + 1}`}
-                        style={{
-                          position: 'absolute',
-                          left: `${renderedOverlays[index].position.x}px`,
-                          top: `${renderedOverlays[index].position.y}px`,
-                          transform: `translate(-50%, -50%) scale(${renderedOverlays[index].scale || 1})`,
-                          transformOrigin: 'center'
-                        }}
-                        onLoad={() => console.log(`Overlay ${index + 1} loaded`)}
-                        onError={() => console.error(`Failed to load overlay ${index + 1}`)}
-                      />
-                    </div>
+          />
+          
+          {/* 保留原有的照片条展示方式作为备用 */}
+          <div className="hidden flex-col items-center mt-4 max-w-full overflow-auto">
+            <div 
+              className="bg-white p-5 pb-10"
+              style={{ 
+                maxWidth: '280px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
+              }}
+            >
+              {renderedImages.map((image, index) => (
+                <div key={index} className="mb-4">
+                  <div className={`${getFilterClassName()} overflow-hidden relative`}>
+                    <img 
+                      src={image} 
+                      alt={`Photo ${index + 1}`} 
+                      className="w-full mx-auto block" 
+                      onLoad={() => console.log(`Photo ${index + 1} loaded`)}
+                      onError={() => console.error(`Failed to load photo ${index + 1}`)}
+                    />
+                    
+                    {renderedOverlays[index] && renderedOverlays[index].url && 
+                     renderedOverlays[index].url !== "/placeholder.svg" && (
+                      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                        <img 
+                          src={renderedOverlays[index].url}
+                          alt={`Overlay ${index + 1}`}
+                          style={{
+                            position: 'absolute',
+                            left: `${renderedOverlays[index].position.x}px`,
+                            top: `${renderedOverlays[index].position.y}px`,
+                            transform: `translate(-50%, -50%) scale(${renderedOverlays[index].scale || 1})`,
+                            transformOrigin: 'center'
+                          }}
+                          onLoad={() => console.log(`Overlay ${index + 1} loaded`)}
+                          onError={() => console.error(`Failed to load overlay ${index + 1}`)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="pt-2 text-xs text-gray-600 font-mono">
+                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                  </div>
+                  {index < renderedImages.length - 1 && (
+                    <div className="w-full border-t border-gray-300 my-4"></div>
                   )}
                 </div>
-                <div className="pt-2 text-xs text-gray-600 font-mono">
-                  {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
-                </div>
-                {index < renderedImages.length - 1 && (
-                  <div className="w-full border-t border-gray-300 my-4"></div>
-                )}
+              ))}
+              <div className="text-center text-xs text-gray-500 font-mono mt-2">
+                Thank you for using IdolBooth!
               </div>
-            ))}
-            <div className="text-center text-xs text-gray-500 font-mono mt-2">
-              Thank you for using IdolBooth!
             </div>
           </div>
-        </div>
+        </>
       )}
       
       {showControls && loaded && renderedImages.length > 0 && (

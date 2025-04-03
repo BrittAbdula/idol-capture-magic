@@ -25,6 +25,7 @@ export interface PhotoPosition {
   y: number;
   width: number;
   height: number;
+  borderRadius?: number;
 }
 
 export interface Background {

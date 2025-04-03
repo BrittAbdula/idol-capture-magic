@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, ChevronLeft } from 'lucide-react';
+import { ArrowRight, ChevronLeft, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getTemplatesByCategory, getTemplatesByIdol, getAllIdolsByCategory } from '../data/templates';
@@ -9,6 +9,24 @@ import SEO from '../components/SEO';
 
 const TemplateCategoryPage: React.FC = () => {
   const { category, idol } = useParams<{ category: string; idol?: string }>();
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  
+  // 处理模态框打开时的滚动穿透问题
+  useEffect(() => {
+    if (previewImage) {
+      // 禁用背景滚动
+      document.body.style.overflow = 'hidden';
+    } else {
+      // 恢复背景滚动
+      document.body.style.overflow = '';
+    }
+    
+    // 组件卸载时恢复滚动
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [previewImage]);
+  
   // 动态生成标题和描述
   const pageTitle = idol 
     ? `${idol.charAt(0).toUpperCase() + idol.slice(1)} Photo Templates | IdolBooth.com` 
@@ -40,6 +58,31 @@ const TemplateCategoryPage: React.FC = () => {
       <Navbar />
       
       <main className="pt-32 pb-24 px-4">
+        {/* 图片预览模态框 */}
+        {previewImage && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-start justify-center p-4 overflow-auto"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div 
+              className="relative max-w-4xl w-full my-12"
+              onClick={(e) => e.stopPropagation()} 
+            >
+              <button 
+                className="fixed top-4 right-4 bg-white rounded-full p-2 shadow-lg z-10 hover:bg-gray-100"
+                onClick={() => setPreviewImage(null)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <img 
+                src={previewImage} 
+                alt="Template Preview" 
+                className="w-full h-auto object-contain rounded shadow-lg"
+              />
+            </div>
+          </div>
+        )}
+        
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <Link 
@@ -99,11 +142,14 @@ const TemplateCategoryPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {templates.map((template, index) => (
                   <div key={index} className="glass-panel p-6 transition-all hover:shadow-lg">
-                    <div className="aspect-video bg-gray-100 mb-4 rounded overflow-hidden">
+                    <div 
+                      className="aspect-video bg-gray-100 mb-4 rounded overflow-hidden cursor-pointer"
+                      onClick={() => setPreviewImage(template.previewUrl)}
+                    >
                       <img 
-                        src="/placeholder.svg" 
+                        src={template.previewUrl} 
                         alt={`Template ${template.templateId}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-center"
                       />
                     </div>
                     
