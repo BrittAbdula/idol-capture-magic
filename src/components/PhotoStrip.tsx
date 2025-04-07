@@ -31,7 +31,7 @@ interface PhotoStripProps {
   };
   showDate?: boolean;
   canvasSize?: { width: number; height: number };
-  photoPositions?: { x: number; y: number; width: number; height: number }[];
+  photoPositions?: { x: number; y: number; width: number; height: number; borderRadius: number }[];
   selectedColor?: string;
 }
 
@@ -178,23 +178,61 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
               if (index < photoPositions.length && photo) {
                 const pos = photoPositions[index];
                 
-                // 绘制白色边框
+                // 绘制白色边框（带圆角）
                 ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(
-                  pos.x - 5, 
-                  pos.y - 5, 
-                  pos.width + 10, 
-                  pos.height + 10
-                );
+                if (pos.borderRadius) {
+                  // 绘制带圆角的边框
+                  drawRoundedRect(
+                    ctx,
+                    pos.x - 5, 
+                    pos.y - 5, 
+                    pos.width + 10, 
+                    pos.height + 10,
+                    pos.borderRadius + 5
+                  );
+                  ctx.fill();
+                } else {
+                  // 普通矩形边框
+                  ctx.fillRect(
+                    pos.x - 5, 
+                    pos.y - 5, 
+                    pos.width + 10, 
+                    pos.height + 10
+                  );
+                }
                 
-                // 绘制照片
-                ctx.drawImage(
-                  photo, 
-                  pos.x, 
-                  pos.y, 
-                  pos.width, 
-                  pos.height
-                );
+                // 绘制照片（带圆角）
+                if (pos.borderRadius) {
+                  ctx.save();
+                  // 创建圆角裁剪路径
+                  drawRoundedRect(
+                    ctx,
+                    pos.x, 
+                    pos.y, 
+                    pos.width, 
+                    pos.height,
+                    pos.borderRadius
+                  );
+                  ctx.clip();
+                  // 绘制照片
+                  ctx.drawImage(
+                    photo, 
+                    pos.x, 
+                    pos.y, 
+                    pos.width, 
+                    pos.height
+                  );
+                  ctx.restore();
+                } else {
+                  // 普通绘制照片
+                  ctx.drawImage(
+                    photo, 
+                    pos.x, 
+                    pos.y, 
+                    pos.width, 
+                    pos.height
+                  );
+                }
               }
             });
           } else {
@@ -277,6 +315,28 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       }
     }
   }, [loaded, renderedImages, renderedOverlays, background, decoration, text, showDate, canvasSize, photoPositions, selectedColor, filter]);
+
+  // 辅助函数：绘制圆角矩形
+  const drawRoundedRect = (
+    ctx: CanvasRenderingContext2D, 
+    x: number, 
+    y: number, 
+    width: number, 
+    height: number, 
+    radius: number
+  ) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+  };
 
   const getFilterClassName = () => {
     switch (filter) {
@@ -376,10 +436,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       const bgColor = background?.color || selectedColor || '#FFFFFF';
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, width, height);
-
-      console.log('模板类型---', background?.type);
-      console.log('背景图片---', bgImage);
-      console.log('背景颜色---', bgColor);
       
       // 2. 如果背景类型是image，绘制背景图片
       if (background?.type === 'image' && bgImage) {
@@ -405,23 +461,61 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
           if (index < photoPositions.length && photo) {
             const pos = photoPositions[index];
             
-            // 绘制白色边框
+            // 绘制白色边框（带圆角）
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(
-              pos.x - 5, 
-              pos.y - 5, 
-              pos.width + 10, 
-              pos.height + 10
-            );
+            if (pos.borderRadius) {
+              // 绘制带圆角的边框
+              drawRoundedRect(
+                ctx,
+                pos.x - 5, 
+                pos.y - 5, 
+                pos.width + 10, 
+                pos.height + 10,
+                pos.borderRadius + 5
+              );
+              ctx.fill();
+            } else {
+              // 普通矩形边框
+              ctx.fillRect(
+                pos.x - 5, 
+                pos.y - 5, 
+                pos.width + 10, 
+                pos.height + 10
+              );
+            }
             
-            // 绘制照片
-            ctx.drawImage(
-              photo, 
-              pos.x, 
-              pos.y, 
-              pos.width, 
-              pos.height
-            );
+            // 绘制照片（带圆角）
+            if (pos.borderRadius) {
+              ctx.save();
+              // 创建圆角裁剪路径
+              drawRoundedRect(
+                ctx,
+                pos.x, 
+                pos.y, 
+                pos.width, 
+                pos.height,
+                pos.borderRadius
+              );
+              ctx.clip();
+              // 绘制照片
+              ctx.drawImage(
+                photo, 
+                pos.x, 
+                pos.y, 
+                pos.width, 
+                pos.height
+              );
+              ctx.restore();
+            } else {
+              // 普通绘制照片
+              ctx.drawImage(
+                photo, 
+                pos.x, 
+                pos.y, 
+                pos.width, 
+                pos.height
+              );
+            }
           }
         });
       } else {

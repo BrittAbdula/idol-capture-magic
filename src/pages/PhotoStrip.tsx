@@ -27,8 +27,8 @@ const PhotoStripPage: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
-  const [customText, setCustomText] = useState<string>("My photo booth memories");
-  const [showDate, setShowDate] = useState<boolean>(true);
+  const [customText, setCustomText] = useState<string>();
+  const [showDate, setShowDate] = useState<boolean>(false);
   const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
