@@ -190,19 +190,27 @@ export const templates: Template[] = [
 			sound: false,
 		},
 		canvasSize: {
-			width: 1080,
-			height: 3100,
+			width: 480,
+			height: 1600,
 		},
 		background: {
-			type: "image",
+			type: "color",
 			color: "#FFFFFF",
-			imageUrl: "/images/templates/template_1.png",
+			imageUrl: "/images/templates/preview_1.png",
 		},
 		photoPositions: [
-			{ x: 90, y: 240, width: 900, height: 675, borderRadius: 20 },
-			{ x: 90, y: 945, width: 900, height: 675, borderRadius: 20 },
-			{ x: 90, y: 1650, width: 900, height: 675, borderRadius: 20 },
-			{ x: 90, y: 2355, width: 900, height: 675, borderRadius: 20 },
+			{ x: 40, y: 120, width: 400, height: 300, borderRadius: 10 },
+			{ x: 40, y: 450, width: 400, height: 300, borderRadius: 10 },
+			{ x: 40, y: 780, width: 400, height: 300, borderRadius: 10 },
+			{ x: 40, y: 1110, width: 400, height: 300, borderRadius: 10 },
+		],
+		photoOverlays: [
+			{
+				url: "/images/templates/template_1.png",
+				position: { x: 0, y: 0 },
+				scale: 1.0,
+				photoPosition: { width: 480, height: 1600, x: 0, y: 0 },
+			}
 		],
 		previewUrl: "/images/templates/preview_1.png",
 	},
@@ -224,7 +232,7 @@ export const templates: Template[] = [
 		background: {
 			type: "image",
 			color: "#8B8BF5", // 紫蓝色背景
-			imageUrl: "/images/templates/template_2.png",
+			imageUrl: "/images/templates/preview_2.png",
 		},
 		photoPositions: [
 			{ x: 40, y: 120, width: 400, height: 300, borderRadius: 10 },
@@ -232,8 +240,14 @@ export const templates: Template[] = [
 			{ x: 40, y: 980, width: 400, height: 300, borderRadius: 10 },
 		],
 		previewUrl: "/images/templates/preview_2.png",
-		photoOverlays: [],
-		decoration: [],
+		photoOverlays: [
+			{
+				url: "/images/templates/template_2.png",
+				position: { x: 0, y: 0 },
+				scale: 1.0,
+				photoPosition: { width: 480, height: 1600, x: 0, y: 0 },
+			}
+		],
 	},
 ];
 

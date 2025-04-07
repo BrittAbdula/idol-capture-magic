@@ -496,7 +496,7 @@ const PhotoStripPage: React.FC = () => {
                   <PhotoStrip 
                     images={processedData.processedPhotos}
                     filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
-                    photoOverlays={processedData.processedOverlays}
+                    photoOverlays={photoStripData.photoOverlays}
                     // 添加必要的属性以确保预览图与最终生成的照片条一致
                     background={photoStripData?.background}
                     decoration={photoStripData?.decoration}

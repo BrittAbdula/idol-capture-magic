@@ -31,7 +31,7 @@ interface PhotoStripProps {
   };
   showDate?: boolean;
   canvasSize?: { width: number; height: number };
-  photoPositions?: { x: number; y: number; width: number; height: number; borderRadius: number }[];
+  photoPositions?: { x: number; y: number; width: number; height: number; borderRadius?: number }[];
   selectedColor?: string;
 }
 
@@ -83,7 +83,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   useEffect(() => {
     // Process overlays if they exist
     if (photoOverlays && photoOverlays.length > 0) {
-      console.log("PhotoStrip - Overlays received:", photoOverlays.length);
+      console.log("PhotoStrip - Overlays received:", photoOverlays.length, photoOverlays);
       const validOverlays = photoOverlays.filter(overlay => 
         overlay && overlay.url && overlay.url !== "/placeholder.svg"
       );
@@ -109,22 +109,32 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       canvas.width = width;
       canvas.height = height;
       
-      // 绘制背景
-      ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
-      ctx.fillRect(0, 0, width, height);
-      
-      // 如果背景图片，加载并绘制
-      if (background?.type === 'image' && (background.url || background.imageUrl)) {
+      // 根据背景类型绘制
+      if (background?.type === 'color' || !background?.type) {
+        // 绘制背景颜色
+        ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        // 直接绘制剩余元素
+        drawRemainingElements();
+      } else if (background?.type === 'image' && (background.url || background.imageUrl)) {
+        // 先绘制背景图片
         const bgImg = new Image();
+        console.log('开始绘制背景图片', bgImg)
         bgImg.onload = () => {
           ctx.drawImage(bgImg, 0, 0, width, height);
           drawRemainingElements();
         };
         bgImg.onerror = () => {
+          // 如果背景图片加载失败，使用背景颜色
+          ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
           drawRemainingElements();
         };
         bgImg.src = background.url || background.imageUrl || '';
       } else {
+        // 默认使用背景颜色
+        ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
         drawRemainingElements();
       }
       
@@ -138,6 +148,21 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
             img.src = src;
           });
         });
+
+          
+        // 加载叠加层
+        const loadOverlays = renderedOverlays.length > 0 ? 
+          renderedOverlays.map(overlay => {
+            if (!overlay || !overlay.url || overlay.url === '/placeholder.svg') return Promise.resolve(null);
+            return new Promise<HTMLImageElement | null>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve(img);
+              img.onerror = () => resolve(null);
+              img.src = overlay.url;
+            });
+          }) : [];
+
+          console.log('叠加层', loadOverlays)
         
         // 加载装饰元素
         const loadDecorations = decoration ? 
@@ -150,12 +175,17 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
               img.src = dec.url;
             });
           }) : [];
+      
         
-        Promise.all([...loadImages, ...loadDecorations]).then(loadedAssets => {
+        Promise.all([...loadImages, ...loadDecorations, ...loadOverlays]).then(loadedAssets => {
           if (loadedAssets.length === 0) return;
           
-          const loadedPhotos = loadedAssets.slice(0, renderedImages.length) as HTMLImageElement[];
-          const loadedDecorations = loadedAssets.slice(renderedImages.length) as (HTMLImageElement | null)[];
+          const photoCount = renderedImages.length;
+          const decorationCount = decoration ? decoration.length : 0;
+          
+          const loadedPhotos = loadedAssets.slice(0, photoCount) as HTMLImageElement[];
+          const loadedOverlays = loadedAssets.slice(photoCount + decorationCount) as (HTMLImageElement | null)[];
+          const loadedDecorations = loadedAssets.slice(photoCount, photoCount + decorationCount) as (HTMLImageElement | null)[];
           
           if (loadedPhotos.length === 0) return;
           
@@ -256,19 +286,29 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
             });
           }
           
-          // 在照片上绘制背景图片（如果需要）
-          if (background?.type === 'image' && (background.url || background.imageUrl)) {
-            const bgImg = new Image();
-            bgImg.onload = () => {
-              ctx.globalCompositeOperation = 'source-atop';
-              ctx.drawImage(bgImg, 0, 0, width, height);
-              ctx.globalCompositeOperation = 'source-over';
-            };
-            bgImg.src = background.url || background.imageUrl || '';
+          // 绘制叠加层 (photoOverlays)
+          ctx.filter = 'none'; // 重置滤镜
+          if (renderedOverlays.length > 0 && loadedOverlays.length > 0) {
+            renderedOverlays.forEach((overlay, index) => {
+              const img = loadedOverlays[index];
+              if (img && overlay && overlay.url && overlay.url !== "/placeholder.svg") {
+                const scale = overlay.scale || 1;
+                const position = overlay.position || { x: 0, y: 0 };
+                const photoPosition = overlay.photoPosition || { width, height, x: 0, y: 0 };
+                console.log('绘制叠加层', scale, position, photoPosition)
+                
+                ctx.drawImage(
+                  img,
+                  position.x,
+                  position.y,
+                  photoPosition.width * scale,
+                  photoPosition.height * scale
+                );
+              }
+            });
           }
           
           // 绘制装饰元素
-          ctx.filter = 'none'; // 重置滤镜
           if (decoration && loadedDecorations.length > 0) {
             decoration.forEach((dec, index) => {
               const img = loadedDecorations[index];
@@ -431,18 +471,22 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       
       // 按照指定步骤绘制图片
       
-      // 1. 绘制背景颜色 (无论背景类型是什么，都先绘制背景颜色)
-      // 使用背景颜色或选中的颜色，但不改变background的type
-      const bgColor = background?.color || selectedColor || '#FFFFFF';
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, width, height);
-      
-      // 2. 如果背景类型是image，绘制背景图片
-      if (background?.type === 'image' && bgImage) {
+      // 1. 根据背景类型绘制
+      if (background?.type === 'color' || !background?.type) {
+        // 绘制背景颜色
+        ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+      } else if (background?.type === 'image' && bgImage) {
+        console.log('绘制背景', bgImage)
+        // 绘制背景图片
         ctx.drawImage(bgImage, 0, 0, width, height);
+      } else {
+        // 默认使用背景颜色
+        ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
       }
       
-      // 3. 应用滤镜效果
+      // 2. 应用滤镜效果
       if (filter !== 'Normal') {
         let filterStyle = '';
         switch (filter) {
@@ -455,7 +499,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.filter = filterStyle;
       }
       
-      // 4. 绘制照片
+      // 3. 绘制照片
       if (photoPositions && photoPositions.length > 0) {
         loadedPhotos.forEach((photo, index) => {
           if (index < photoPositions.length && photo) {
@@ -539,16 +583,28 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         });
       }
       
-      // 5. 如果背景类型是image，再次绘制背景图片（使用source-atop混合模式）
-      if (background?.type === 'image' && bgImage) {
-        ctx.filter = 'none'; // 重置滤镜
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.drawImage(bgImage, 0, 0, width, height);
-        ctx.globalCompositeOperation = 'source-over'; // 恢复默认混合模式
+      // 4. 绘制叠加层 (photoOverlays)
+      ctx.filter = 'none'; // 重置滤镜
+      if (renderedOverlays.length > 0 && overlayImages.length > 0) {
+        renderedOverlays.forEach((overlay, index) => {
+          const img = overlayImages[index];
+          if (img && overlay) {
+            const scale = overlay.scale || 1;
+            const position = overlay.position || { x: 0, y: 0 };
+            const photoPosition = overlay.photoPosition || { width, height, x: 0, y: 0 };
+            
+            ctx.drawImage(
+              img,
+              position.x,
+              position.y,
+              photoPosition.width * scale,
+              photoPosition.height * scale
+            );
+          }
+        });
       }
       
-      // 6. 绘制装饰元素
-      ctx.filter = 'none'; // 重置滤镜
+      // 5. 绘制装饰元素
       if (decoration && loadedDecorations.length > 0) {
         decoration.forEach((dec, index) => {
           const img = loadedDecorations[index];
@@ -565,53 +621,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         });
       }
       
-      // 7. 绘制叠加层
-      if (renderedOverlays.length > 0 && overlayImages.length > 0) {
-        renderedOverlays.forEach((overlay, index) => {
-          const overlayImg = overlayImages[index];
-          if (overlayImg && overlay.position) {
-            const scale = overlay.scale || 1;
-            const photoPosition = overlay.photoPosition;
-            
-            if (photoPosition && photoPositions) {
-              // 找到对应的照片位置
-              const pos = photoPositions[index];
-              if (pos) {
-                const posX = pos.x + (overlay.position.x * (pos.width / photoPosition.width));
-                const posY = pos.y + (overlay.position.y * (pos.height / photoPosition.height));
-                
-                const overlayWidth = overlayImg.width * scale;
-                const overlayHeight = overlayImg.height * scale;
-                
-                ctx.drawImage(
-                  overlayImg,
-                  posX - (overlayWidth / 2),
-                  posY - (overlayHeight / 2),
-                  overlayWidth,
-                  overlayHeight
-                );
-              }
-            } else {
-              // 如果没有照片位置信息，使用原始位置
-              const posX = overlay.position.x;
-              const posY = overlay.position.y;
-              
-              const overlayWidth = overlayImg.width * scale;
-              const overlayHeight = overlayImg.height * scale;
-              
-              ctx.drawImage(
-                overlayImg,
-                posX - (overlayWidth / 2),
-                posY - (overlayHeight / 2),
-                overlayWidth,
-                overlayHeight
-              );
-            }
-          }
-        });
-      }
-      
-      // 8. 绘制文本
+      // 6. 绘制文本
       if (text && text.content) {
         ctx.fillStyle = text.color || '#000000';
         ctx.font = `${text.size || 24}px ${text.font || 'Arial'}`;
@@ -623,7 +633,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.fillText(text.content, textX, textY);
       }
       
-      // 9. 绘制日期
+      // 7. 绘制日期
       if (showDate) {
         ctx.fillStyle = '#00000080';
         ctx.font = '20px monospace';
@@ -632,22 +642,27 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.fillText(dateText, width / 2, height - 80);
       }
       
-      // 10. 绘制水印
+      // 8. 绘制水印
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 26px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText("IdolBooth", width / 2, height - 35);
       
-      // 转换为数据URL并下载
-      const link = document.createElement('a');
-      link.download = `photo_strip_${Date.now()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.95);
-      link.click();
-      
-      toast.success("Photo strip downloaded successfully!");
-    }).catch(err => {
-      console.error("Error creating photo strip:", err);
-      toast.error("Failed to download photo strip");
+      // 下载图片
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `idolbooth-${new Date().getTime()}.png`;
+        link.href = dataUrl;
+        link.click();
+        toast.success("Photo downloaded successfully!");
+      } catch (error) {
+        console.error("Error downloading photo:", error);
+        toast.error("Failed to download photo");
+      }
+    }).catch(error => {
+      console.error("Error processing images:", error);
+      toast.error("Failed to process images");
     });
   };
 
