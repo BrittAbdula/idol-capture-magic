@@ -113,7 +113,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
       
-      // 如果有背景图片，加载并绘制
+      // 如果背景图片，加载并绘制
       if (background?.type === 'image' && (background.url || background.imageUrl)) {
         const bgImg = new Image();
         bgImg.onload = () => {
@@ -290,7 +290,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   };
 
   const handleDownload = () => {
-    // Create a canvas element to combine the images into a single receipt-like strip
+    // 创建一个与预览图相同的画布
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -299,7 +299,13 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       return;
     }
     
-    // We'll need to load the images first
+    // 设置与预览图相同的画布尺寸
+    const width = canvasSize?.width || 480;
+    const height = canvasSize?.height || 640;
+    canvas.width = width;
+    canvas.height = height;
+    
+    // 加载所有需要的图像资源
     const loadImages = renderedImages.map(src => {
       return new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
@@ -312,51 +318,76 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
       });
     });
     
-    // If we have photo overlays, preload them too
+    // 加载装饰元素
+    const loadDecorations = decoration ? 
+      decoration.map(dec => {
+        if (!dec.url) return Promise.resolve(null);
+        return new Promise<HTMLImageElement | null>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = dec.url;
+        });
+      }) : [];
+    
+    // 加载背景图片
+    let bgImagePromise = Promise.resolve(null);
+    if (background?.type === 'image' && (background.url || background.imageUrl)) {
+      bgImagePromise = new Promise<HTMLImageElement | null>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = background.url || background.imageUrl || '';
+      });
+    }
+    
+    // 加载叠加层
     const loadOverlays = renderedOverlays.length > 0 ? renderedOverlays.map(overlay => {
       if (!overlay || !overlay.url || overlay.url === "/placeholder.svg") {
         return Promise.resolve(null);
       }
-      return new Promise<HTMLImageElement | null>((resolve, reject) => {
+      return new Promise<HTMLImageElement | null>((resolve) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = () => {
-          console.error(`Failed to load overlay: ${overlay.url}`);
-          resolve(null);
-        };
+        img.onerror = () => resolve(null);
         img.src = overlay.url;
       });
     }) : [];
     
-    Promise.all([...loadImages, ...loadOverlays]).then(loadedImages => {
-      if (loadedImages.length === 0) {
+    Promise.all([...loadImages, ...loadDecorations, bgImagePromise, ...loadOverlays]).then(loadedAssets => {
+      if (loadedAssets.length === 0) {
         toast.error("Failed to load images");
         return;
       }
       
-      // Separate loaded images and overlays
-      const photoImages = loadedImages.slice(0, renderedImages.length) as HTMLImageElement[];
-      const overlayImages = loadOverlays.length > 0 ? 
-                            loadedImages.slice(renderedImages.length).filter(Boolean) as HTMLImageElement[] : [];
+      // 分离加载的资源
+      const photoCount = renderedImages.length;
+      const decorationCount = decoration ? decoration.length : 0;
       
-      // Set canvas size - vertical receipt-like strip format
-      const imgWidth = photoImages[0].width;
-      const imgHeight = photoImages[0].height;
+      const loadedPhotos = loadedAssets.slice(0, photoCount) as HTMLImageElement[];
+      const loadedDecorations = loadedAssets.slice(photoCount, photoCount + decorationCount) as (HTMLImageElement | null)[];
+      const bgImage = loadedAssets[photoCount + decorationCount] as HTMLImageElement | null;
+      const overlayImages = loadedAssets.slice(photoCount + decorationCount + 1) as (HTMLImageElement | null)[];
       
-      // Add some padding between photos and at the edges
-      const padding = 20;
-      const stripPadding = 30;
+      // 按照指定步骤绘制图片
       
-      canvas.width = imgWidth + (stripPadding * 2);
-      canvas.height = (imgHeight * photoImages.length) + (padding * (photoImages.length - 1)) + (stripPadding * 2);
+      // 1. 绘制背景颜色 (无论背景类型是什么，都先绘制背景颜色)
+      // 使用背景颜色或选中的颜色，但不改变background的type
+      const bgColor = background?.color || selectedColor || '#FFFFFF';
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, width, height);
+
+      console.log('模板类型---', background?.type);
+      console.log('背景图片---', bgImage);
+      console.log('背景颜色---', bgColor);
       
-      // Fill with white background
-      ctx.fillStyle = background?.color || selectedColor || '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // 2. 如果背景类型是image，绘制背景图片
+      if (background?.type === 'image' && bgImage) {
+        ctx.drawImage(bgImage, 0, 0, width, height);
+      }
       
-      // Apply the filter effect if needed
+      // 3. 应用滤镜效果
       if (filter !== 'Normal') {
-        // Apply the filter manually based on filter type
         let filterStyle = '';
         switch (filter) {
           case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
@@ -368,30 +399,108 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         ctx.filter = filterStyle;
       }
       
-      // Draw each image on the canvas
-      photoImages.forEach((img, index) => {
-        const y = stripPadding + (index * (imgHeight + padding));
-        ctx.drawImage(img, stripPadding, y, imgWidth, imgHeight);
-        
-        // If we have an overlay for this photo, draw it
-        if (renderedOverlays[index] && overlayImages[index]) {
-          const overlay = renderedOverlays[index];
-          const overlayImg = overlayImages[index];
-          
-          if (overlayImg) {
-            // Reset filter for overlay image
-            ctx.filter = 'none';
+      // 4. 绘制照片
+      if (photoPositions && photoPositions.length > 0) {
+        loadedPhotos.forEach((photo, index) => {
+          if (index < photoPositions.length && photo) {
+            const pos = photoPositions[index];
             
-            // Use exact position from the overlay position data
+            // 绘制白色边框
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(
+              pos.x - 5, 
+              pos.y - 5, 
+              pos.width + 10, 
+              pos.height + 10
+            );
+            
+            // 绘制照片
+            ctx.drawImage(
+              photo, 
+              pos.x, 
+              pos.y, 
+              pos.width, 
+              pos.height
+            );
+          }
+        });
+      } else {
+        // 如果没有指定位置，使用默认布局
+        const imgWidth = width * 0.8;
+        const imgHeight = imgWidth * 0.75;
+        const padding = 20;
+        const startY = 50;
+        
+        loadedPhotos.forEach((photo, index) => {
+          if (photo) {
+            const y = startY + (index * (imgHeight + padding));
+            ctx.drawImage(
+              photo, 
+              (width - imgWidth) / 2, 
+              y, 
+              imgWidth, 
+              imgHeight
+            );
+          }
+        });
+      }
+      
+      // 5. 如果背景类型是image，再次绘制背景图片（使用source-atop混合模式）
+      if (background?.type === 'image' && bgImage) {
+        ctx.filter = 'none'; // 重置滤镜
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.drawImage(bgImage, 0, 0, width, height);
+        ctx.globalCompositeOperation = 'source-over'; // 恢复默认混合模式
+      }
+      
+      // 6. 绘制装饰元素
+      ctx.filter = 'none'; // 重置滤镜
+      if (decoration && loadedDecorations.length > 0) {
+        decoration.forEach((dec, index) => {
+          const img = loadedDecorations[index];
+          if (img && dec.position) {
+            const decScale = dec.scale || 1;
+            ctx.drawImage(
+              img,
+              dec.position.x,
+              dec.position.y,
+              img.width * decScale,
+              img.height * decScale
+            );
+          }
+        });
+      }
+      
+      // 7. 绘制叠加层
+      if (renderedOverlays.length > 0 && overlayImages.length > 0) {
+        renderedOverlays.forEach((overlay, index) => {
+          const overlayImg = overlayImages[index];
+          if (overlayImg && overlay.position) {
             const scale = overlay.scale || 1;
             const photoPosition = overlay.photoPosition;
             
-            if (photoPosition) {
-              const widthRatio = imgWidth / photoPosition.width;
-              const heightRatio = imgHeight / photoPosition.height;
-              
-              const posX = stripPadding + (overlay.position.x * widthRatio);
-              const posY = y + (overlay.position.y * heightRatio);
+            if (photoPosition && photoPositions) {
+              // 找到对应的照片位置
+              const pos = photoPositions[index];
+              if (pos) {
+                const posX = pos.x + (overlay.position.x * (pos.width / photoPosition.width));
+                const posY = pos.y + (overlay.position.y * (pos.height / photoPosition.height));
+                
+                const overlayWidth = overlayImg.width * scale;
+                const overlayHeight = overlayImg.height * scale;
+                
+                ctx.drawImage(
+                  overlayImg,
+                  posX - (overlayWidth / 2),
+                  posY - (overlayHeight / 2),
+                  overlayWidth,
+                  overlayHeight
+                );
+              }
+            } else {
+              // 如果没有照片位置信息，使用原始位置
+              const posX = overlay.position.x;
+              const posY = overlay.position.y;
               
               const overlayWidth = overlayImg.width * scale;
               const overlayHeight = overlayImg.height * scale;
@@ -403,67 +512,42 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                 overlayWidth,
                 overlayHeight
               );
-            } else {
-              // Fallback positioning
-              const posX = stripPadding + overlay.position.x;
-              const posY = y + overlay.position.y;
-              
-              const overlayWidth = overlayImg.width * scale;
-              const overlayHeight = overlayImg.height * scale;
-              
-              ctx.drawImage(
-                overlayImg,
-                posX, posY, overlayWidth, overlayHeight
-              );
-            }
-            
-            // Restore filter for next image
-            if (filter !== 'Normal') {
-              let filterStyle = '';
-              switch (filter) {
-                case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
-                case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
-                case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
-                case 'B&W': filterStyle = 'grayscale(1)'; break;
-                case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
-              }
-              ctx.filter = filterStyle;
             }
           }
-        }
-        
-        // Add timestamp under each photo
-        ctx.filter = 'none'; // Reset filter for text
-        ctx.fillStyle = '#333333';
-        ctx.font = '12px monospace';
-        const timestamp = new Date().toLocaleTimeString();
-        const date = new Date().toLocaleDateString();
-        ctx.fillText(`${date} ${timestamp}`, stripPadding + 10, y + imgHeight + 15);
-        
-        // Restore filter for next image
-        if (filter !== 'Normal') {
-          let filterStyle = '';
-          switch (filter) {
-            case 'Warm': filterStyle = 'sepia(0.3) brightness(1.05)'; break;
-            case 'Cool': filterStyle = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
-            case 'Vintage': filterStyle = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
-            case 'B&W': filterStyle = 'grayscale(1)'; break;
-            case 'Dramatic': filterStyle = 'contrast(1.25) brightness(0.9)'; break;
-          }
-          ctx.filter = filterStyle;
-        }
-      });
+        });
+      }
       
-      // Add footer at the bottom of the receipt
-      ctx.filter = 'none';
-      ctx.fillStyle = '#333333';
-      ctx.font = '10px monospace';
-      ctx.fillText('Thank you for using IdolBooth!', stripPadding + 10, canvas.height - 25);
+      // 8. 绘制文本
+      if (text && text.content) {
+        ctx.fillStyle = text.color || '#000000';
+        ctx.font = `${text.size || 24}px ${text.font || 'Arial'}`;
+        ctx.textAlign = 'center';
+        
+        const textX = text.position ? text.position.x : width / 2;
+        const textY = text.position ? text.position.y : height - 100;
+        
+        ctx.fillText(text.content, textX, textY);
+      }
       
-      // Convert to data URL and download
+      // 9. 绘制日期
+      if (showDate) {
+        ctx.fillStyle = '#00000080';
+        ctx.font = '20px monospace';
+        ctx.textAlign = 'center';
+        const dateText = new Date().toLocaleDateString();
+        ctx.fillText(dateText, width / 2, height - 80);
+      }
+      
+      // 10. 绘制水印
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("IdolBooth", width / 2, height - 35);
+      
+      // 转换为数据URL并下载
       const link = document.createElement('a');
       link.download = `photo_strip_${Date.now()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg');
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
       link.click();
       
       toast.success("Photo strip downloaded successfully!");

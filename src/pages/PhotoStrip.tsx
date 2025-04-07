@@ -169,8 +169,11 @@ const PhotoStripPage: React.FC = () => {
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
       
-      ctx.fillStyle = photoStripData.background.color || '#FFFFFF';
+      // 先绘制背景颜色
+      ctx.fillStyle = photoStripData.background.color || selectedColor || '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 如果背景类型是图片且有URL，则绘制背景图片
       if (photoStripData.background.type === 'image' && 
           (photoStripData.background.url || photoStripData.background.imageUrl)) {
         const bgImg = new Image();
@@ -282,6 +285,7 @@ const PhotoStripPage: React.FC = () => {
     }
   }, [photoStripData, selectedColor, customText, showDate, isMobile]);
 
+  // 修改 useEffect 钩子，确保不改变背景类型
   useEffect(() => {
     if (customText && photoStripData && photoStripData.text?.content !== customText) {
       updateText({
@@ -297,8 +301,9 @@ const PhotoStripPage: React.FC = () => {
     }
 
     if (photoStripData && photoStripData.background.color !== selectedColor) {
+      // 保留原始背景类型和图片URL，只更新颜色
       updateBackground({
-        type: 'color' as const,
+        ...photoStripData.background,
         color: selectedColor
       });
     }
