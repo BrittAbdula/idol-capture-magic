@@ -190,27 +190,20 @@ export const templates: Template[] = [
 			sound: false,
 		},
 		canvasSize: {
-			width: 480,
-			height: 1600,
+			width: 707,
+			height: 2000,
 		},
 		background: {
-			type: "color",
+			type: "image",
 			color: "#FFFFFF",
 			imageUrl: "/images/templates/preview_1.png",
+			overlayUrl: "/images/templates/template_1.png",
 		},
 		photoPositions: [
-			{ x: 40, y: 120, width: 400, height: 300, borderRadius: 10 },
-			{ x: 40, y: 450, width: 400, height: 300, borderRadius: 10 },
-			{ x: 40, y: 780, width: 400, height: 300, borderRadius: 10 },
-			{ x: 40, y: 1110, width: 400, height: 300, borderRadius: 10 },
-		],
-		photoOverlays: [
-			{
-				url: "/images/templates/template_1.png",
-				position: { x: 0, y: 0 },
-				scale: 1.0,
-				photoPosition: { width: 480, height: 1600, x: 0, y: 0 },
-			}
+			{ x: 36, y: 70, width: 634, height: 362, borderRadius: 40 },
+			{ x: 36, y: 474, width: 634, height: 362, borderRadius: 40 },
+			{ x: 36, y: 880, width: 634, height: 362, borderRadius: 40 },
+			{ x: 36, y: 1286, width: 634, height: 362, borderRadius: 40 },
 		],
 		previewUrl: "/images/templates/preview_1.png",
 	},
@@ -226,28 +219,21 @@ export const templates: Template[] = [
 			sound: true,
 		},
 		canvasSize: {
-			width: 480,
-			height: 1600,
+			width: 707,
+			height: 2000,
 		},
 		background: {
 			type: "image",
 			color: "#8B8BF5", // 紫蓝色背景
 			imageUrl: "/images/templates/preview_2.png",
+			overlayUrl: "/images/templates/template_2.png",
 		},
 		photoPositions: [
-			{ x: 40, y: 120, width: 400, height: 300, borderRadius: 10 },
-			{ x: 40, y: 550, width: 400, height: 300, borderRadius: 10 },
-			{ x: 40, y: 980, width: 400, height: 300, borderRadius: 10 },
+			{ x: 85, y: 160, width: 534, height: 402, borderRadius: 20 },
+			{ x: 85, y: 652, width: 534, height: 402, borderRadius: 20 },
+			{ x: 85, y: 1144, width: 534, height: 402, borderRadius: 20 },
 		],
 		previewUrl: "/images/templates/preview_2.png",
-		photoOverlays: [
-			{
-				url: "/images/templates/template_2.png",
-				position: { x: 0, y: 0 },
-				scale: 1.0,
-				photoPosition: { width: 480, height: 1600, x: 0, y: 0 },
-			}
-		],
 	},
 ];
 

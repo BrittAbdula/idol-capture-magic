@@ -33,6 +33,7 @@ export interface Background {
   color?: string;
   imageUrl?: string;
   url?: string; // Add url property
+  overlayUrl?: string;
 }
 
 export interface Decoration {
