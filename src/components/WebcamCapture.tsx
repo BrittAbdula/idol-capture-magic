@@ -39,7 +39,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [photoCount, setPhotoCount] = useState(0);
   const [mirrored, setMirrored] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen,] = useState(false);
   const [currentAspectRatio, setCurrentAspectRatio] = useState<AspectRatioType>(aspectRatio as AspectRatioType);
   const [showGrid, setShowGrid] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -211,34 +211,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     return photoOverlays[overlayIndex];
   }, [photoOverlays, photoCount]);
 
-  const calculateOverlayPosition = useCallback((overlay: PhotoOverlay, index: number) => {
-    if (!overlay || !overlay.position) return { x: 0, y: 0 };
-    
-    const videoEl = videoRef.current;
-    const containerEl = videoContainerRef.current;
-    if (!videoEl || !containerEl) return overlay.position;
-    
-    const videoRect = videoEl.getBoundingClientRect();
-    
-    const photoPosition = overlay.photoPosition;
-    if (!photoPosition) {
-      return overlay.position;
-    }
-    
-    const videoViewportWidth = videoRect.width;
-    const videoViewportHeight = videoRect.height;
-    
-    const widthRatio = videoViewportWidth / photoPosition.width;
-    const heightRatio = videoViewportHeight / photoPosition.height;
-    
-    const absoluteX = overlay.position.x;
-    const absoluteY = overlay.position.y;
-    
-    const scaledX = absoluteX * widthRatio;
-    const scaledY = absoluteY * heightRatio;
-    
-    return { x: scaledX, y: scaledY };
-  }, []);
 
   const captureImage = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
@@ -254,20 +226,43 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       let offsetX = 0;
       let offsetY = 0;
       
-      if (currentAspectRatio === '1:1') {
-        const size = Math.min(width, height);
-        offsetX = (width - size) / 2;
-        offsetY = (height - size) / 2;
-        width = size;
-        height = size;
-      } else if (currentAspectRatio === '3:2') {
-        const newWidth = (height * 3) / 2;
-        offsetX = (width - newWidth) / 2;
-        width = newWidth;
-      } else if (currentAspectRatio === '4:5') {
-        const newWidth = (height * 4) / 5;
-        offsetX = (width - newWidth) / 2;
-        width = newWidth;
+      // 获取当前照片的模板设置
+      const currentOverlay = photoOverlays && photoOverlays[photoCount];
+      const photoPosition = currentOverlay?.photoPosition;
+      
+      // 如果有模板设置的photoPosition，使用其宽高比
+      if (photoPosition) {
+        const templateRatio = photoPosition.width / photoPosition.height;
+        
+        // 根据模板宽高比裁剪视频
+        if (width / height > templateRatio) {
+          // 视频比例比模板宽，需要裁剪宽度
+          const newWidth = height * templateRatio;
+          offsetX = (width - newWidth) / 2;
+          width = newWidth;
+        } else {
+          // 视频比例比模板窄，需要裁剪高度
+          const newHeight = width / templateRatio;
+          offsetY = (height - newHeight) / 2;
+          height = newHeight;
+        }
+      } else {
+        // 解析当前宽高比
+        const [widthRatio, heightRatio] = currentAspectRatio.split(':').map(num => parseInt(num, 10));
+        const targetRatio = widthRatio / heightRatio;
+        
+        // 根据目标宽高比裁剪视频
+        if (width / height > targetRatio) {
+          // 视频比例比目标宽，需要裁剪宽度
+          const newWidth = height * targetRatio;
+          offsetX = (width - newWidth) / 2;
+          width = newWidth;
+        } else {
+          // 视频比例比目标窄，需要裁剪高度
+          const newHeight = width / targetRatio;
+          offsetY = (height - newHeight) / 2;
+          height = newHeight;
+        }
       }
       
       canvas.width = width;
@@ -426,31 +421,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     setMirrored(prev => !prev);
   }, []);
 
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      if (containerRef.current?.requestFullscreen) {
-        containerRef.current.requestFullscreen()
-          .then(() => setIsFullscreen(true))
-          .catch(err => console.error('Error attempting to enable fullscreen:', err));
-      }
-    } else {
-      document.exitFullscreen()
-        .then(() => setIsFullscreen(false))
-        .catch(err => console.error('Error attempting to exit fullscreen:', err));
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
 
   useEffect(() => {
     startWebcam();
@@ -459,24 +429,13 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     };
   }, [startWebcam, stopWebcam]);
 
-  const cycleAspectRatio = useCallback(() => {
-    setCurrentAspectRatio(prev => {
-      switch (prev) {
-        case '4:3': return '1:1';
-        case '1:1': return '3:2';
-        case '3:2': return '4:5';
-        case '4:5': return '4:3';
-        default: return '4:3';
-      }
-    });
-  }, []);
 
   const toggleGrid = useCallback(() => {
     setShowGrid(prev => !prev);
   }, []);
 
   const getContainerStyle = () => {
-    let containerStyle: React.CSSProperties = {
+    const containerStyle: React.CSSProperties = {
       position: 'relative',
       width: '100%',
       height: isFullscreen ? '100vh' : 'auto',
@@ -487,54 +446,29 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       alignItems: 'center',
     };
 
-    if (!isFullscreen) {
-      if (currentAspectRatio === '4:3') {
-        containerStyle.aspectRatio = '4/3';
-      } else if (currentAspectRatio === '1:1') {
-        containerStyle.aspectRatio = '1/1';
-      } else if (currentAspectRatio === '3:2') {
-        containerStyle.aspectRatio = '3/2';
-      } else if (currentAspectRatio === '4:5') {
-        containerStyle.aspectRatio = '4/5';
-      }
-    }
+    const arr = currentAspectRatio.split(':');
+    const widthRatio = parseInt(arr[0], 10);
+    const heightRatio = parseInt(arr[1], 10);
+    containerStyle.aspectRatio = `${widthRatio}/${heightRatio}`;
 
     return containerStyle;
   };
 
   const getVideoStyle = () => {
-    let videoStyle: React.CSSProperties = {
+    const videoStyle: React.CSSProperties = {
       transform: mirrored ? 'scaleX(-1)' : 'none',
       objectFit: 'cover',
     };
 
-    if (isFullscreen) {
-      if (currentAspectRatio === '4:3') {
-        videoStyle.width = 'auto';
-        videoStyle.height = '100%';
-        videoStyle.maxWidth = 'calc(100vh * 4 / 3)';
-        videoStyle.objectFit = 'contain';
-      } else if (currentAspectRatio === '1:1') {
-        const size = Math.min(window.innerWidth, window.innerHeight);
-        videoStyle.width = `${size}px`;
-        videoStyle.height = `${size}px`;
-        videoStyle.maxWidth = '100vw';
-        videoStyle.objectFit = 'cover';
-      } else if (currentAspectRatio === '3:2') {
-        videoStyle.width = 'auto';
-        videoStyle.height = '100%';
-        videoStyle.maxWidth = 'calc(100vh * 3 / 2)';
-        videoStyle.objectFit = 'contain';
-      } else if (currentAspectRatio === '4:5') {
-        videoStyle.width = 'auto';
-        videoStyle.height = '100%';
-        videoStyle.maxWidth = 'calc(100vh * 4 / 5)';
-        videoStyle.objectFit = 'contain';
-      }
-    } else {
-      videoStyle.width = '100%';
-      videoStyle.height = '100%';
-    }
+    // 设置宽度为100%，让视频填充容器宽度
+    videoStyle.width = '100%';
+    
+    // 根据容器的宽高比设置视频高度
+    // 使用100%而不是100vw，这样会相对于父容器而不是视口
+    videoStyle.height = '100%';
+    
+    // 确保视频保持正确的宽高比
+    videoStyle.objectFit = 'cover';
 
     return videoStyle;
   };
@@ -563,27 +497,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   };
 
   const getAspectRatioRect = () => {
-    let width, height;
     
-    if (isFullscreen) {
-      if (currentAspectRatio === '1:1') {
-        const size = Math.min(window.innerWidth, window.innerHeight);
-        width = `${size}px`;
-        height = `${size}px`;
-      } else if (currentAspectRatio === '4:3') {
-        height = '100vh';
-        width = 'calc(100vh * 4 / 3)';
-      } else if (currentAspectRatio === '3:2') {
-        height = '100vh';
-        width = 'calc(100vh * 3 / 2)';
-      } else if (currentAspectRatio === '4:5') {
-        height = '100vh';
-        width = 'calc(100vh * 4 / 5)';
-      }
-    } else {
-      width = '100%';
-      height = '100%';
-    }
+    const width = '100%';
+    const height = '100%';
     
     return {
       width,
@@ -664,9 +580,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
               style={{ 
                 boxShadow: `0 0 0 2000px rgba(0, 0, 0, 0.3)`,
                 ...getAspectRatioRect(),
-                aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
-                            currentAspectRatio === '1:1' ? '1/1' : 
-                            currentAspectRatio === '3:2' ? '3/2' : '4/5',
+                aspectRatio:`${currentAspectRatio.split(':')[0]}/${currentAspectRatio.split(':')[1]}`,
                 margin: 'auto',
                 inset: 0,
               }}
@@ -677,9 +591,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
                 className="absolute pointer-events-none"
                 style={{ 
                   ...getAspectRatioRect(),
-                  aspectRatio: currentAspectRatio === '4:3' ? '4/3' : 
-                              currentAspectRatio === '1:1' ? '1/1' : 
-                              currentAspectRatio === '3:2' ? '3/2' : '4/5',
+                  aspectRatio:`${currentAspectRatio.split(':')[0]}/${currentAspectRatio.split(':')[1]}`,
                   margin: 'auto',
                   inset: 0,
                   backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px)',
@@ -728,18 +640,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
                   <FlipHorizontal className="w-5 h-5 text-white" />
                 </button>
                 
-                <button 
-                  onClick={toggleFullscreen}
-                  className="absolute bottom-3 right-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors"
-                >
-                  {isFullscreen ? 
-                    <Minimize className="w-5 h-5 text-white" /> : 
-                    <Maximize className="w-5 h-5 text-white" />
-                  }
-                </button>
                 
                 <button
-                  onClick={cycleAspectRatio}
                   className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"
                 >
                   <span className="text-xs font-bold text-white">{currentAspectRatio}</span>

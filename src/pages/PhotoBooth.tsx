@@ -387,9 +387,7 @@ const PhotoBooth: React.FC = () => {
           <div 
             className="relative bg-black mb-4 overflow-hidden"
             style={{ 
-              aspectRatio: aspectRatio === '4:3' ? '4/3' : 
-                          aspectRatio === '1:1' ? '1/1' : 
-                          aspectRatio === '3:2' ? '3/2' : '4/5',
+              aspectRatio:`${aspectRatio.split(':')[0]}/${aspectRatio.split(':')[1]}`,
               maxHeight: '250px'
             }}
             ref={el => overlayPreviewRefs.current[i] = el}
@@ -670,7 +668,7 @@ const PhotoBooth: React.FC = () => {
             <div className="w-full max-w-xl mx-auto mb-6">
               <WebcamCapture 
                 onCapture={handlePhotoStripCapture}
-                aspectRatio={aspectRatio}
+                aspectRatio={currentTemplate?.photoBoothSettings?.aspectRatio || aspectRatio}
                 photoLimit={photoNum}
                 countdownTime={countdown}
                 defaultFilter={filter}
