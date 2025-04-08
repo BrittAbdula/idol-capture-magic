@@ -372,12 +372,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
 						const dateText = new Date().toLocaleDateString();
 						ctx.fillText(dateText, width / 2, height - 80);
 					}
-
-					// 绘制水印
-					ctx.fillStyle = "#000000";
-					ctx.font = "bold 26px sans-serif";
-					ctx.textAlign = "center";
-					ctx.fillText("IdolBooth", width / 2, height - 35);
 				});
 			}
 		}
@@ -700,12 +694,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
 					const dateText = new Date().toLocaleDateString();
 					ctx.fillText(dateText, width / 2, height - 80);
 				}
-
-				// 9. 绘制水印
-				ctx.fillStyle = "#000000";
-				ctx.font = "bold 26px sans-serif";
-				ctx.textAlign = "center";
-				ctx.fillText("IdolBooth", width / 2, height - 35);
 
 				// 下载图片
 				try {

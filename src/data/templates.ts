@@ -182,7 +182,7 @@ export const templates: Template[] = [
 		templateId: "standard-01",
 		category: "general",
 		photoBoothSettings: {
-			aspectRatio: "4:3",
+			aspectRatio: "47:29",
 			countdown: 3,
 			photoNum: 4,
 			filter: "Normal",
@@ -190,50 +190,23 @@ export const templates: Template[] = [
 			sound: false,
 		},
 		canvasSize: {
-			width: 707,
-			height: 2000,
+			width: 591,
+			height: 1772,
 		},
 		background: {
 			type: "image",
 			color: "#FFFFFF",
-			imageUrl: "/images/templates/preview_1.png",
-			overlayUrl: "/images/templates/template_1.png",
+			imageUrl: "/images/templates/template_1_1.png",
+			overlayUrl: "/images/templates/template_1_2.png",
 		},
 		photoPositions: [
-			{ x: 36, y: 70, width: 634, height: 362, borderRadius: 40 },
-			{ x: 36, y: 474, width: 634, height: 362, borderRadius: 40 },
-			{ x: 36, y: 880, width: 634, height: 362, borderRadius: 40 },
-			{ x: 36, y: 1286, width: 634, height: 362, borderRadius: 40 },
+			{ x: 60, y: 110, width: 470, height: 290, borderRadius: 10 },
+			{ x: 60, y: 450, width: 470, height: 290, borderRadius: 10 },
+			{ x: 60, y: 780, width: 470, height: 290, borderRadius: 10 },
+			{ x: 60, y: 1112, width: 470, height: 290, borderRadius: 10 },
+			
 		],
-		previewUrl: "/images/templates/preview_1.png",
-	},
-	{
-		templateId: "y2k-style-01",
-		category: "general",
-		photoBoothSettings: {
-			aspectRatio: "4:3",
-			countdown: 3,
-			photoNum: 3,
-			filter: "Normal",
-			lightColor: "#FFFFFF",
-			sound: true,
-		},
-		canvasSize: {
-			width: 707,
-			height: 2000,
-		},
-		background: {
-			type: "image",
-			color: "#8B8BF5", // 紫蓝色背景
-			imageUrl: "/images/templates/preview_2.png",
-			overlayUrl: "/images/templates/template_2.png",
-		},
-		photoPositions: [
-			{ x: 85, y: 160, width: 534, height: 402, borderRadius: 20 },
-			{ x: 85, y: 652, width: 534, height: 402, borderRadius: 20 },
-			{ x: 85, y: 1144, width: 534, height: 402, borderRadius: 20 },
-		],
-		previewUrl: "/images/templates/preview_2.png",
+		previewUrl: "/images/templates/template_1_3.png",
 	},
 ];
 
