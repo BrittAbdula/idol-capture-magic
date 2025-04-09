@@ -1,9 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Camera, FlipHorizontal, Maximize, Minimize, Grid3X3 } from 'lucide-react';
+import { Camera, FlipHorizontal, Grid3X3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Button } from "@/components/ui/button";
-import { defaultAspectRatios, PhotoOverlay } from "@/contexts/PhotoStripContext";
+import { PhotoOverlay } from "@/contexts/PhotoStripContext";
 
 interface WebcamCaptureProps {
   onCapture: (images: string[], aspectRatio?: string) => void;
@@ -17,7 +16,6 @@ interface WebcamCaptureProps {
 }
 
 type FilterType = 'Normal' | 'Warm' | 'Cool' | 'Vintage' | 'B&W' | 'Dramatic';
-type AspectRatioType = '4:3' | '1:1' | '3:2' | '4:5';
 
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ 
   onCapture,
@@ -32,6 +30,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const sessionCompleteRef = useRef(false);
+  
   const [isStreaming, setIsStreaming] = useState(false);
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -40,20 +42,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const [photoCount, setPhotoCount] = useState(0);
   const [mirrored, setMirrored] = useState(true);
   const [isFullscreen,] = useState(false);
-  const [currentAspectRatio, setCurrentAspectRatio] = useState<AspectRatioType>(aspectRatio as AspectRatioType);
+  const [currentAspectRatio, setCurrentAspectRatio] = useState<string>(aspectRatio);
   const [showGrid, setShowGrid] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const photoOverlayRefs = useRef<(HTMLImageElement | null)[]>([]);
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [videoDisplaySize, setVideoDisplaySize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const videoContainerRef = useRef<HTMLDivElement>(null);
-  const [templateDimensions, setTemplateDimensions] = useState({
-    width: 0,
-    height: 0
-  });
   const [overlayImages, setOverlayImages] = useState<HTMLImageElement[]>([]);
-  const sessionCompleteRef = useRef(false);
 
   const defaultAspectRatios: Record<string, { width: number, height: number }> = {
     '1:1': { width: 1, height: 1 },
@@ -61,10 +55,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     '3:2': { width: 3, height: 2 },
     '4:5': { width: 4, height: 5 }
   };
-
-  useEffect(() => {
-    console.log("PhotoLimit updated:", photoLimit);
-  }, [photoLimit]);
 
   useEffect(() => {
     const updateSizes = () => {
@@ -105,7 +95,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 
   useEffect(() => {
     if (photoOverlays && photoOverlays.length > 0) {
-      const loadImages = photoOverlays.map((overlay, index) => {
+      const loadImages = photoOverlays.map((overlay) => {
         return new Promise<HTMLImageElement | null>((resolve) => {
           if (!overlay || !overlay.url || overlay.url === "/placeholder.svg") {
             resolve(null);
@@ -134,39 +124,26 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   }, [playSound]);
 
   useEffect(() => {
-    if (photoOverlays && photoOverlays.length > 0) {
-      photoOverlayRefs.current = Array(photoOverlays.length).fill(null);
-      
-      photoOverlays.forEach((overlay, index) => {
-        if (overlay && overlay.url) {
-          const img = new Image();
-          img.src = overlay.url;
-          img.onload = () => {
-            photoOverlayRefs.current[index] = img;
-          };
-        }
-      });
-    } else {
-      photoOverlayRefs.current = [];
-    }
-  }, [photoOverlays]);
-
-  useEffect(() => {
-    setCurrentAspectRatio(aspectRatio as AspectRatioType);
+    setCurrentAspectRatio(aspectRatio);
   }, [aspectRatio]);
 
   useEffect(() => {
     setActiveFilter(defaultFilter as FilterType || 'Normal');
   }, [defaultFilter]);
 
+  // 修改 startWebcam 函数，确保请求的视频流宽高比与 currentAspectRatio 一致
   const startWebcam = useCallback(async () => {
     try {
-      const aspectRatioValues = defaultAspectRatios[currentAspectRatio];
+      // 解析当前宽高比
+      const [widthRatio, heightRatio] = currentAspectRatio.split(':').map(num => parseInt(num, 10));
+      const targetRatio = widthRatio / heightRatio;
+      
+      // 使用精确的宽高比请求摄像头
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: "user", 
-          width: { ideal: aspectRatioValues.width * 640 }, 
-          height: { ideal: aspectRatioValues.height * 480 } 
+          width: { ideal: widthRatio * 160 },
+          height: { ideal: heightRatio * 160 }
         }
       });
       
@@ -175,9 +152,17 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         
         videoRef.current.onloadedmetadata = () => {
           if (videoRef.current) {
+            // 获取视频实际尺寸
+            const videoWidth = videoRef.current.videoWidth;
+            const videoHeight = videoRef.current.videoHeight;
+            
+            // 计算实际宽高比
+            const actualRatio = videoWidth / videoHeight;
+            console.log('视频实际宽高比:', actualRatio, '目标宽高比:', targetRatio);
+            
             setVideoSize({
-              width: videoRef.current.videoWidth,
-              height: videoRef.current.videoHeight
+              width: videoWidth,
+              height: videoHeight
             });
           }
         };
@@ -204,14 +189,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   }, []);
 
-  const getCurrentOverlay = useCallback(() => {
-    if (!photoOverlays || photoOverlays.length === 0) return null;
-    
-    const overlayIndex = Math.min(photoCount, photoOverlays.length - 1);
-    return photoOverlays[overlayIndex];
-  }, [photoOverlays, photoCount]);
-
-
+  // 修改 captureImage 函数，确保 canvas 的宽高比与 currentAspectRatio 一致
   const captureImage = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -220,6 +198,10 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       if (audioRef.current) {
         audioRef.current.play().catch(e => console.log("Audio play failed", e));
       }
+      
+      // 解析当前宽高比
+      const [widthRatio, heightRatio] = currentAspectRatio.split(':').map(num => parseInt(num, 10));
+      const targetRatio = widthRatio / heightRatio;
       
       let width = video.videoWidth;
       let height = video.videoHeight;
@@ -237,39 +219,55 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         // 根据模板宽高比裁剪视频
         if (width / height > templateRatio) {
           // 视频比例比模板宽，需要裁剪宽度
-          const newWidth = height * templateRatio;
-          offsetX = (width - newWidth) / 2;
+          const newWidth = Math.floor(height * templateRatio);
+          offsetX = Math.floor((width - newWidth) / 2);
           width = newWidth;
         } else {
           // 视频比例比模板窄，需要裁剪高度
-          const newHeight = width / templateRatio;
-          offsetY = (height - newHeight) / 2;
+          const newHeight = Math.floor(width / templateRatio);
+          offsetY = Math.floor((height - newHeight) / 2);
           height = newHeight;
         }
-      } else {
-        // 解析当前宽高比
-        const [widthRatio, heightRatio] = currentAspectRatio.split(':').map(num => parseInt(num, 10));
-        const targetRatio = widthRatio / heightRatio;
         
-        // 根据目标宽高比裁剪视频
+        // 再次验证宽高比
+        const actualRatio = width / height;
+        if (Math.abs(actualRatio - templateRatio) > 0.01) {
+          width = Math.floor(height * templateRatio);
+        }
+      } else {
+        // 使用当前设置的宽高比
         if (width / height > targetRatio) {
           // 视频比例比目标宽，需要裁剪宽度
-          const newWidth = height * targetRatio;
-          offsetX = (width - newWidth) / 2;
+          const newWidth = Math.floor(height * targetRatio);
+          offsetX = Math.floor((width - newWidth) / 2);
           width = newWidth;
         } else {
           // 视频比例比目标窄，需要裁剪高度
-          const newHeight = width / targetRatio;
-          offsetY = (height - newHeight) / 2;
+          const newHeight = Math.floor(width / targetRatio);
+          offsetY = Math.floor((height - newHeight) / 2);
           height = newHeight;
         }
+        
+        // 再次验证宽高比
+        const actualRatio = width / height;
+        if (Math.abs(actualRatio - targetRatio) > 0.01) {
+          width = Math.floor(height * targetRatio);
+        }
       }
+      
+      // 确保宽高是整数
+      width = Math.floor(width);
+      height = Math.floor(height);
       
       canvas.width = width;
       canvas.height = height;
       
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // 清除画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制视频帧
         if (mirrored) {
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
@@ -281,6 +279,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           0, 0, width, height
         );
         
+        // 应用滤镜
         if (activeFilter !== 'Normal') {
           switch (activeFilter) {
             case 'Warm':
@@ -313,50 +312,89 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           );
         }
         
+        // 获取当前照片对应的叠加层
         const currentOverlay = photoOverlays && photoOverlays[photoCount];
         const currentOverlayImg = overlayImages[photoCount];
         
+        // 绘制叠加层
         if (currentOverlay && currentOverlayImg && currentOverlay.url && currentOverlay.url !== "/placeholder.svg") {
-          ctx.resetTransform();
+          ctx.resetTransform(); // 重置变换，确保叠加层位置正确
           
           const scale = currentOverlay.scale || 1;
           
-          const photoPosition = currentOverlay.photoPosition;
-          if (photoPosition) {
+          // 根据 photoPosition 计算位置
+          if (currentOverlay.photoPosition) {
+            const photoPosition = currentOverlay.photoPosition;
+            // 计算画布与模板照片位置的比例
             const widthRatio = canvas.width / photoPosition.width;
             const heightRatio = canvas.height / photoPosition.height;
             
+            // 使用左上角为原点的坐标系
             const posX = currentOverlay.position.x * widthRatio;
             const posY = currentOverlay.position.y * heightRatio;
             
-            const overlayWidth = currentOverlayImg.width * scale;
-            const overlayHeight = currentOverlayImg.height * scale;
+            // 计算叠加层的大小
+            const templateCanvasSize = currentOverlay.canvasSize;
+            let scaleRatio = 1;
             
+            if (templateCanvasSize) {
+              // 计算当前画布与模板画布的比例
+              const canvasRatio = Math.min(
+                canvas.width / templateCanvasSize.width,
+                canvas.height / templateCanvasSize.height
+              );
+              
+              // 应用 scale 和画布比例
+              scaleRatio = currentOverlay.scale * canvasRatio;
+            } else {
+              // 如果没有 canvasSize，则直接使用 scale
+              scaleRatio = currentOverlay.scale || 1;
+            }
+            
+            const overlayWidth = currentOverlayImg.width * scaleRatio;
+            const overlayHeight = currentOverlayImg.height * scaleRatio;
+            
+            // 绘制叠加层图片，位置是左上角
             ctx.drawImage(
               currentOverlayImg,
-              posX - (overlayWidth / 2),
-              posY - (overlayHeight / 2),
+              posX,
+              posY,
               overlayWidth,
               overlayHeight
             );
           } else {
+            // 没有 photoPosition 时，使用百分比定位
             const posX = (currentOverlay.position.x / 100) * canvas.width;
             const posY = (currentOverlay.position.y / 100) * canvas.height;
             
-            const overlayWidth = currentOverlayImg.width * scale;
-            const overlayHeight = currentOverlayImg.height * scale;
+            // 计算叠加层的大小
+            let scaleRatio = currentOverlay.scale || 1;
             
+            // 如果有 canvasSize，则考虑画布比例
+            if (currentOverlay.canvasSize) {
+              const canvasRatio = Math.min(
+                canvas.width / currentOverlay.canvasSize.width,
+                canvas.height / currentOverlay.canvasSize.height
+              );
+              scaleRatio *= canvasRatio;
+            }
+            
+            const overlayWidth = currentOverlayImg.width * scaleRatio;
+            const overlayHeight = currentOverlayImg.height * scaleRatio;
+            
+            // 绘制叠加层图片，位置是左上角
             ctx.drawImage(
               currentOverlayImg,
-              posX - (overlayWidth / 2),
-              posY - (overlayHeight / 2),
+              posX,
+              posY,
               overlayWidth,
               overlayHeight
             );
           }
         }
         
-        const imageDataURL = canvas.toDataURL('image/jpeg');
+        // 获取最终图像数据
+        const imageDataURL = canvas.toDataURL('image/jpeg', 0.9);
         const newCapturedImages = [...capturedImages, imageDataURL];
         
         setCapturedImages(newCapturedImages);
@@ -378,11 +416,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
     
     if (photoCount === photoLimit && !sessionCompleteRef.current) {
-      console.log(`Photo strip complete! Took ${photoCount} of ${photoLimit} photos`);
       toast.success("Photo strip complete!");
       sessionCompleteRef.current = true;
     } else if (photoCount > 0 && photoCount < photoLimit) {
-      console.log(`Preparing for next photo: ${photoCount + 1} of ${photoLimit}`);
       const timer = setTimeout(() => {
         startCountdown();
       }, 1500);
@@ -455,22 +491,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   };
 
   const getVideoStyle = () => {
-    const videoStyle: React.CSSProperties = {
+    return {
       transform: mirrored ? 'scaleX(-1)' : 'none',
-      objectFit: 'cover',
+      objectFit: 'cover' as const,
+      width: '100%',
+      height: '100%',
     };
-
-    // 设置宽度为100%，让视频填充容器宽度
-    videoStyle.width = '100%';
-    
-    // 根据容器的宽高比设置视频高度
-    // 使用100%而不是100vw，这样会相对于父容器而不是视口
-    videoStyle.height = '100%';
-    
-    // 确保视频保持正确的宽高比
-    videoStyle.objectFit = 'cover';
-
-    return videoStyle;
   };
 
   const getFilterClassName = () => {
@@ -484,75 +510,60 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     }
   };
 
-  const getCroppedOverlayContainerStyle = () => {
-    const aspectRatioRect = getAspectRatioRect();
-    
-    return {
-      position: 'absolute' as const,
-      pointerEvents: 'none' as const,
-      ...aspectRatioRect,
-      margin: 'auto',
-      inset: 0,
-    };
-  };
-
   const getAspectRatioRect = () => {
-    
-    const width = '100%';
-    const height = '100%';
-    
     return {
-      width,
-      height,
+      width: '100%',
+      height: '100%',
     };
   };
 
-  const getOverlayPositionInPercentages = (overlay: PhotoOverlay) => {
-    if (!overlay || !overlay.position) return { x: 50, y: 50 };
-    
-    const position = {
-      x: (overlay.position.x / (videoDisplaySize.width || 1)) * 100,
-      y: (overlay.position.y / (videoDisplaySize.height || 1)) * 100,
-    };
-    
-    return position;
-  };
-
+  // 获取叠加层位置样式
   const getOverlayPositionStyle = (overlay: PhotoOverlay) => {
     if (!overlay || !overlay.position) return {};
     
-    const photoPosition = overlay.photoPosition;
-    if (photoPosition && videoDisplaySize.width && videoDisplaySize.height) {
-      const widthRatio = videoDisplaySize.width / photoPosition.width;
-      const heightRatio = videoDisplaySize.height / photoPosition.height;
-      
-      return {
-        position: 'absolute' as const,
-        left: `${overlay.position.x * widthRatio}px`,
-        top: `${overlay.position.y * heightRatio}px`,
-        transform: `translate(-50%, -50%) scale(${overlay.scale})`,
-        transformOrigin: 'center',
-        pointerEvents: 'none' as const,
-        maxWidth: '60%',
-        maxHeight: '60%',
-      };
-    }
+    const scale = overlay.scale || 1;
     
     return {
       position: 'absolute' as const,
-      left: `${overlay.position.x}%`,
-      top: `${overlay.position.y}%`,
-      transform: `translate(-50%, -50%) scale(${overlay.scale})`,
-      transformOrigin: 'center',
+      left: `${overlay.position.x}px`,
+      top: `${overlay.position.y}px`,
+      transform: `scale(${scale})`,
+      transformOrigin: 'top left',
       pointerEvents: 'none' as const,
-      maxWidth: '60%',
-      maxHeight: '60%',
     };
   };
 
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
-  const currentOverlay = photoOverlays && photoCount < photoLimit ? photoOverlays[photoCount] : null;
+  // 实时预览叠加层函数
+  const renderLiveOverlay = () => {
+    if (!isStreaming || !photoOverlays || photoOverlays.length === 0 || photoCount >= photoOverlays.length) return null;
+    
+    const currentOverlay = photoOverlays[photoCount];
+    if (!currentOverlay || !currentOverlay.url || currentOverlay.url === "/placeholder.svg") return null;
+    
+    const scale = currentOverlay.scale || 1;
+    
+    return (
+      <div 
+        className="absolute pointer-events-none"
+        style={{
+          position: 'absolute',
+          left: `${currentOverlay.position.x}px`,
+          top: `${currentOverlay.position.y}px`,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          zIndex: 10
+        }}
+      >
+        <img 
+          src={currentOverlay.url} 
+          alt="Overlay" 
+          className="max-w-[200px] max-h-[200px] object-contain"
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col overflow-hidden rounded-lg shadow-lg" ref={containerRef}>
@@ -601,17 +612,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
               />
             )}
             
-            {currentOverlay && 
-             currentOverlay.url && 
-             currentOverlay.url !== "/placeholder.svg" && (
-              <div style={getCroppedOverlayContainerStyle()}>
-                <img 
-                  src={currentOverlay.url} 
-                  alt="Photo overlay"
-                  style={getOverlayPositionStyle(currentOverlay)}
-                />
-              </div>
-            )}
+            {renderLiveOverlay()}
             
             <canvas ref={canvasRef} className="hidden" />
             
@@ -639,7 +640,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
                 >
                   <FlipHorizontal className="w-5 h-5 text-white" />
                 </button>
-                
                 
                 <button
                   className="absolute top-3 left-3 bg-black/30 p-2 rounded-full hover:bg-black/50 transition-colors z-20"

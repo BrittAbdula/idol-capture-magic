@@ -298,41 +298,43 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
 						});
 					}
 
+				
+
+					// 绘制叠加层 (photoOverlays)
+					// ctx.filter = "none"; // 重置滤镜
+					// if (renderedOverlays.length > 0 && loadedOverlays.length > 0) {
+					// 	renderedOverlays.forEach((overlay, index) => {
+					// 		const img = loadedOverlays[index];
+					// 		if (
+					// 			img &&
+					// 			overlay &&
+					// 			overlay.url &&
+					// 			overlay.url !== "/placeholder.svg"
+					// 		) {
+					// 			const scale = overlay.scale || 1;
+					// 			const position = overlay.position || { x: 0, y: 0 };
+					// 			const photoPosition = overlay.photoPosition || {
+					// 				width,
+					// 				height,
+					// 				x: 0,
+					// 				y: 0,
+					// 			};
+
+					// 			ctx.drawImage(
+					// 				img,
+					// 				position.x,
+					// 				position.y,
+					// 				photoPosition.width * scale,
+					// 				photoPosition.height * scale
+					// 			);
+					// 		}
+					// 	});
+					// }
+
 					// 如果是图片背景，绘制上层背景图片
 					if (background?.type === "image" && background.overlayUrl && overlayBgImage) {
 						ctx.filter = "none"; // 重置滤镜
 						ctx.drawImage(overlayBgImage, 0, 0, width, height);
-					}
-
-					// 绘制叠加层 (photoOverlays)
-					ctx.filter = "none"; // 重置滤镜
-					if (renderedOverlays.length > 0 && loadedOverlays.length > 0) {
-						renderedOverlays.forEach((overlay, index) => {
-							const img = loadedOverlays[index];
-							if (
-								img &&
-								overlay &&
-								overlay.url &&
-								overlay.url !== "/placeholder.svg"
-							) {
-								const scale = overlay.scale || 1;
-								const position = overlay.position || { x: 0, y: 0 };
-								const photoPosition = overlay.photoPosition || {
-									width,
-									height,
-									x: 0,
-									y: 0,
-								};
-
-								ctx.drawImage(
-									img,
-									position.x,
-									position.y,
-									photoPosition.width * scale,
-									photoPosition.height * scale
-								);
-							}
-						});
 					}
 
 					// 绘制装饰元素

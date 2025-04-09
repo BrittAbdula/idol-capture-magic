@@ -158,9 +158,6 @@ const TemplateCategoryPage: React.FC = () => {
                     </h2>
                     
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                        {template.photoBoothSettings.aspectRatio}
-                      </span>
                       {template.photoBoothSettings.filter && (
                         <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
                           {template.photoBoothSettings.filter}

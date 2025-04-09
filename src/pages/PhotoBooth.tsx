@@ -288,6 +288,47 @@ const PhotoBooth: React.FC = () => {
     setDraggedOverlayIndex(index);
   };
   
+  const calculatePreviewPosition = (index: number) => {
+    if (!currentPhotoOverlays[index] || !photoStripData) {
+      return { x: 50, y: 50 };
+    }
+    
+    const overlay = currentPhotoOverlays[index];
+    const containerRef = overlayPreviewRefs.current[index];
+    if (!containerRef) return overlay.position;
+    
+    // 获取预览容器的尺寸
+    const containerRect = containerRef.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+    
+    // 获取照片位置信息
+    const photoPosition = photoStripData.photoPositions[index];
+    
+    if (photoPosition) {
+      // 计算预览容器与实际照片位置的比例
+      const widthRatio = containerWidth / photoPosition.width;
+      const heightRatio = containerHeight / photoPosition.height;
+      
+      // 将实际坐标转换为预览容器中的坐标
+      return {
+        x: overlay.position.x * widthRatio,
+        y: overlay.position.y * heightRatio
+      };
+    }
+    
+    // 如果使用百分比定位
+    if (typeof overlay.position.x === 'number' && overlay.position.x > 1) {
+      // 假设是像素值，直接返回
+      return overlay.position;
+    } else {
+      // 假设是百分比，转换为像素
+      return {
+        x: (overlay.position.x / 100) * containerWidth,
+        y: (overlay.position.y / 100) * containerHeight
+      };
+    }
+  };
   const handleOverlayMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || draggedOverlayIndex === null) return;
     
@@ -298,26 +339,38 @@ const PhotoBooth: React.FC = () => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    let absoluteX = x;
-    let absoluteY = y;
+    // 计算相对位置
+    let newPosition: Position;
     
     if (photoStripData && photoStripData.photoPositions[draggedOverlayIndex]) {
       const photoPosition = photoStripData.photoPositions[draggedOverlayIndex];
+      
+      // 计算预览容器与实际照片位置的比例
       const containerWidth = rect.width;
       const containerHeight = rect.height;
-      
       const widthRatio = photoPosition.width / containerWidth;
       const heightRatio = photoPosition.height / containerHeight;
       
-      absoluteX = x * widthRatio;
-      absoluteY = y * heightRatio;
+      // 将鼠标位置转换为相对于照片位置的实际坐标
+      newPosition = { 
+        x: x * widthRatio, 
+        y: y * heightRatio 
+      };
+      
+      console.log('计算的实际坐标:', newPosition, '预览容器尺寸:', { width: containerWidth, height: containerHeight });
+    } else {
+      // 如果没有 photoPosition，使用百分比定位
+      newPosition = { 
+        x: (x / rect.width) * 100, 
+        y: (y / rect.height) * 100 
+      };
     }
     
     const updatedOverlays = [...currentPhotoOverlays];
     if (!updatedOverlays[draggedOverlayIndex]) {
       updatedOverlays[draggedOverlayIndex] = {
         url: overlayPreviews[draggedOverlayIndex] || "/placeholder.svg",
-        position: { x: absoluteX, y: absoluteY },
+        position: newPosition,
         scale: 1.0,
         canvasSize: photoStripData?.canvasSize,
         photoPosition: photoStripData?.photoPositions[draggedOverlayIndex] || null
@@ -325,7 +378,7 @@ const PhotoBooth: React.FC = () => {
     } else {
       updatedOverlays[draggedOverlayIndex] = {
         ...updatedOverlays[draggedOverlayIndex],
-        position: { x: absoluteX, y: absoluteY }
+        position: newPosition
       };
     }
     
@@ -380,6 +433,9 @@ const PhotoBooth: React.FC = () => {
     const previews = [];
     
     for (let i = 0; i < photoNum; i++) {
+      // 计算预览中叠加层的位置
+      const previewPosition = calculatePreviewPosition(i);
+      
       previews.push(
         <div key={i} className="mb-6 border rounded-lg bg-gray-50 p-4">
           <h3 className="font-medium mb-3">Photo {i + 1} Overlay</h3>
@@ -387,7 +443,7 @@ const PhotoBooth: React.FC = () => {
           <div 
             className="relative bg-black mb-4 overflow-hidden"
             style={{ 
-              aspectRatio:`${aspectRatio.split(':')[0]}/${aspectRatio.split(':')[1]}`,
+              aspectRatio: `${aspectRatio.split(':')[0]}/${aspectRatio.split(':')[1]}`,
               maxHeight: '250px'
             }}
             ref={el => overlayPreviewRefs.current[i] = el}
@@ -403,8 +459,8 @@ const PhotoBooth: React.FC = () => {
               <div 
                 className="absolute cursor-move"
                 style={{
-                  left: `${currentPhotoOverlays[i].position.x}px`,
-                  top: `${currentPhotoOverlays[i].position.y}px`,
+                  left: `${previewPosition.x}px`,
+                  top: `${previewPosition.y}px`,
                   transform: `translate(-50%, -50%) scale(${currentPhotoOverlays[i].scale})`,
                   transformOrigin: 'center',
                   zIndex: draggedOverlayIndex === i ? 100 : 10

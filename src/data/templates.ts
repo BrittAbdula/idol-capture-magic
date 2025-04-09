@@ -5,177 +5,65 @@ export const templates: Template[] = [
 	{
 		templateId: "classic-01",
 		category: "kpop",
-		idol: "momo",
+		idol: "sunghoon",
 		photoBoothSettings: {
 			aspectRatio: "4:3",
-			countdown: 3,
+			countdown: 1,
 			photoNum: 4,
 			filter: "Warm",
 			lightColor: "#FFD700",
 			sound: true,
 		},
 		canvasSize: {
-			width: 1200,
-			height: 1600,
+			width: 429,
+			height: 1296,
 		},
 		background: {
-			type: "color",
+			type: "image",
 			color: "#ffffff",
+			imageUrl: "/images/templates/idol/sunghoon_picframe_1.png",
+			overlayUrl: "/images/templates/idol/sunghoon_picframe_1.png",
 		},
 		photoPositions: [
-			{ x: 100, y: 100, width: 400, height: 500 },
-			{ x: 600, y: 100, width: 400, height: 500 },
-			{ x: 100, y: 700, width: 400, height: 500 },
-			{ x: 600, y: 700, width: 400, height: 500 },
+			{ x: 34, y: 72, width: 400, height: 300 },
+			{ x: 34, y: 372, width: 400, height: 300},
+			{ x: 34, y: 672, width: 400, height: 300},
+			{ x: 34, y: 972, width: 400, height: 300},
 		],
-		previewUrl: "/placeholder.svg",
+		previewUrl: "/images/templates/idol/sunghoon_photoism.jpg",
 		photoOverlays: [
 			{
-				url: "/placeholder.svg",
-				position: { x: 50, y: 100 },
-				scale: 1.2,
+				url: "/images/templates/idol/sunghoon_1.png",
+				position: { x: 0, y: 0 },
+				scale: 1,
 			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 40, y: 120 },
-				scale: 1.1,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 60, y: 90 },
-				scale: 1.3,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 55, y: 110 },
-				scale: 1.0,
-			},
+
+			// {
+			// 	url: "/images/templates/idol/sunghoon_2.png",
+			// 	position: { x: 34, y: 372 },
+			// 	scale: 1,
+			// },
+
+			// {
+			// 	url: "/images/templates/idol/sunghoon_3.png",
+			// 	position: { x: 34, y: 672 },
+			// 	scale: 1,
+			// },
 		],
 		decoration: [
-			{
-				type: "sticker",
-				url: "/placeholder.svg",
-				position: {
-					x: 200,
-					y: 300,
-				},
-				scale: 0.8,
-			},
-			{
-				type: "frame",
-				url: "/placeholder.svg",
-			},
-		],
-	},
-	{
-		templateId: "cute-01",
-		category: "kpop",
-		idol: "lisa",
-		photoBoothSettings: {
-			aspectRatio: "1:1",
-			countdown: 5,
-			photoNum: 4,
-			filter: "Vintage",
-			lightColor: "#FF9999",
-			sound: true,
-		},
-		canvasSize: {
-			width: 1200,
-			height: 1200,
-		},
-		background: {
-			type: "color",
-			color: "#FFF0F5",
-		},
-		photoPositions: [
-			{ x: 100, y: 100, width: 400, height: 400 },
-			{ x: 600, y: 100, width: 400, height: 400 },
-			{ x: 100, y: 600, width: 400, height: 400 },
-			{ x: 600, y: 600, width: 400, height: 400 },
-		],
-		previewUrl: "/placeholder.svg",
-		photoOverlays: [
-			{
-				url: "/placeholder.svg",
-				position: { x: 70, y: 150 },
-				scale: 1.0,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 75, y: 155 },
-				scale: 1.0,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 65, y: 145 },
-				scale: 1.0,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 80, y: 160 },
-				scale: 1.0,
-			},
-		],
-		decoration: [
-			{
-				type: "sticker",
-				url: "/placeholder.svg",
-				position: {
-					x: 300,
-					y: 400,
-				},
-				scale: 1.0,
-			},
-		],
-	},
-	{
-		templateId: "cool-01",
-		category: "kpop",
-		idol: "jimin",
-		photoBoothSettings: {
-			aspectRatio: "3:2",
-			countdown: 3,
-			photoNum: 4,
-			filter: "Cool",
-			lightColor: "#99CCFF",
-			sound: false,
-		},
-		canvasSize: {
-			width: 1200,
-			height: 800,
-		},
-		background: {
-			type: "color",
-			color: "#F0F8FF",
-		},
-		photoPositions: [
-			{ x: 50, y: 50, width: 500, height: 333 },
-			{ x: 650, y: 50, width: 500, height: 333 },
-			{ x: 50, y: 417, width: 500, height: 333 },
-			{ x: 650, y: 417, width: 500, height: 333 },
-		],
-		previewUrl: "/placeholder.svg",
-		photoOverlays: [
-			{
-				url: "/placeholder.svg",
-				position: { x: 100, y: 200 },
-				scale: 1.1,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 105, y: 205 },
-				scale: 1.1,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 95, y: 195 },
-				scale: 1.1,
-			},
-			{
-				url: "/placeholder.svg",
-				position: { x: 110, y: 210 },
-				scale: 1.1,
-			},
+			// {
+			// 	type: "sticker",
+			// 	url: "/placeholder.svg",
+			// 	position: {
+			// 		x: 200,
+			// 		y: 300,
+			// 	},
+			// 	scale: 0.8,
+			// },
+			// {
+			// 	type: "frame",
+			// 	url: "/placeholder.svg",
+			// },
 		],
 	},
 	{
