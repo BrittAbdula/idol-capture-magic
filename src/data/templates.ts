@@ -34,15 +34,25 @@ export const templates: Template[] = [
 		photoOverlays: [
 			{
 				url: "/images/templates/idol/sunghoon_1.png",
-				position: { x: 0, y: 0 },
+				position: { x: 0, y: 0 }, // 相对照片的左上角的xy
 				scale: 1,
 			},
 
-			// {
-			// 	url: "/images/templates/idol/sunghoon_2.png",
-			// 	position: { x: 34, y: 372 },
-			// 	scale: 1,
-			// },
+			{
+				url: "/images/templates/idol/sunghoon_2.png",
+				position: { x: 0, y: 0 },
+				scale: 1,
+			},
+			{
+				url: "/images/templates/idol/sunghoon_3.png",
+				position: { x: 0, y: 0 },
+				scale: 1,
+			},
+			{
+				url: "/images/templates/idol/sunghoon_4.png",
+				position: { x: 0, y: 0 },
+				scale: 1,
+			},
 
 			// {
 			// 	url: "/images/templates/idol/sunghoon_3.png",

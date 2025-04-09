@@ -320,77 +320,99 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         if (currentOverlay && currentOverlayImg && currentOverlay.url && currentOverlay.url !== "/placeholder.svg") {
           ctx.resetTransform(); // 重置变换，确保叠加层位置正确
           
-          const scale = currentOverlay.scale || 1;
+          // 基础缩放比例
+          let scale = currentOverlay.scale || 1;
           
-          // 根据 photoPosition 计算位置
-          if (currentOverlay.photoPosition) {
-            const photoPosition = currentOverlay.photoPosition;
-            // 计算画布与模板照片位置的比例
-            const widthRatio = canvas.width / photoPosition.width;
-            const heightRatio = canvas.height / photoPosition.height;
+          // 如果有叠加层图片尺寸，计算适当的缩放比例
+          if (currentOverlayImg.width > 0 && currentOverlayImg.height > 0) {
+            // 获取当前照片对应的 photoPosition
+            const photoPosition = currentOverlay.photoPosition || 
+                                (currentOverlay.canvasSize ? { 
+                                  x: 0, 
+                                  y: 0, 
+                                  width: currentOverlay.canvasSize.width, 
+                                  height: currentOverlay.canvasSize.height 
+                                } : null);
             
-            // 使用左上角为原点的坐标系
-            const posX = currentOverlay.position.x * widthRatio;
-            const posY = currentOverlay.position.y * heightRatio;
-            
-            // 计算叠加层的大小
-            const templateCanvasSize = currentOverlay.canvasSize;
-            let scaleRatio = 1;
-            
-            if (templateCanvasSize) {
-              // 计算当前画布与模板画布的比例
-              const canvasRatio = Math.min(
-                canvas.width / templateCanvasSize.width,
-                canvas.height / templateCanvasSize.height
+            if (photoPosition && currentOverlay.canvasSize) {
+              // 1. 计算画布与 photoPosition 的比例
+              const canvasToPhotoRatio = Math.min(
+                canvas.width / photoPosition.width,
+                canvas.height / photoPosition.height
               );
               
-              // 应用 scale 和画布比例
-              scaleRatio = currentOverlay.scale * canvasRatio;
-            } else {
-              // 如果没有 canvasSize，则直接使用 scale
-              scaleRatio = currentOverlay.scale || 1;
-            }
-            
-            const overlayWidth = currentOverlayImg.width * scaleRatio;
-            const overlayHeight = currentOverlayImg.height * scaleRatio;
-            
-            // 绘制叠加层图片，位置是左上角
-            ctx.drawImage(
-              currentOverlayImg,
-              posX,
-              posY,
-              overlayWidth,
-              overlayHeight
-            );
-          } else {
-            // 没有 photoPosition 时，使用百分比定位
-            const posX = (currentOverlay.position.x / 100) * canvas.width;
-            const posY = (currentOverlay.position.y / 100) * canvas.height;
-            
-            // 计算叠加层的大小
-            let scaleRatio = currentOverlay.scale || 1;
-            
-            // 如果有 canvasSize，则考虑画布比例
-            if (currentOverlay.canvasSize) {
-              const canvasRatio = Math.min(
+              // 2. 计算 photoPosition 在 canvasSize 中的比例
+              const photoToCanvasRatio = Math.min(
+                photoPosition.width / currentOverlay.canvasSize.width,
+                photoPosition.height / currentOverlay.canvasSize.height
+              );
+              
+              // 3. 计算叠加层图片与 canvasSize 的比例
+              const imgToCanvasRatio = Math.min(
+                currentOverlay.canvasSize.width / currentOverlayImg.width,
+                currentOverlay.canvasSize.height / currentOverlayImg.height
+              );
+              
+              // 4. 综合计算最终缩放比例
+              // 用户设置的 scale * 图片与画布的比例 * 画布与照片位置的比例
+              scale = scale * imgToCanvasRatio * canvasToPhotoRatio;
+              
+              console.log('拍照时计算详情:', {
+                '用户设置scale': currentOverlay.scale || 1,
+                '图片与画布比例': imgToCanvasRatio,
+                '画布与照片位置比例': canvasToPhotoRatio,
+                '照片与画布比例': photoToCanvasRatio,
+                '最终scale': scale
+              });
+            } else if (currentOverlay.canvasSize) {
+              // 只有 canvasSize 但没有 photoPosition
+              // 计算画布与 canvasSize 的比例
+              const canvasToCanvasRatio = Math.min(
                 canvas.width / currentOverlay.canvasSize.width,
                 canvas.height / currentOverlay.canvasSize.height
               );
-              scaleRatio *= canvasRatio;
+              
+              // 计算叠加层图片与 canvasSize 的比例
+              const imgToCanvasRatio = Math.min(
+                currentOverlay.canvasSize.width / currentOverlayImg.width,
+                currentOverlay.canvasSize.height / currentOverlayImg.height
+              );
+              
+              // 应用用户设置的 scale * 图片与画布的比例 * 画布与模板画布的比例
+              scale = scale * imgToCanvasRatio * canvasToCanvasRatio;
+            } else {
+              // 没有 canvasSize 和 photoPosition，使用简单的比例计算
+              const widthRatio = canvas.width / currentOverlayImg.width;
+              const heightRatio = canvas.height / currentOverlayImg.height;
+              
+              // 使用较小的比例，确保叠加层完全显示在画布内
+              const fitRatio = Math.min(widthRatio, heightRatio) * 0.5; // 使用0.5作为默认缩放因子
+              
+              // 应用用户设置的 scale 和适合画布的缩放比例
+              scale = scale * fitRatio;
             }
-            
-            const overlayWidth = currentOverlayImg.width * scaleRatio;
-            const overlayHeight = currentOverlayImg.height * scaleRatio;
-            
-            // 绘制叠加层图片，位置是左上角
-            ctx.drawImage(
-              currentOverlayImg,
-              posX,
-              posY,
-              overlayWidth,
-              overlayHeight
-            );
           }
+          
+          // 计算叠加层的位置和大小
+          const posX = currentOverlay.position.x;
+          const posY = currentOverlay.position.y;
+          const overlayWidth = currentOverlayImg.width * scale;
+          const overlayHeight = currentOverlayImg.height * scale;
+          
+          // 绘制叠加层图片
+          ctx.drawImage(
+            currentOverlayImg,
+            posX,
+            posY,
+            overlayWidth,
+            overlayHeight
+          );
+          
+          console.log('拍照时绘制叠加层:', {
+            'position': { x: posX, y: posY },
+            'size': { width: overlayWidth, height: overlayHeight },
+            'scale': scale
+          });
         }
         
         // 获取最终图像数据
@@ -542,7 +564,87 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     const currentOverlay = photoOverlays[photoCount];
     if (!currentOverlay || !currentOverlay.url || currentOverlay.url === "/placeholder.svg") return null;
     
-    const scale = currentOverlay.scale || 1;
+    // 获取当前叠加层图片
+    const currentOverlayImg = overlayImages[photoCount];
+    if (!currentOverlayImg) return null;
+    
+    // 基础缩放比例
+    let scale = currentOverlay.scale || 1;
+    
+    // 如果有视频尺寸和叠加层图片尺寸，计算适当的缩放比例
+    if (videoSize.width > 0 && videoSize.height > 0 && currentOverlayImg.width > 0 && currentOverlayImg.height > 0) {
+      // 获取当前照片对应的 photoPosition
+      const photoPosition = photoOverlays?.[photoCount]?.photoPosition || 
+                           (currentOverlay.canvasSize ? { 
+                              x: 0, 
+                              y: 0, 
+                              width: currentOverlay.canvasSize.width, 
+                              height: currentOverlay.canvasSize.height 
+                            } : null);
+      
+      if (photoPosition && currentOverlay.canvasSize) {
+        // 1. 计算视频与 photoPosition 的比例
+        const videoToPhotoRatio = Math.min(
+          videoSize.width / photoPosition.width,
+          videoSize.height / photoPosition.height
+        );
+        
+        // 2. 计算 photoPosition 在 canvasSize 中的比例
+        const photoToCanvasRatio = Math.min(
+          photoPosition.width / currentOverlay.canvasSize.width,
+          photoPosition.height / currentOverlay.canvasSize.height
+        );
+        
+        // 3. 计算叠加层图片与 canvasSize 的比例
+        const imgToCanvasRatio = Math.min(
+          currentOverlay.canvasSize.width / currentOverlayImg.width,
+          currentOverlay.canvasSize.height / currentOverlayImg.height
+        );
+        
+        // 4. 综合计算最终缩放比例
+        // 用户设置的 scale * 图片与画布的比例 * 视频与照片位置的比例
+        scale = scale * imgToCanvasRatio * videoToPhotoRatio;
+        
+        console.log('计算详情:', {
+          '用户设置scale': currentOverlay.scale || 1,
+          '图片与画布比例': imgToCanvasRatio,
+          '视频与照片位置比例': videoToPhotoRatio,
+          '照片与画布比例': photoToCanvasRatio,
+          '最终scale': scale
+        });
+      } else if (currentOverlay.canvasSize) {
+        // 只有 canvasSize 但没有 photoPosition
+        // 计算视频与 canvasSize 的比例
+        const videoToCanvasRatio = Math.min(
+          videoSize.width / currentOverlay.canvasSize.width,
+          videoSize.height / currentOverlay.canvasSize.height
+        );
+        
+        // 计算叠加层图片与 canvasSize 的比例
+        const imgToCanvasRatio = Math.min(
+          currentOverlay.canvasSize.width / currentOverlayImg.width,
+          currentOverlay.canvasSize.height / currentOverlayImg.height
+        );
+        
+        // 应用用户设置的 scale * 图片与画布的比例 * 视频与画布的比例
+        scale = scale * imgToCanvasRatio * videoToCanvasRatio;
+      } else {
+        // 没有 canvasSize 和 photoPosition，使用简单的比例计算
+        const widthRatio = videoSize.width / currentOverlayImg.width;
+        const heightRatio = videoSize.height / currentOverlayImg.height;
+        
+        // 使用较小的比例，确保叠加层完全显示在视频内
+        const fitRatio = Math.min(widthRatio, heightRatio) * 0.5; // 使用0.5作为默认缩放因子
+        
+        // 应用用户设置的 scale 和适合视频的缩放比例
+        scale = scale * fitRatio;
+      }
+    }
+    
+    console.log('计算后的scale:', scale, '视频尺寸:', videoSize, '图片尺寸:', 
+      { width: currentOverlayImg.width, height: currentOverlayImg.height }, 
+      'canvasSize:', currentOverlay.canvasSize,
+      'photoPosition:', photoOverlays?.[photoCount]?.photoPosition);
     
     return (
       <div 
@@ -558,8 +660,12 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       >
         <img 
           src={currentOverlay.url} 
-          alt="Overlay" 
-          className="max-w-[200px] max-h-[200px] object-contain"
+          alt="Overlay"
+          className="object-contain"
+          style={{ 
+            maxWidth: `${videoSize.width}px`, 
+            maxHeight: `${videoSize.height}px` 
+          }}
         />
       </div>
     );
