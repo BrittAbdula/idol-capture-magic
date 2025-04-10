@@ -45,54 +45,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 	const [mirrored, setMirrored] = useState(true);
 	const [currentAspectRatio, setCurrentAspectRatio] = useState<string>(aspectRatio);
 	const [showGrid, setShowGrid] = useState(false);
-	const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
-	const [videoDisplaySize, setVideoDisplaySize] = useState({ width: 0, height: 0 });
-	const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 	const [overlayImages, setOverlayImages] = useState<HTMLImageElement[]>([]);
 
-	const defaultAspectRatios: Record<string, { width: number; height: number }> = {
-		"1:1": { width: 1, height: 1 },
-		"4:3": { width: 4, height: 3 },
-		"3:2": { width: 3, height: 2 },
-		"4:5": { width: 4, height: 5 },
-	};
-
-	useEffect(() => {
-		const updateSizes = () => {
-			if (videoContainerRef.current && videoRef.current) {
-				const containerRect = videoContainerRef.current.getBoundingClientRect();
-				const videoRect = videoRef.current.getBoundingClientRect();
-
-				setContainerSize({
-					width: containerRect.width,
-					height: containerRect.height,
-				});
-
-				setVideoDisplaySize({
-					width: videoRect.width,
-					height: videoRect.height,
-				});
-			}
-		};
-
-		updateSizes();
-		window.addEventListener("resize", updateSizes);
-
-		const observer = new MutationObserver(updateSizes);
-		if (containerRef.current) {
-			observer.observe(containerRef.current, {
-				childList: true,
-				subtree: true,
-				attributes: true,
-				attributeFilter: ["style", "class"],
-			});
-		}
-
-		return () => {
-			window.removeEventListener("resize", updateSizes);
-			observer.disconnect();
-		};
-	}, [isStreaming, currentAspectRatio]);
 
 	useEffect(() => {
 		if (photoOverlays && photoOverlays.length > 0) {
@@ -161,11 +115,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 						// 计算实际宽高比
 						const actualRatio = videoWidth / videoHeight;
 						console.log("视频实际宽高比:", actualRatio, "目标宽高比:", targetRatio);
-
-						setVideoSize({
-							width: videoWidth,
-							height: videoHeight,
-						});
 					}
 				};
 
@@ -263,13 +212,40 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 			width = Math.floor(width);
 			height = Math.floor(height);
 
-			canvas.width = width;
-			canvas.height = height;
+      console.log("拍照时的实际尺寸:", {
+        width,
+        height
+      })
+
+			// 获取视频容器的实际尺寸，用于计算缩放比例
+			const videoContainerWidth = videoContainerRef.current?.clientWidth || width;
+			const videoContainerHeight = videoContainerRef.current?.clientHeight || height;
+			
+			// 使用容器尺寸设置canvas大小，而不是视频尺寸
+			canvas.width = videoContainerWidth;
+			canvas.height = videoContainerHeight;
+			
+			// 计算从预览尺寸到实际拍照尺寸的缩放比例
+			const scaleFactorX = 1; // 由于使用相同尺寸，缩放比例为1
+			const scaleFactorY = 1;
+
+			console.log("Canvas尺寸设置为容器尺寸:", {
+				容器宽度: videoContainerWidth,
+				容器高度: videoContainerHeight,
+				视频宽度: width,
+				视频高度: height
+			});
 
 			const ctx = canvas.getContext("2d");
 			if (ctx) {
 				// 清除画布
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				// 计算视频在canvas中的位置和尺寸，保持宽高比
+				const drawWidth = canvas.width;
+				const drawHeight = canvas.height;
+				const drawX = 0;
+				const drawY = 0;
 
 				// 绘制视频帧
 				if (mirrored) {
@@ -277,7 +253,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 					ctx.scale(-1, 1);
 				}
 
-				ctx.drawImage(video, offsetX, offsetY, width, height, 0, 0, width, height);
+				// 绘制视频到canvas上，保持宽高比
+				ctx.drawImage(video, offsetX, offsetY, width, height, drawX, drawY, drawWidth, drawHeight);
 
 				// 应用滤镜
 				if (activeFilter !== "Normal") {
@@ -322,63 +299,46 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 				) {
 					ctx.resetTransform(); // 重置变换，确保叠加层位置正确
 
-					// 基础缩放比例
-					let scale = currentOverlay.scale || 1;
-
-					// 如果有叠加层图片尺寸，计算适当的缩放比例
-					if (currentOverlayImg.width > 0 && currentOverlayImg.height > 0) {
-						// 获取当前照片对应的 photoPosition
-						const photoPosition = currentOverlay.photoPosition;
-
-						if (photoPosition) {
-							// 计算画布与 photoPosition 的比例
-							const canvasToPhotoRatio = Math.min(
-								canvas.width / photoPosition.width,
-								canvas.height / photoPosition.height
-							);
-
-							// 计算叠加层图片与 photoPosition 的比例
-							const imgToPhotoRatio = Math.min(
-								photoPosition.width / currentOverlayImg.width,
-								photoPosition.height / currentOverlayImg.height
-							);
-
-							// 综合计算最终缩放比例
-							// 用户设置的 scale * 图片与照片位置的比例 * 画布与照片位置的比例
-							scale = scale * imgToPhotoRatio * canvasToPhotoRatio;
-
-							console.log("拍照时计算详情:", {
-								用户设置scale: currentOverlay.scale || 1,
-								图片与照片位置比例: imgToPhotoRatio,
-								画布与照片位置比例: canvasToPhotoRatio,
-								最终scale: scale,
-							});
-						} else {
-							// 没有 photoPosition，使用简单的比例计算
-							const widthRatio = canvas.width / currentOverlayImg.width;
-							const heightRatio = canvas.height / currentOverlayImg.height;
-
-							// 使用较小的比例，确保叠加层完全显示在画布内
-							const fitRatio = Math.min(widthRatio, heightRatio) * 0.5; // 使用0.5作为默认缩放因子
-
-							// 应用用户设置的 scale 和适合画布的缩放比例
-							scale = scale * fitRatio;
-						}
-					}
-
+					// 使用用户设置的scale
+					const scale = currentOverlay.scale || 1;
+					
+					// 获取当前照片对应的 photoPosition
+					const photoPosition = currentOverlay.photoPosition;
+					
 					// 计算叠加层的位置和大小
-					const posX = currentOverlay.position.x;
-					const posY = currentOverlay.position.y;
-					const overlayWidth = currentOverlayImg.width * scale;
-					const overlayHeight = currentOverlayImg.height * scale;
+					// 将预览中的位置按比例缩放到实际拍照尺寸
+					const posX = currentOverlay.position.x * scaleFactorX;
+					const posY = currentOverlay.position.y * scaleFactorY;
+					
+					let overlayWidth = 0;
+					let overlayHeight = 0;
+					
+					// 保持原始宽高比
+					const aspectRatio = currentOverlayImg.width / currentOverlayImg.height;
+					
+					// 如果有photoPosition，则使用它来计算叠加层的位置和大小
+					if (photoPosition) {
+						// 计算叠加层宽度为照片宽度的一定比例
+						overlayWidth = photoPosition.width * scale;
+						overlayHeight = overlayWidth / aspectRatio;
+					} else {
+						// 没有photoPosition，使用canvas尺寸的百分比
+						// 默认宽度为canvas宽度的50%
+						overlayWidth = canvas.width * 0.5 * scale;
+						overlayHeight = overlayWidth / aspectRatio;
+					}
 
 					// 绘制叠加层图片
 					ctx.drawImage(currentOverlayImg, posX, posY, overlayWidth, overlayHeight);
 
 					console.log("拍照时绘制叠加层:", {
-						position: { x: posX, y: posY },
-						size: { width: overlayWidth, height: overlayHeight },
+						预览位置: { x: currentOverlay.position.x, y: currentOverlay.position.y },
+						缩放比例: { x: scaleFactorX, y: scaleFactorY },
+						实际位置: { x: posX, y: posY },
+						尺寸: { width: overlayWidth, height: overlayHeight },
 						scale: scale,
+						视频容器尺寸: { width: videoContainerWidth, height: videoContainerHeight },
+						照片尺寸: { width, height }
 					});
 				}
 
@@ -482,7 +442,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 		const widthRatio = parseInt(arr[0], 10);
 		const heightRatio = parseInt(arr[1], 10);
 		containerStyle.aspectRatio = `${widthRatio}/${heightRatio}`;
-    console.log('containerStyle.aspectRatio:', containerStyle.aspectRatio);
+		console.log("containerStyle.aspectRatio:", containerStyle.aspectRatio);
 
 		return containerStyle;
 	};
@@ -540,75 +500,76 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 		const currentOverlayImg = overlayImages[photoCount];
 		if (!currentOverlayImg) return null;
 
-		// 基础缩放比例
-		let scale = currentOverlay.scale || 1;
-
-		// 如果有视频尺寸和叠加层图片尺寸，计算适当的缩放比例
-		if (
-			videoSize.width > 0 &&
-			videoSize.height > 0 &&
-			currentOverlayImg.width > 0 &&
-			currentOverlayImg.height > 0
-		) {
-			// 获取当前照片对应的 photoPosition
-			const photoPosition = photoOverlays?.[photoCount]?.photoPosition;
-
-			if (photoPosition) {
-				// 计算视频与 photoPosition 的比例
-				const videoToPhotoRatio = Math.min(
-					videoSize.width / photoPosition.width,
-					videoSize.height / photoPosition.height
-				);
-
-				// 计算叠加层图片与 photoPosition 的比例
-				const imgToPhotoRatio = Math.min(
-					photoPosition.width / currentOverlayImg.width,
-					photoPosition.height / currentOverlayImg.height
-				);
-
-				// 综合计算最终缩放比例
-				// 用户设置的 scale * 图片与照片位置的比例 * 视频与照片位置的比例
-				scale = scale * imgToPhotoRatio * videoToPhotoRatio;
-
-				console.log("计算详情:", {
-					用户设置scale: currentOverlay.scale || 1,
-					图片与照片位置比例: imgToPhotoRatio,
-					视频与照片位置比例: videoToPhotoRatio,
-					最终scale: scale,
-				});
-			} else {
-				// 没有 photoPosition，使用简单的比例计算
-				const widthRatio = videoSize.width / currentOverlayImg.width;
-				const heightRatio = videoSize.height / currentOverlayImg.height;
-
-				// 使用较小的比例，确保叠加层完全显示在视频内
-				const fitRatio = Math.min(widthRatio, heightRatio) * 0.5; // 使用0.5作为默认缩放因子
-
-				// 应用用户设置的 scale 和适合视频的缩放比例
-				scale = scale * fitRatio;
-			}
-		}
-
-		console.log(
-			"计算后的scale:",
-			scale,
-			"视频尺寸:",
-			videoSize,
-			"图片尺寸:",
-			{ width: currentOverlayImg.width, height: currentOverlayImg.height },
-			"photoPosition:",
-			photoOverlays?.[photoCount]?.photoPosition
+		// 使用用户设置的scale
+		const scale = currentOverlay.scale || 1;
+		
+		// 获取当前照片对应的 photoPosition
+		const photoPosition = photoOverlays?.[photoCount]?.photoPosition;
+		
+		// 计算叠加层在视频容器中的位置
+		// 注意：position是相对于照片位置的，需要转换为相对于容器的位置
+		const positionX = currentOverlay.position.x;
+		const positionY = currentOverlay.position.y;
+		
+		// 计算叠加层的宽度（基于容器宽度的百分比）
+		let overlayWidth = 0;
+		let overlayHeight = 0;
+		
+		// 保持原始宽高比
+		const aspectRatio = currentOverlayImg.width / currentOverlayImg.height;
+		
+		// 检测是否为移动设备（仅用于日志记录）
+		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+			navigator.userAgent
 		);
+		
+		// 如果有photoPosition，则使用它来计算叠加层的位置和大小
+		if (photoPosition) {
+			// 计算照片在容器中的相对位置和大小
+			const containerWidth = videoContainerRef.current?.clientWidth || 0;
+			const containerHeight = videoContainerRef.current?.clientHeight || 0;
+      console.log("容器尺寸:", {
+				宽度: containerWidth,
+				高度: containerHeight
+			});
+			
+			// 计算叠加层宽度为照片宽度的一定比例
+			overlayWidth = photoPosition.width * scale;
+			overlayHeight = overlayWidth / aspectRatio;
+			
+			console.log("叠加层信息:", {
+				scale,
+				position: currentOverlay.position,
+				photoPosition,
+				容器尺寸: { width: containerWidth, height: containerHeight },
+				叠加层尺寸: { width: overlayWidth, height: overlayHeight },
+				设备类型: isMobile ? "移动设备" : "桌面设备"
+			});
+		} else {
+			// 没有photoPosition，使用容器尺寸的百分比
+			const containerWidth = videoContainerRef.current?.clientWidth || 0;
+			const containerHeight = videoContainerRef.current?.clientHeight || 0;
+			
+			// 默认宽度为容器宽度的50%
+			overlayWidth = containerWidth * 0.5 * scale;
+			overlayHeight = overlayWidth / aspectRatio;
+			
+			console.log("叠加层信息(无photoPosition):", {
+				scale,
+				position: currentOverlay.position,
+				容器尺寸: { width: containerWidth, height: containerHeight },
+				叠加层尺寸: { width: overlayWidth, height: overlayHeight },
+				设备类型: isMobile ? "移动设备" : "桌面设备"
+			});
+		}
 
 		return (
 			<div
 				className="absolute pointer-events-none"
 				style={{
 					position: "absolute",
-					left: `${currentOverlay.position.x}px`,
-					top: `${currentOverlay.position.y}px`,
-					transform: `scale(${scale})`,
-					transformOrigin: "top left",
+					left: `${positionX}px`,
+					top: `${positionY}px`,
 					zIndex: 10,
 				}}
 			>
@@ -617,8 +578,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 					alt="Overlay"
 					className="object-contain"
 					style={{
-						maxWidth: `${videoSize.width}px`,
-						maxHeight: `${videoSize.height}px`,
+						width: `${overlayWidth}px`,
+						height: `${overlayHeight}px`,
 					}}
 				/>
 			</div>
