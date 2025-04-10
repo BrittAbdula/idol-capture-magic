@@ -7,6 +7,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { PhotoStripProvider } from "./contexts/PhotoStripContext";
 
+// 动态导入并初始化 vConsole (仅在开发环境)
+if (process.env.NODE_ENV !== 'production') {
+  import('vconsole').then(({ default: VConsole }) => {
+    new VConsole();
+  }).catch(err => {
+  });
+}
+
 import Index from "./pages/Index";
 import PhotoBooth from "./pages/PhotoBooth";
 import PhotoStrip from "./pages/PhotoStrip";
