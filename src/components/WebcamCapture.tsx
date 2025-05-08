@@ -122,6 +122,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       Promise.all(loadImages).then((loadedImages) => {
         setOverlayImages(loadedImages.filter(Boolean) as HTMLImageElement[]);
       });
+    } else {
+      setOverlayImages([]);
     }
   }, [photoOverlays]);
 
@@ -254,20 +256,38 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       let offsetX = 0;
       let offsetY = 0;
       
-      if (currentAspectRatio === '1:1') {
-        const size = Math.min(width, height);
-        offsetX = (width - size) / 2;
-        offsetY = (height - size) / 2;
-        width = size;
-        height = size;
-      } else if (currentAspectRatio === '3:2') {
-        const newWidth = (height * 3) / 2;
-        offsetX = (width - newWidth) / 2;
-        width = newWidth;
-      } else if (currentAspectRatio === '4:5') {
-        const newWidth = (height * 4) / 5;
-        offsetX = (width - newWidth) / 2;
-        width = newWidth;
+      const currentOverlay = photoOverlays && photoCount < photoOverlays.length ? photoOverlays[photoCount] : null;
+      const currentOverlayImgElement = overlayImages[photoCount];
+
+      if (currentOverlay && currentOverlayImgElement && currentOverlay.url && currentOverlay.url !== "/placeholder.svg") {
+        const targetAspectRatio = 4 / 3;
+        const videoAspectRatio = width / height;
+
+        if (videoAspectRatio > targetAspectRatio) {
+          const targetWidth = height * targetAspectRatio;
+          offsetX = (width - targetWidth) / 2;
+          width = targetWidth;
+        } else {
+          const targetHeight = width / targetAspectRatio;
+          offsetY = (height - targetHeight) / 2;
+          height = targetHeight;
+        }
+      } else {
+        if (currentAspectRatio === '1:1') {
+          const size = Math.min(width, height);
+          offsetX = (width - size) / 2;
+          offsetY = (height - size) / 2;
+          width = size;
+          height = size;
+        } else if (currentAspectRatio === '3:2') {
+          const newWidth = (height * 3) / 2;
+          offsetX = (width - newWidth) / 2;
+          width = newWidth;
+        } else if (currentAspectRatio === '4:5') {
+          const newWidth = (height * 4) / 5;
+          offsetX = (width - newWidth) / 2;
+          width = newWidth;
+        }
       }
       
       canvas.width = width;
@@ -287,6 +307,8 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         );
         
         if (activeFilter !== 'Normal') {
+          ctx.save();
+          
           switch (activeFilter) {
             case 'Warm':
               ctx.filter = 'sepia(0.3) brightness(1.05)';
@@ -304,61 +326,28 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
               ctx.filter = 'contrast(1.25) brightness(0.9)';
               break;
           }
-          if (mirrored) {
-            ctx.resetTransform();
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-          } else {
-            ctx.resetTransform();
-          }
+          
           ctx.drawImage(
             video, 
             offsetX, offsetY, width, height, 
             0, 0, width, height
           );
+          
+          ctx.restore();
         }
         
-        const currentOverlay = photoOverlays && photoOverlays[photoCount];
-        const currentOverlayImg = overlayImages[photoCount];
-        
-        if (currentOverlay && currentOverlayImg && currentOverlay.url && currentOverlay.url !== "/placeholder.svg") {
+        if (
+          currentOverlay &&
+          currentOverlayImgElement &&
+          currentOverlay.url &&
+          currentOverlay.url !== "/placeholder.svg"
+        ) {
           ctx.resetTransform();
           
-          const scale = currentOverlay.scale || 1;
-          
-          const photoPosition = currentOverlay.photoPosition;
-          if (photoPosition) {
-            const widthRatio = canvas.width / photoPosition.width;
-            const heightRatio = canvas.height / photoPosition.height;
-            
-            const posX = currentOverlay.position.x * widthRatio;
-            const posY = currentOverlay.position.y * heightRatio;
-            
-            const overlayWidth = currentOverlayImg.width * scale;
-            const overlayHeight = currentOverlayImg.height * scale;
-            
-            ctx.drawImage(
-              currentOverlayImg,
-              posX - (overlayWidth / 2),
-              posY - (overlayHeight / 2),
-              overlayWidth,
-              overlayHeight
-            );
-          } else {
-            const posX = (currentOverlay.position.x / 100) * canvas.width;
-            const posY = (currentOverlay.position.y / 100) * canvas.height;
-            
-            const overlayWidth = currentOverlayImg.width * scale;
-            const overlayHeight = currentOverlayImg.height * scale;
-            
-            ctx.drawImage(
-              currentOverlayImg,
-              posX - (overlayWidth / 2),
-              posY - (overlayHeight / 2),
-              overlayWidth,
-              overlayHeight
-            );
-          }
+          ctx.drawImage(
+            currentOverlayImgElement,
+            0, 0, canvas.width, canvas.height
+          );
         }
         
         const imageDataURL = canvas.toDataURL('image/jpeg');
@@ -476,7 +465,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   }, []);
 
   const getContainerStyle = () => {
-    let containerStyle: React.CSSProperties = {
+    const containerStyle: React.CSSProperties = {
       position: 'relative',
       width: '100%',
       height: isFullscreen ? '100vh' : 'auto',
@@ -503,7 +492,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   };
 
   const getVideoStyle = () => {
-    let videoStyle: React.CSSProperties = {
+    const videoStyle: React.CSSProperties = {
       transform: mirrored ? 'scaleX(-1)' : 'none',
       objectFit: 'cover',
     };
@@ -551,8 +540,11 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   };
 
   const getCroppedOverlayContainerStyle = () => {
-    const aspectRatioRect = getAspectRatioRect();
-    
+    const isOverlayActiveForCapture = photoOverlays && photoCount < photoOverlays.length &&
+                                       photoOverlays[photoCount]?.url && photoOverlays[photoCount]?.url !== "/placeholder.svg";
+
+    const aspectRatioRect = isOverlayActiveForCapture ? { aspectRatio: '4/3' } : getAspectRatioRect();
+
     return {
       position: 'absolute' as const,
       pointerEvents: 'none' as const,
@@ -603,6 +595,22 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   };
 
   const getOverlayPositionStyle = (overlay: PhotoOverlay) => {
+    const isOverlayActiveForCapture = photoOverlays && photoCount < photoOverlays.length &&
+                                       photoOverlays[photoCount]?.url && photoOverlays[photoCount]?.url !== "/placeholder.svg";
+
+    if (isOverlayActiveForCapture) {
+      return {
+        position: 'absolute' as const,
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain' as const,
+        pointerEvents: 'none' as const,
+      };
+    }
+
     if (!overlay || !overlay.position) return {};
     
     const photoPosition = overlay.photoPosition;
@@ -636,7 +644,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 
   const inCaptureMode = countdownValue !== null || (photoCount > 0 && photoCount < photoLimit);
 
-  const currentOverlay = photoOverlays && photoCount < photoLimit ? photoOverlays[photoCount] : null;
+  const currentOverlay = photoOverlays && photoCount < photoOverlays.length ? photoOverlays[photoCount] : null;
 
   return (
     <div className="flex flex-col overflow-hidden rounded-lg shadow-lg" ref={containerRef}>

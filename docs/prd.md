@@ -56,7 +56,7 @@ filter、light color、countdown、sound、photoOverlays 参数可在页面设�
 在 app.js 里创建一个共享状态 currentTemplate, photoStripData 包含初始化 photo-booth, photo-strip 相关信息。
 photo-booth 使用 currentTemplate 初始化配置，并实时更新 photoStripData（新增照片、调整滤镜等）。
 photo-strip 页面直接读取 photoStripData 进行配置初始化和图片渲染。
-这里特别注意视频流上方 photoOverlays 的位置、尺寸渲染，以及拍照过程中 Overlay 图片的变换。
+这里特别注意视频流上方 photoOverlays 的尺寸渲染，以及拍照过程中 Overlay 图片的变换。
 
 
 2. 用户直接进入 /photo-booth 页面，相机初始化缺省参数进行拍照
@@ -73,22 +73,12 @@ currentTemplate & photoStripData Json 样例:
   "templateId": "classic-01",
   "category": "kpop",
   "idol": "momo",
-  "canvasSize": {
-    "width": 1200,
-    "height": 1600
-  },
   "previewUrl": "https://idolbooth.com/generated/previews/session-20250324-asjzkkn.png",
   "background": {
     "type": "image",
     "url": "https://idolbooth.com/assets/bg_star.jpg",
     "color": "#ffffff"
   },
-  "photoPositions": [
-    { "x": 100, "y": 100, "width": 400, "height": 500 },
-    { "x": 600, "y": 100, "width": 400, "height": 500 },
-    { "x": 100, "y": 700, "width": 400, "height": 500 },
-    { "x": 600, "y": 700, "width": 400, "height": 500 }
-  ],
   "photos": [
     "data:image/png;base64,...", 
     "data:image/png;base64,...", 
@@ -96,40 +86,16 @@ currentTemplate & photoStripData Json 样例:
     "data:image/png;base64,..."
   ],
   "photoOverlays": [
-    {
-      "url": "https://idolbooth.com/assets/momo_pose1.png",
-      "position": { "x": 50, "y": 100 },
-      "scale": 1.2
-    },
-    {
-      "url": "https://idolbooth.com/assets/momo_pose2.png",
-      "position": { "x": 40, "y": 120 },
-      "scale": 1.1
-    },
-    {
-      "url": "https://idolbooth.com/assets/momo_pose3.png",
-      "position": { "x": 60, "y": 90 },
-      "scale": 1.3
-    },
-    {
-      "url": "https://idolbooth.com/assets/momo_pose4.png",
-      "position": { "x": 55, "y": 110 },
-      "scale": 1.0
-    }
+    "https://idolbooth.com/assets/momo_pose1.png",
+    "https://idolbooth.com/assets/momo_pose2.png",
+    "https://idolbooth.com/assets/momo_pose3.png",
+    "https://idolbooth.com/assets/momo_pose4.png"
   ],
   "decoration": [
-    {
-      "type": "sticker",
-      "url": "https://idolbooth.com/assets/star.png",
-      "position": { "x": 200, "y": 300 },
-      "scale": 0.8
-    },
-    {
-      "type": "frame",
-      "url": "https://idolbooth.com/assets/classic_frame.png",
-      "position": { "x": 0, "y": 0 },
-      "scale": 1.0
-    }
+    "https://idolbooth.com/assets/star.png",
+    "https://idolbooth.com/assets/star2.png",
+    "https://idolbooth.com/assets/star3.png",
+    "https://idolbooth.com/assets/star4.png"
   ],
   "text": {
     "content": "With Momo ❤️",
@@ -154,12 +120,10 @@ photoStripId	string	该次拍摄的唯一 ID
 category	string	归属分类（如 kpop, jpop）
 idol	string	偶像名称
 previewUrl	string	该模板的预览图片 URL
-photoOverlays	object	偶像照片和位置信息（实现合影）
+photoOverlays	object	偶像照片（实现合影）
 photoBoothSettings	object	photo-booth 拍照时的参数，如倒计时、滤镜等
 
-canvasSize	object	画布大小，宽高单位 px
 background	object	背景设置（图片或纯色）
-photoPositions	array	计算照片在 canvas 上的坐标
 photos	array	 canvas 上的照片,拍摄得到的照片
 decoration	array	贴纸、边框等装饰元素
 text	object	文字内容、样式、位置

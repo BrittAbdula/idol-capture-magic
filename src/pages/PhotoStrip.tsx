@@ -1,11 +1,13 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
+import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -13,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MultiPhotoUpload from '../components/MultiPhotoUpload';
@@ -26,18 +36,21 @@ const PhotoStripPage: React.FC = () => {
   const { photoStripData, setPhotoStripData, updatePhotos, updateBackground, updateText, updateDecoration, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [selectedColor, setSelectedColor] = useState<string>('#FFFFFF');
+  const [selectedColor, setSelectedColor] = useState<string>('#F7DC6F');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [showDate, setShowDate] = useState<boolean>(true);
-  const [customColorInput, setCustomColorInput] = useState<string>('#FFFFFF');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [customColorInput, setCustomColorInput] = useState<string>('#F7DC6F');
   const [isGeneratingDownload, setIsGeneratingDownload] = useState<boolean>(false);
   const [isPrinting, setIsPrinting] = useState<boolean>(false);
   const [isSharing, setIsSharing] = useState<boolean>(false);
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
+
+  // New state for adaptive layout
+  const [selectedMargin, setSelectedMargin] = useState<string>('10');
+  const [selectedCols, setSelectedCols] = useState<string>('2');
+
   console.log("------PhotoStripPage - photoStripData:", photoStripData);
 
   const processedData = useMemo(() => {
@@ -56,7 +69,7 @@ const PhotoStripPage: React.FC = () => {
       console.log("PhotoStripPage - Initial data loading");
       const processed = processPhotoStripData(photoStripData);
       
-      const updates = {} as any;
+      const updates: { showUpload?: boolean; selectedColor?: string; customColorInput?: string; customText?: string; } = {};
       
       if (processed.hasValidPhotos && processed.processedPhotos.length > 0) {
         updates.showUpload = false;
@@ -111,150 +124,57 @@ const PhotoStripPage: React.FC = () => {
   const handlePhotoUploadComplete = (photos: string[]) => {
     console.log("Upload complete with", photos.length, "photos");
     if (photos.length > 0) {
-      updatePhotos(photos);
+      // 如果还没有photoStripData，创建初始化数据
+      if (!photoStripData) {
+        const defaultPhotoStripData = {
+          photoStripId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+          templateId: "default",
+          category: "general",
+          canvasSize: {
+            width: 1200,
+            height: 1600
+          },
+          background: { 
+            type: "color" as const, 
+            color: selectedColor 
+          },
+          photoPositions: [
+            { x: 100, y: 100, width: 400, height: 500 },
+            { x: 600, y: 100, width: 400, height: 500 },
+            { x: 100, y: 700, width: 400, height: 500 },
+            { x: 600, y: 700, width: 400, height: 500 }
+          ],
+          photoOverlays: [],
+          decoration: [],
+          photos: photos,
+          text: { 
+            content: customText,
+            font: "Arial",
+            size: 24,
+            color: "#FF4081",
+            position: { x: 600, y: 1500 }
+          },
+          photoBoothSettings: {
+            aspectRatio: "4:3",
+            countdown: 3,
+            photoNum: photos.length,
+            filter: "Normal",
+            lightColor: "#FFFFFF",
+            sound: false
+          }
+        };
+        
+        setPhotoStripData(defaultPhotoStripData);
+      } else {
+        // 已有photoStripData，只更新照片
+        updatePhotos(photos);
+      }
+      
       setShowUpload(false);
       toast.success("Photos uploaded successfully!");
     } else {
       toast.error("No photos were uploaded");
     }
-  };
-
-  const getOptimalCanvasSettings = () => {
-    return {
-      padding: 25,
-      sideMargin: 35,
-      topMargin: 35,
-      stripWidth: 480
-    };
-  };
-
-  const generatePhotoStrip = (targetCanvas: HTMLCanvasElement, scale: number = 1) => {
-    if (!targetCanvas || !photoStripData || photoStripData.photos.length === 0) return;
-    
-    const canvas = targetCanvas;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) return;
-    
-    const loadImages = photoStripData.photos.map(src => {
-      return new Promise<HTMLImageElement>((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.src = src;
-      });
-    });
-    
-    const loadDecorations = photoStripData.decoration ? 
-      photoStripData.decoration.map(dec => {
-        if (!dec.url) return Promise.resolve(null);
-        return new Promise<HTMLImageElement | null>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
-          img.src = dec.url;
-        });
-      }) : [];
-    
-    Promise.all([...loadImages, ...loadDecorations]).then(loadedAssets => {
-      if (loadedAssets.length === 0) return;
-      
-      const loadedPhotos = loadedAssets.slice(0, photoStripData.photos.length) as HTMLImageElement[];
-      const loadedDecorations = loadedAssets.slice(photoStripData.photos.length) as (HTMLImageElement | null)[];
-      
-      if (loadedPhotos.length === 0) return;
-      
-      const canvasWidth = photoStripData.canvasSize.width * scale;
-      const canvasHeight = photoStripData.canvasSize.height * scale;
-      
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      
-      ctx.fillStyle = photoStripData.background.color || '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      if (photoStripData.background.type === 'image' && 
-          (photoStripData.background.url || photoStripData.background.imageUrl)) {
-        const bgImg = new Image();
-        bgImg.onload = () => {
-          ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-          drawRemainingElements();
-        };
-        bgImg.onerror = () => {
-          drawRemainingElements();
-        };
-        bgImg.src = photoStripData.background.url || photoStripData.background.imageUrl || '';
-      } else {
-        drawRemainingElements();
-      }
-      
-      function drawRemainingElements() {
-        if (photoStripData.photos && photoStripData.photos.length > 0) {
-          photoStripData.photos.forEach((photoUrl, index) => {
-            if (index < photoStripData.photoPositions.length && index < loadedPhotos.length) {
-              const pos = photoStripData.photoPositions[index];
-              
-              const borderWidth = 5 * scale;
-              ctx.fillStyle = '#FFFFFF';
-              ctx.fillRect(
-                pos.x * scale - borderWidth, 
-                pos.y * scale - borderWidth, 
-                pos.width * scale + (borderWidth * 2), 
-                pos.height * scale + (borderWidth * 2)
-              );
-              
-              ctx.drawImage(
-                loadedPhotos[index], 
-                pos.x * scale, 
-                pos.y * scale, 
-                pos.width * scale, 
-                pos.height * scale
-              );
-            }
-          });
-        }
-        
-        if (photoStripData.decoration && loadedDecorations.length > 0) {
-          photoStripData.decoration.forEach((dec, index) => {
-            const img = loadedDecorations[index];
-            if (img && dec.position) {
-              const decScale = dec.scale || 1;
-              ctx.drawImage(
-                img,
-                dec.position.x * scale,
-                dec.position.y * scale,
-                img.width * decScale * scale,
-                img.height * decScale * scale
-              );
-            }
-          });
-        }
-        
-        if (photoStripData.text) {
-          const text = photoStripData.text;
-          ctx.fillStyle = text.color || '#000000';
-          ctx.font = `${text.size || 24 * scale}px ${text.font || 'Arial'}`;
-          ctx.textAlign = 'center';
-          
-          const textX = text.position ? text.position.x * scale : canvas.width / 2;
-          const textY = text.position ? text.position.y * scale : canvas.height - 100 * scale;
-          
-          ctx.fillText(text.content, textX, textY);
-        }
-        
-        if (showDate) {
-          ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF80' : '#00000080';
-          ctx.font = `${Math.max(16, 20 * scale)}px monospace`;
-          ctx.textAlign = 'center';
-          const dateText = new Date().toLocaleDateString();
-          ctx.fillText(dateText, canvas.width / 2, canvas.height - 80 * scale);
-        }
-        
-        ctx.fillStyle = isDarkColor(selectedColor) ? '#FFFFFF' : '#000000';
-        ctx.font = `bold ${Math.max(22, 26 * scale)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText("IdolBooth", canvas.width / 2, canvas.height - 35 * scale);
-      }
-    });
   };
 
   const isDarkColor = (hexColor: string): boolean => {
@@ -267,28 +187,22 @@ const PhotoStripPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (thumbnailCanvasRef.current && photoStripData && photoStripData.photos.length > 0) {
-      const scale = isMobile ? 0.3 : 0.4;
-      generatePhotoStrip(thumbnailCanvasRef.current, scale);
-    }
-  }, [photoStripData, selectedColor, customText, showDate, isMobile]);
-
-  useEffect(() => {
     if (customText && photoStripData && photoStripData.text?.content !== customText) {
       updateText({
         content: customText,
-        font: 'Arial',
-        size: 24,
-        color: '#FF4081',
+        font: photoStripData.text?.font || 'Arial',
+        size: photoStripData.text?.size || 24,
+        color: photoStripData.text?.color || '#FF4081',
         position: {
-          x: photoStripData.canvasSize.width ? photoStripData.canvasSize.width / 2 : 600,
-          y: photoStripData.canvasSize.height ? photoStripData.canvasSize.height - 100 : 1500
+          x: photoStripData.canvasSize ? photoStripData.canvasSize.width / 2 : 600,
+          y: photoStripData.canvasSize ? photoStripData.canvasSize.height - 100 : 1500
         }
       });
     }
 
     if (photoStripData && photoStripData.background.color !== selectedColor) {
       updateBackground({
+        ...photoStripData.background,
         type: 'color' as const,
         color: selectedColor
       });
@@ -302,28 +216,41 @@ const PhotoStripPage: React.FC = () => {
     }
 
     setIsGeneratingDownload(true);
-    
-    const tempCanvas = document.createElement('canvas');
-    
-    generatePhotoStrip(tempCanvas, 1);
-    
-    setTimeout(() => {
-      try {
-        const link = document.createElement('a');
-        link.download = `photo_strip_${Date.now()}.jpg`;
-        link.href = tempCanvas.toDataURL('image/jpeg', 0.95);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast.success("Photo strip downloaded successfully!");
-      } catch (error) {
-        console.error("Download error:", error);
-        toast.error("Failed to download photo strip");
-      } finally {
-        setIsGeneratingDownload(false);
-      }
-    }, 500);
+
+    // Find the image element rendered by the PhotoStrip component
+    const imgElement = document.querySelector('.photo-strip-preview img');
+
+    if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
+      console.error("Download error: Could not find photo strip image element");
+      toast.error("Failed to download photo strip: could not get image");
+      setIsGeneratingDownload(false);
+      return;
+    }
+
+    const dataUrl = imgElement.src;
+
+    if (!dataUrl || dataUrl === '') {
+      console.error("Download error: Image element has no source");
+      toast.error("Failed to download photo strip: invalid image data");
+      setIsGeneratingDownload(false);
+      return;
+    }
+
+    try {
+      const link = document.createElement('a');
+      link.download = `idolbooth_photostrip_${Date.now()}.jpg`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Photo strip downloaded successfully!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download photo strip");
+    } finally {
+      setIsGeneratingDownload(false);
+    }
   };
 
   const handlePrint = () => {
@@ -334,12 +261,13 @@ const PhotoStripPage: React.FC = () => {
 
     setIsPrinting(true);
     
-    const tempCanvas = document.createElement('canvas');
-    generatePhotoStrip(tempCanvas, 1);
-    
     setTimeout(() => {
       try {
-        const dataUrl = tempCanvas.toDataURL('image/jpeg');
+        const imgElement = document.querySelector('.photo-strip-preview img');
+        if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
+          throw new Error("Could not find photo strip image element");
+        }
+        const dataUrl = imgElement.src;
         
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -406,18 +334,14 @@ const PhotoStripPage: React.FC = () => {
     setIsSharing(true);
     
     try {
-      const tempCanvas = document.createElement('canvas');
-      generatePhotoStrip(tempCanvas, 1);
+      const imgElement = document.querySelector('.photo-strip-preview img');
       
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        tempCanvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Canvas to Blob conversion failed'));
-          }
-        }, 'image/jpeg', 0.95);
-      });
+      if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
+        throw new Error("Could not find photo strip image element");
+      }
+      
+      const response = await fetch(imgElement.src);
+      const blob = await response.blob();
       
       if (navigator.share) {
         await navigator.share({
@@ -451,9 +375,9 @@ const PhotoStripPage: React.FC = () => {
   };
 
   const colors = [
-    '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
+    '#F7DC6F', '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF', 
     '#FF69B4', '#00008B', '#BDFFA3', '#FFDAB9', '#3A1E1E',
-    '#C0C0C0', '#F2D7D5', '#A9CCE3', '#F7DC6F', '#D5F5E3', 
+    '#C0C0C0', '#F2D7D5', '#A9CCE3', '#D5F5E3', 
     '#4182E4', '#58D3F7', '#F9E79F', '#ABEBC6', '#F7B6D2', '#D3D3D3',
     '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
   ];
@@ -472,22 +396,336 @@ const PhotoStripPage: React.FC = () => {
       <main className="pt-28 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center font-montserrat">
-            Your Photo Strip
+            IdolBooth Photo Strip
           </h1>
           
           {processedData.hasValidPhotos && processedData.processedPhotos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col items-center">
-                <div className="mb-4 relative mx-auto">
+                <div className="mb-4 relative mx-auto photo-strip-preview max-h-[60vh] overflow-auto md:max-h-none md:overflow-visible">
                   <PhotoStrip 
                     images={processedData.processedPhotos}
                     filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
                     photoOverlays={processedData.processedOverlays}
+                    backgroundColor={photoStripData?.background?.color || '#F7DC6F'}
+                    text={photoStripData?.text}
+                    decoration={photoStripData?.decoration}
+                    showDate={showDate}
+                    margin={parseInt(selectedMargin, 10)}
+                    cols={parseInt(selectedCols, 10)}
                   />
+                </div>
+
+                {/* Mobile Settings Button (visible only on mobile) */}
+                <div className="mt-4 block md:hidden">
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" className="idol-button-outline flex items-center justify-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        <span>Settings</span>
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[80vh] overflow-auto">
+                      <SheetHeader className="mb-4">
+                        <SheetTitle>Photo Strip Settings</SheetTitle>
+                        <SheetDescription>
+                          Customize your photo strip appearance
+                        </SheetDescription>
+                      </SheetHeader>
+                      <ScrollArea className="h-full pr-4">
+                        {/* Layout Settings */}
+                        <div className="glass-panel p-6 mb-6">
+                          <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                            Layout Settings
+                          </h2>
+                          <div className="space-y-6">
+                            <div>
+                              <label className="block mb-3">Photo Margin (px)</label>
+                              <RadioGroup 
+                                value={selectedMargin} 
+                                onValueChange={setSelectedMargin}
+                                className="flex gap-3"
+                              >
+                                {['5', '10', '20', '30'].map((margin) => (
+                                  <label 
+                                    key={margin}
+                                    htmlFor={`margin-${margin}-mobile`}
+                                    className="cursor-pointer flex-1"
+                                  >
+                                    <div 
+                                      className={`flex items-center justify-center h-16 rounded-md transition-all ${selectedMargin === margin ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}
+                                      style={{ border: `${Math.max(1, parseInt(margin)/6)}px solid` }}
+                                    >
+                                      <div className="bg-gray-300 rounded-md w-3/4 h-3/4"></div>
+                                      <RadioGroupItem value={margin} id={`margin-${margin}-mobile`} className="sr-only" />
+                                    </div>
+                                    <span className={`block text-xs text-center mt-1 ${selectedMargin === margin ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                                      {margin}px
+                                    </span>
+                                  </label>
+                                ))}
+                              </RadioGroup>
+                            </div>
+                            <div>
+                              <label className="block mb-3">Photos per Row</label>
+                              <RadioGroup 
+                                value={selectedCols} 
+                                onValueChange={setSelectedCols}
+                                className="flex gap-3"
+                              >
+                                {[
+                                  { value: '1', label: '1 Column' },
+                                  { value: '2', label: '2 Columns' },
+                                  { value: '3', label: '3 Columns' }
+                                ].map((col) => (
+                                  <label 
+                                    key={col.value}
+                                    htmlFor={`cols-${col.value}-mobile`} 
+                                    className={`cursor-pointer flex-1`}
+                                  >
+                                    <div className={`border-2 p-2 rounded-md h-12 transition-all ${selectedCols === col.value ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}>
+                                      {col.value === '1' && <div className="w-full h-full bg-gray-300 rounded-sm"></div>}
+                                      {col.value === '2' && <div className="flex h-full gap-1"><div className="w-1/2 bg-gray-300 rounded-sm"></div><div className="w-1/2 bg-gray-300 rounded-sm"></div></div>}
+                                      {col.value === '3' && <div className="flex h-full gap-1"><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div></div>}
+                                      <RadioGroupItem value={col.value} id={`cols-${col.value}-mobile`} className="sr-only" />
+                                    </div>
+                                    <span className={`block text-xs text-center mt-1 ${selectedCols === col.value ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                                      {col.label}
+                                    </span>
+                                  </label>
+                                ))}
+                              </RadioGroup>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Frame color */}
+                        <div className="glass-panel p-6 mb-6">
+                          <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                            Frame color
+                          </h2>
+                          <div className="flex flex-wrap gap-3">
+                            {colors.map((color, index) => (
+                              <button
+                                key={index}
+                                className={`w-10 h-10 rounded-full border ${selectedColor === color ? 'ring-2 ring-offset-2 ring-idol-gold' : 'ring-1 ring-gray-200'}`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => setSelectedColor(color)}
+                                aria-label={`Select color ${index + 1}`}
+                              />
+                            ))}
+                            
+                            <div className="flex items-center gap-2 mt-4 w-full">
+                              <input
+                                type="color"
+                                value={customColorInput}
+                                onChange={(e) => {
+                                  const color = e.target.value;
+                                  setCustomColorInput(color);
+                                  setSelectedColor(color);
+                                }}
+                                className="w-10 h-10 p-0 border-0 rounded-full cursor-pointer"
+                              />
+                              <input
+                                type="text"
+                                value={customColorInput}
+                                onChange={(e) => {
+                                  const color = e.target.value;
+                                  setCustomColorInput(color);
+                                  if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
+                                    setSelectedColor(color);
+                                  }
+                                }}
+                                placeholder="#RRGGBB"
+                                className="w-24 px-2 py-1 border rounded-md text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Caption settings */}
+                        <div className="glass-panel p-6 mb-6">
+                          <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                            Caption settings
+                          </h2>
+                          
+                          <div className="space-y-6">
+                            <div>
+                              <Label className="block mb-2">Custom caption text</Label>
+                              <div className="space-y-3">
+                                <input
+                                  type="text"
+                                  value={customText}
+                                  onChange={(e) => setCustomText(e.target.value)}
+                                  placeholder="Add your custom text here"
+                                  className="w-full px-3 py-2 border rounded-md"
+                                  maxLength={40}
+                                />
+                                <div className="mt-2">
+                                  <p className="text-xs text-gray-500 mb-2">Quick captions:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {[
+                                      "Best day ever! ✨",
+                                      "Squad goals 💯",
+                                      "My idol moment 💫",
+                                      "Forever memory 💖",
+                                      "Main character energy ⚡",
+                                      "Ultimate fan moment 🔥"
+                                    ].map(caption => (
+                                      <button
+                                        key={caption}
+                                        onClick={() => setCustomText(caption)}
+                                        className={`text-xs px-2 py-1 rounded-full ${
+                                          customText === caption ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'
+                                        }`}
+                                      >
+                                        {caption}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="showDate-mobile"
+                                checked={showDate}
+                                onCheckedChange={(checked) => 
+                                  setShowDate(checked === true)}
+                              />
+                              <Label 
+                                htmlFor="showDate-mobile"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Show date
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </SheetContent>
+                  </Sheet>
+                </div>
+
+                {/* Action buttons for mobile */}
+                <div className="mt-2 flex flex-wrap gap-2 w-full md:hidden">
+                  <Button 
+                    onClick={handleDownload}
+                    className="flex-1 idol-button flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600"
+                    disabled={isGeneratingDownload}
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>{isGeneratingDownload ? "Generating..." : "Download"}</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={handlePrint}
+                    className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
+                    variant="outline"
+                    disabled={isPrinting}
+                  >
+                    <Printer className="w-5 h-5" />
+                    <span>{isPrinting ? "Preparing..." : "Print"}</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleShare}
+                    className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
+                    variant="outline"
+                    disabled={isSharing}
+                  >
+                    <Share2 className="w-5 h-5" />
+                    <span>{isSharing ? "Sharing..." : "Share"}</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => navigate('/photo-booth')}
+                    className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
+                    variant="outline"
+                  >
+                    <Undo2 className="w-5 h-5" />
+                    <span>Take New Photos</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setShowUpload(true)}
+                    className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
+                    variant="outline"
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span>Upload Photos</span>
+                  </Button>
                 </div>
               </div>
               
-              <div className="flex flex-col">
+              {/* Desktop settings panel - only visible on desktop */}
+              <div className="hidden md:flex md:flex-col">
+                <div className="glass-panel p-6 mb-6">
+                  <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                    Layout Settings
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block mb-3">Photo Margin (px)</label>
+                      <RadioGroup 
+                        value={selectedMargin} 
+                        onValueChange={setSelectedMargin}
+                        className="flex gap-4"
+                      >
+                        {['5', '10', '20', '30'].map((margin) => (
+                          <label 
+                            key={margin}
+                            htmlFor={`margin-${margin}`}
+                            className="cursor-pointer flex-1"
+                          >
+                            <div 
+                              className={`flex items-center justify-center h-20 rounded-md transition-all ${selectedMargin === margin ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}
+                              style={{ border: `${Math.max(1, parseInt(margin)/5)}px solid` }}
+                            >
+                              <div className="bg-gray-300 rounded-md w-3/4 h-3/4"></div>
+                              <RadioGroupItem value={margin} id={`margin-${margin}`} className="sr-only" />
+                            </div>
+                            <span className={`block text-sm text-center mt-1 ${selectedMargin === margin ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                              {margin}px
+                            </span>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                    <div>
+                      <label className="block mb-3">Photos per Row</label>
+                      <RadioGroup 
+                        value={selectedCols} 
+                        onValueChange={setSelectedCols}
+                        className="flex gap-4"
+                      >
+                        {[
+                          { value: '1', label: '1 Column' },
+                          { value: '2', label: '2 Columns' },
+                          { value: '3', label: '3 Columns' }
+                        ].map((col) => (
+                          <label 
+                            key={col.value}
+                            htmlFor={`cols-${col.value}`} 
+                            className={`cursor-pointer w-[100px]`}
+                          >
+                            <div className={`border-2 p-2 rounded-md h-14 flex items-center justify-center transition-all ${selectedCols === col.value ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}>
+                              {col.value === '1' && <div className="w-full h-full bg-gray-300 rounded-sm"></div>}
+                              {col.value === '2' && <div className="flex h-full w-full gap-1"><div className="w-1/2 bg-gray-300 rounded-sm"></div><div className="w-1/2 bg-gray-300 rounded-sm"></div></div>}
+                              {col.value === '3' && <div className="flex h-full w-full gap-1"><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div></div>}
+                              <RadioGroupItem value={col.value} id={`cols-${col.value}`} className="sr-only" />
+                            </div>
+                            <span className={`block text-sm text-center mt-1 ${selectedCols === col.value ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                              {col.label}
+                            </span>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="glass-panel p-6 mb-6">
                   <h2 className="text-xl font-semibold mb-4 font-montserrat">
                     Frame color
@@ -538,15 +776,42 @@ const PhotoStripPage: React.FC = () => {
                   
                   <div className="space-y-6">
                     <div>
-                      <label className="block mb-2">Custom caption text</label>
-                      <input
-                        type="text"
-                        value={customText}
-                        onChange={(e) => setCustomText(e.target.value)}
-                        placeholder="Add your custom text here"
-                        className="w-full px-3 py-2 border rounded-md"
-                        maxLength={40}
-                      />
+                      <Label className="block mb-2">Custom caption text</Label>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={customText}
+                          onChange={(e) => setCustomText(e.target.value)}
+                          placeholder="Add your custom text here"
+                          className="w-full px-3 py-2 border rounded-md"
+                          maxLength={40}
+                        />
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500 mb-2">Quick captions:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              "Best day ever! ✨", 
+                              "Squad goals 💯",
+                              "My idol moment 💫",
+                              "Forever memory 💖",
+                              "Main character energy ⚡",
+                              "Ultimate fan moment 🔥",
+                              "Fandom life 💕",
+                              "Dream came true 🌟"
+                            ].map(caption => (
+                              <button
+                                key={caption}
+                                onClick={() => setCustomText(caption)}
+                                className={`text-xs px-2 py-1 rounded-full ${
+                                  customText === caption ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                              >
+                                {caption}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="flex items-center space-x-2">
@@ -556,12 +821,12 @@ const PhotoStripPage: React.FC = () => {
                         onCheckedChange={(checked) => 
                           setShowDate(checked === true)}
                       />
-                      <label 
+                      <Label 
                         htmlFor="showDate"
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         Show date
-                      </label>
+                      </Label>
                     </div>
                   </div>
                 </div>
@@ -569,7 +834,7 @@ const PhotoStripPage: React.FC = () => {
                 <div className="flex flex-wrap gap-3 mt-auto">
                   <Button 
                     onClick={handleDownload}
-                    className="flex-1 idol-button flex items-center justify-center gap-2 py-3"
+                    className="flex-1 idol-button flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600"
                     disabled={isGeneratingDownload}
                   >
                     <Download className="w-5 h-5" />
@@ -620,37 +885,27 @@ const PhotoStripPage: React.FC = () => {
             <div className="max-w-4xl mx-auto">
               <div className="glass-panel p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                  Choose a Template (Optional)
+                  Upload Photos to Create a Photo Strip
                 </h2>
-                <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                  <SelectTrigger className="w-full md:w-[300px]">
-                    <SelectValue placeholder="Select a template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default (4 photos, 4:3)</SelectItem>
-                    {templates.map((template) => (
-                      <SelectItem key={template.templateId} value={template.templateId}>
-                        {template.category} - {template.templateId} ({template.photoBoothSettings.photoNum} photos, {template.photoBoothSettings.aspectRatio})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <MultiPhotoUpload 
-                onComplete={handlePhotoUploadComplete}
-                template={currentTemplate}
-                aspectRatio={currentTemplate?.photoBoothSettings.aspectRatio || "4:3"}
-              />
-              
-              <div className="mt-6 text-center">
-                <Button
-                  onClick={() => navigate('/photo-booth')}
-                  variant="outline"
-                  className="idol-button-outline"
-                >
-                  Go to Photo Booth Instead
-                </Button>
+                
+                <MultiPhotoUpload 
+                  onComplete={handlePhotoUploadComplete}
+                  template={currentTemplate}
+                  aspectRatio={currentTemplate?.photoBoothSettings.aspectRatio || "4:3"}
+                />
+                
+                <div className="mt-6 flex justify-between items-center">
+                  <p className="text-sm text-gray-500">
+                    Upload 1-9 photos to create your photo strip, or use the photo booth to take new photos
+                  </p>
+                  <Button
+                    onClick={() => navigate('/photo-booth')}
+                    variant="outline"
+                    className="idol-button-outline"
+                  >
+                    Go to Photo Booth
+                  </Button>
+                </div>
               </div>
             </div>
           )}

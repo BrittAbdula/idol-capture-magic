@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePhotoStrip } from '../contexts/PhotoStripContext';
 import { getTemplate } from '../data/templates';
-import { Position, PhotoOverlay, defaultAspectRatios } from '../contexts/PhotoStripContext';
+import { Position, PhotoOverlay, defaultAspectRatios, PhotoStripSessionData } from '../contexts/PhotoStripContext';
 import SEO from '../components/SEO'; 
 
 const PhotoBooth: React.FC = () => {
@@ -38,49 +38,49 @@ const PhotoBooth: React.FC = () => {
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const [filter, setFilter] = useState('Normal');
   const [photoNum, setPhotoNum] = useState(4);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(1);
   const [playSound, setPlaySound] = useState(false);
   const [lightColor, setLightColor] = useState('#FFD700');
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState('general');
   
+  // State for fullscreen photo viewing
+  const [fullscreenPhoto, setFullscreenPhoto] = useState<string | null>(null);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
+  
   const [currentPhotoOverlays, setCurrentPhotoOverlays] = useState<PhotoOverlay[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedOverlayIndex, setDraggedOverlayIndex] = useState<number | null>(null);
   const [overlayPreviews, setOverlayPreviews] = useState<{ [key: number]: string }>({});
   const overlayPreviewRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const videoContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // For gentle animation of photos
+  const [isAnimating, setIsAnimating] = useState(true);
+  
+  // Toggle animation state every few seconds for subtle movement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(prev => !prev);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const { photoStripData, setPhotoStripData, updatePhotos, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   
   useEffect(() => {
-    const loadTemplateSettings = () => {
+    const loadInitialData = () => {
+      let initialPhotoStripData: PhotoStripSessionData | null = null;
+      let initialOverlays: PhotoOverlay[] = [];
+
       if (templateFromQuery) {
         const template = getTemplate(templateFromQuery);
-        
+
         if (template) {
           setCurrentTemplate(template);
-          
-          const settings = template.photoBoothSettings;
-          setAspectRatio(settings.aspectRatio);
-          setPhotoNum(settings.photoNum);
-          setCountdown(settings.countdown);
-          if (settings.filter) setFilter(settings.filter);
-          if (settings.lightColor) setLightColor(settings.lightColor);
-          setPlaySound(settings.sound);
-          
-          if (template.photoOverlays && template.photoOverlays.length > 0) {
-            const enhancedOverlays = template.photoOverlays.map((overlay, index) => {
-              return {
-                ...overlay,
-                canvasSize: template.canvasSize,
-                photoPosition: template.photoPositions[index] || null
-              };
-            });
-            setCurrentPhotoOverlays(enhancedOverlays);
-          }
-          
-          const newPhotoStripData = {
+
+          // Initialize photoStripData from template
+          initialPhotoStripData = {
             photoStripId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
             templateId: template.templateId,
             category: template.category,
@@ -88,81 +88,154 @@ const PhotoBooth: React.FC = () => {
             canvasSize: template.canvasSize,
             background: template.background,
             photoPositions: template.photoPositions,
-            photoOverlays: template.photoOverlays,
+            photoOverlays: template.photoOverlays || [], // Use template overlays, default to empty array
             decoration: template.decoration,
-            photos: [],
-            photoBoothSettings: {
-              ...settings,
-              filter,
-              lightColor,
-              sound: playSound
-            }
+            photos: [], // Start with empty photos array
+            text: template.text, // Use template text config
+            photoBoothSettings: template.photoBoothSettings,
           };
-          
-          setPhotoStripData(newPhotoStripData);
+
+          // Initialize currentPhotoOverlays state from template overlays
+          initialOverlays = initialPhotoStripData.photoOverlays.map((overlay, index) => ({
+            ...overlay,
+            // Ensure canvasSize and photoPosition are included
+            canvasSize: initialPhotoStripData!.canvasSize, // Use data from the initialized object
+            photoPosition: initialPhotoStripData!.photoPositions?.[index] || null,
+          }));
+
         } else {
           toast.error("Template not found");
+          // Proceed with default settings if template not found
         }
       }
+
+      // If photoStripData is still null (no template or template not found), create default data
+      if (!initialPhotoStripData) {
+        const defaultPhotoNum = 4; // Default photo number
+        const defaultCanvasSize = { width: 1200, height: 1600 }; // Default canvas size
+        const defaultPhotoPositions = [
+          { x: 100, y: 100, width: 400, height: 500 },
+          { x: 600, y: 100, width: 400, height: 500 },
+          { x: 100, y: 700, width: 400, height: 500 },
+          { x: 600, y: 700, width: 400, height: 500 },
+        ];
+
+        initialPhotoStripData = {
+          photoStripId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+          templateId: "default",
+          category: "general",
+          canvasSize: defaultCanvasSize,
+          background: { type: "color", color: "#F7DC6F" },
+          photoPositions: defaultPhotoPositions,
+          photoOverlays: [], // Start with empty overlays for default
+          decoration: [],
+          photos: [],
+          text: { // Default text config
+            content: "IdolBooth moment",
+            font: "Arial",
+            size: 24,
+            color: "#000000",
+            position: { x: defaultCanvasSize.width / 2, y: defaultCanvasSize.height - 100 },
+          },
+          photoBoothSettings: {
+            aspectRatio: '4:3',
+            countdown: 3,
+            photoNum: defaultPhotoNum,
+            filter: 'Normal',
+            lightColor: '#FFD700',
+            sound: false
+          },
+        };
+        
+        // Initialize currentPhotoOverlays state with default empty overlays based on default photoNum
+        initialOverlays = Array(defaultPhotoNum).fill(null).map((_, index) => ({
+          url: "/placeholder.svg",
+          position: { x: defaultCanvasSize.width / 2, y: defaultCanvasSize.height / (defaultPhotoNum + 1) * (index + 1) },
+          scale: 1.0,
+          canvasSize: defaultCanvasSize,
+          photoPosition: defaultPhotoPositions?.[index] || null,
+        }));
+      }
+
+      // Set the initialized data to context and local state
+      setPhotoStripData(initialPhotoStripData);
+      setCurrentPhotoOverlays(initialOverlays);
+      setPhotoNum(initialPhotoStripData.photoBoothSettings.photoNum); // Sync local photoNum state
+      setAspectRatio(initialPhotoStripData.photoBoothSettings.aspectRatio); // Sync local aspectRatio state
+      setFilter(initialPhotoStripData.photoBoothSettings.filter || 'Normal'); // Sync local filter state
+      setCountdown(initialPhotoStripData.photoBoothSettings.countdown); // Sync local countdown state
+      setPlaySound(initialPhotoStripData.photoBoothSettings.sound); // Sync local sound state
+      setLightColor(initialPhotoStripData.photoBoothSettings.lightColor || '#FFD700'); // Sync local lightColor state
+
     };
-    
-    loadTemplateSettings();
-  }, [templateFromQuery, setCurrentTemplate, setPhotoStripData, filter, lightColor, playSound]);
-  
-  // Ensure photoNum is synced with photoStripData and overlays are properly initialized
+
+    // Load data only once on mount or when templateFromQuery changes
+    if (!photoStripData || photoStripData.templateId !== templateFromQuery) {
+       loadInitialData();
+    }
+
+  }, [templateFromQuery]); // Depend only on templateFromQuery to avoid unnecessary re-runs
+
+  // Sync local settings state back to photoStripData in context whenever local state changes
   useEffect(() => {
     if (photoStripData) {
-      // Only update state if the values are different to avoid infinite loops
-      if (photoStripData.photoBoothSettings.photoNum !== photoNum) {
-        setPhotoNum(photoStripData.photoBoothSettings.photoNum);
-      }
-      
-      // Ensure we have the right number of overlays
-      if (photoNum > 0) {
-        const updatedOverlays = [...currentPhotoOverlays];
-        
-        // Add or remove overlays as needed to match photoNum
-        while (updatedOverlays.length < photoNum) {
-          const index = updatedOverlays.length;
-          if (index < currentPhotoOverlays.length) {
-            updatedOverlays.push(currentPhotoOverlays[index]);
-          } else {
-            updatedOverlays.push({
-              url: "/placeholder.svg",
-              position: { x: 50, y: 50 },
-              scale: 1.0,
-              canvasSize: photoStripData.canvasSize,
-              photoPosition: photoStripData.photoPositions[index] || null
-            });
-          }
-        }
-        
-        // Trim to photoNum if we have too many
-        const finalOverlays = updatedOverlays.slice(0, photoNum);
-        
-        // Only update if the overlays have actually changed
-        if (JSON.stringify(finalOverlays) !== JSON.stringify(currentPhotoOverlays)) {
-          setCurrentPhotoOverlays(finalOverlays);
-        }
-      }
+      setPhotoStripData((prevData: PhotoStripSessionData | null) => {
+        if (!prevData) return null;
+        return {
+          ...prevData,
+          photoBoothSettings: {
+            ...prevData.photoBoothSettings,
+            aspectRatio: aspectRatio,
+            countdown: countdown,
+            photoNum: photoNum,
+            filter: filter,
+            lightColor: lightColor,
+            sound: playSound
+          },
+          // Note: photoOverlays are synced in the other useEffect that depends on photoNum
+        };
+      });
     }
-  }, [photoNum, photoStripData, currentPhotoOverlays]);
-  
-  // Handle photoNum changes from UI
+  }, [aspectRatio, countdown, photoNum, filter, lightColor, playSound, photoStripData]);
+
+  // Ensure currentPhotoOverlays is synced with photoStripData and photoNum
+  useEffect(() => {
+    if (!photoStripData) return; // Wait for photoStripData to be initialized
+
+    // Ensure we have the right number of overlays and update their associated data
+    const updatedOverlays = Array(photoNum).fill(null).map((_, index) => {
+      const existingOverlay = currentPhotoOverlays[index];
+      const photoPos = photoStripData.photoPositions?.[index] || null;
+
+      return {
+        url: existingOverlay?.url || photoStripData.photoOverlays?.[index]?.url || "/placeholder.svg", // Prefer existing, then data from context, then default
+        position: existingOverlay?.position || photoStripData.photoOverlays?.[index]?.position || { x: photoStripData.canvasSize.width / 2, y: photoStripData.canvasSize.height / (photoNum + 1) * (index + 1) },
+        scale: existingOverlay?.scale || photoStripData.photoOverlays?.[index]?.scale || 1.0,
+        // Always use current photoStripData's canvasSize and photoPosition
+        canvasSize: photoStripData.canvasSize,
+        photoPosition: photoPos,
+      };
+    });
+
+    // Deep comparison needed for objects/arrays to avoid infinite loops
+    if (JSON.stringify(updatedOverlays) !== JSON.stringify(currentPhotoOverlays)) {
+      setCurrentPhotoOverlays(updatedOverlays);
+      // Update photoStripData in context with the new overlay structure
+      setPhotoStripData((prevData: PhotoStripSessionData | null) => {
+         if (!prevData) return null;
+         return {
+           ...prevData,
+           photoOverlays: updatedOverlays
+         };
+      });
+    }
+
+  }, [photoNum, photoStripData, currentPhotoOverlays]); // Added currentPhotoOverlays to dependencies for two-way sync
+
   const handlePhotoNumChange = (value: string) => {
     const newPhotoNum = Number(value);
     setPhotoNum(newPhotoNum);
-    
-    // Update photoStripData with the new photoNum
-    if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
-        photoBoothSettings: {
-          ...photoStripData.photoBoothSettings,
-          photoNum: newPhotoNum
-        }
-      });
-    }
+    // The useEffect above will sync this change to photoStripData and currentPhotoOverlays
   };
   
   useEffect(() => {
@@ -182,27 +255,82 @@ const PhotoBooth: React.FC = () => {
   }, [photoNum]);
   
   const handlePhotoStripCapture = (images: string[], selectedAspectRatio?: string) => {
-    // Update local state with the new images
     setPhotoStripImages(images);
     
-    // Update the photos in the PhotoStripContext
-    updatePhotos(images);
-    
-    // Update overlays if we have them
-    if (photoStripData && currentPhotoOverlays.length > 0) {
-      updatePhotoOverlays(currentPhotoOverlays);
+    if (photoStripData) {
+      // 创建更新后的photoStripData对象
+      const updatedData = {
+        ...photoStripData,
+        photos: images,
+        photoOverlays: currentPhotoOverlays,
+        photoBoothSettings: {
+          ...photoStripData.photoBoothSettings,
+          aspectRatio: aspectRatio,
+          filter: filter,
+          lightColor: lightColor,
+          sound: playSound
+        }
+      };
+      
+      // 直接使用新对象更新，而不是使用updater函数
+      setPhotoStripData(updatedData);
     }
     
     if (selectedAspectRatio) {
       setAspectRatio(selectedAspectRatio);
     }
-    
-    // Only navigate when we have the expected number of photos
-    if (images.length >= photoNum) {
-      navigate('/photo-strip');
-    }
   };
   
+  const handleNavigateToPhotoStrip = () => {
+    navigate('/photo-strip');
+  };
+  
+  const handleRetakePhotos = () => {
+    setPhotoStripImages([]);
+  };
+  
+  // Function to open fullscreen photo with index
+  const openFullscreenPhoto = (image: string, index: number) => {
+    setFullscreenPhoto(image);
+    setCurrentPhotoIndex(index);
+  };
+
+  // Function to navigate to next photo in fullscreen view
+  const navigateToNextPhoto = () => {
+    if (photoStripImages.length === 0) return;
+    
+    const nextIndex = (currentPhotoIndex + 1) % photoStripImages.length;
+    setFullscreenPhoto(photoStripImages[nextIndex]);
+    setCurrentPhotoIndex(nextIndex);
+  };
+
+  // Function to navigate to previous photo in fullscreen view
+  const navigateToPrevPhoto = () => {
+    if (photoStripImages.length === 0) return;
+    
+    const prevIndex = (currentPhotoIndex - 1 + photoStripImages.length) % photoStripImages.length;
+    setFullscreenPhoto(photoStripImages[prevIndex]);
+    setCurrentPhotoIndex(prevIndex);
+  };
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (fullscreenPhoto === null) return;
+      
+      if (e.key === 'ArrowRight') {
+        navigateToNextPhoto();
+      } else if (e.key === 'ArrowLeft') {
+        navigateToPrevPhoto();
+      } else if (e.key === 'Escape') {
+        setFullscreenPhoto(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fullscreenPhoto, currentPhotoIndex, photoStripImages.length]);
+
   const renderPolaroidPhotos = () => {
     if (photoStripImages.length === 0) {
       return (
@@ -213,50 +341,246 @@ const PhotoBooth: React.FC = () => {
     }
     
     return (
-      <div className="flex justify-center mt-6 overflow-x-auto py-4">
-        <div className={`flex justify-center gap-4 transition-all duration-300`}>
-          {photoStripImages.map((image, index) => (
-            <div 
-              key={index} 
-              className="polaroid-frame bg-white shadow-lg p-2 pb-6 transform transition-transform hover:rotate-1"
+      <>
+        <div className="relative mt-14 mb-8 overflow-x-auto py-16">
+          {/* Enhanced clothesline - multiple texture layers for realism */}
+          <div className="absolute top-0 left-0 right-0 mx-4" style={{ height: '3px' }}>
+            {/* Base rope texture */}
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-700 to-amber-900 rounded-full"></div>
+            
+            {/* Rope fiber texture */}
+            <div className="absolute inset-0 opacity-30" 
               style={{ 
-                maxWidth: '180px',
-                order: photoStripImages.length - index
-              }}
-            >
-              <div className="mb-2 overflow-hidden">
+                backgroundImage: `repeating-linear-gradient(
+                  45deg, 
+                  transparent, 
+                  transparent 2px, 
+                  #f59e0b 2px, 
+                  #f59e0b 4px
+                )`,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+              }}>
+            </div>
+            
+            {/* Rope highlight */}
+            <div className="absolute inset-0 top-0 h-[1px] bg-amber-400 opacity-40 rounded-full"></div>
+            
+            {/* Rope shadow */}
+            <div className="absolute top-full left-0 right-0 h-1 bg-black opacity-30 blur-[1px]"></div>
+          </div>
+          
+          <div className="flex justify-center gap-6 md:gap-8 transition-all duration-300 mt-4">
+            {photoStripImages.map((image, index) => {
+              // Create unique rotation and animation values for each photo
+              const isEven = index % 2 === 0;
+              const baseRotation = isEven ? -2 - (index % 3) : 2 + (index % 3);
+              
+              // Alternating rotation for gentle swaying effect
+              const rotation = isAnimating 
+                ? baseRotation + (isEven ? -0.5 : 0.5)
+                : baseRotation;
+              
+              // Different transition duration for each photo
+              const transitionDuration = 2 + (index % 3);
+              
+              return (
+                <div 
+                  key={index} 
+                  className="polaroid-frame bg-white shadow-lg p-2 pb-6 flex flex-col items-center hover:shadow-xl"
+                  style={{ 
+                    maxWidth: '180px',
+                    order: photoStripImages.length - index,
+                    transform: `rotate(${rotation}deg)`,
+                    transformOrigin: 'top center',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12)',
+                    position: 'relative',
+                    transition: `transform ${transitionDuration}s ease-in-out`,
+                  }}
+                >
+                  {/* Enhanced string connecting to clothesline - with texture and sway */}
+                  <div className="absolute -top-10 left-1/2 w-[2px] h-10" style={{ transform: 'translateX(-50%)' }}>
+                    {/* String base */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-gray-400 to-gray-500"></div>
+                    
+                    {/* String fiber texture */}
+                    <div className="absolute inset-0 opacity-20"
+                      style={{ 
+                        backgroundImage: `repeating-linear-gradient(
+                          to bottom,
+                          transparent,
+                          transparent 2px,
+                          #f8fafc 2px,
+                          #f8fafc 3px
+                        )`,
+                      }}>
+                    </div>
+                    
+                    {/* String highlight */}
+                    <div className="absolute top-0 bottom-0 left-0 w-[1px] bg-white opacity-20"></div>
+                    
+                    {/* String shadow */}
+                    <div className="absolute top-0 bottom-0 right-0 w-[1px] bg-black opacity-20"></div>
+                  </div>
+                  
+                  {/* Enhanced clothespin with more detail and depth */}
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 z-10">
+                    {/* Main clothespin body */}
+                    <div className="absolute inset-0">
+                      {/* Top part */}
+                      <div className="absolute top-0 inset-x-0 h-3/5 bg-gradient-to-b from-yellow-600 to-yellow-700 rounded-t-sm"
+                        style={{
+                          clipPath: 'polygon(0% 0%, 100% 0%, 90% 40%, 50% 45%, 10% 40%)',
+                          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.3)'
+                        }}></div>
+                      
+                      {/* Bottom part */}
+                      <div className="absolute bottom-0 inset-x-0 h-3/5 bg-gradient-to-b from-yellow-700 to-yellow-900 rounded-b-sm"
+                        style={{
+                          clipPath: 'polygon(10% 0%, 90% 0%, 85% 100%, 15% 100%)',
+                          boxShadow: 'inset 0 -1px 2px rgba(0,0,0,0.4)'
+                        }}></div>
+                    </div>
+                    
+                    {/* Clothespin details */}
+                    <div className="absolute inset-x-0 top-[30%] h-[2px] bg-yellow-950 opacity-30"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-1 h-2/3 bg-gradient-to-b from-yellow-500 to-yellow-600 rounded-full opacity-50"></div>
+                    </div>
+                    
+                    {/* Clothespin shadows */}
+                    <div className="absolute -bottom-1 inset-x-[15%] h-1 bg-black opacity-20 blur-[1px]"></div>
+                    
+                    {/* Wood grain texture */}
+                    <div className="absolute inset-0 opacity-10"
+                      style={{ 
+                        backgroundImage: `repeating-linear-gradient(
+                          90deg,
+                          transparent,
+                          transparent 2px,
+                          #7c2d12 2px,
+                          #7c2d12 4px
+                        )`,
+                      }}>
+                    </div>
+                  </div>
+                  
+                  {/* Photo with subtle border and shadow */}
+                  <div 
+                    className="mb-2 overflow-hidden border border-gray-100 cursor-pointer transition-transform hover:scale-105" 
+                    style={{ 
+                      maxHeight: '220px',
+                      boxShadow: 'inset 0 0 3px rgba(0,0,0,0.1)'
+                    }}
+                    onClick={() => openFullscreenPhoto(image, index)}
+                  >
+                    <img 
+                      src={image} 
+                      alt={`Photo ${index + 1}`} 
+                      className="w-full h-auto" 
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Navigation buttons */}
+          {photoStripImages.length >= photoNum && (
+            <div className="flex justify-center mt-10 gap-4">
+              <Button 
+                variant="outline" 
+                onClick={handleRetakePhotos}
+                className="px-6"
+              >
+                Retake Photos
+              </Button>
+              <Button 
+                onClick={handleNavigateToPhotoStrip}
+                className="px-6 bg-amber-500 hover:bg-amber-600"
+              >
+                Make Photo Strip
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Fullscreen photo dialog with navigation */}
+        <Dialog open={fullscreenPhoto !== null} onOpenChange={(open) => !open && setFullscreenPhoto(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] p-1 bg-black">
+            <div className="relative flex items-center justify-center h-full">
+              {fullscreenPhoto && (
                 <img 
-                  src={image} 
-                  alt={`Photo ${index + 1}`} 
-                  className="w-full h-auto" 
+                  src={fullscreenPhoto} 
+                  alt={`Photo ${currentPhotoIndex + 1}`} 
+                  className="max-w-full max-h-[80vh] object-contain"
                 />
-              </div>
-              <div className="text-center text-xs text-gray-600">
-                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              )}
+              
+              {/* Navigation controls */}
+              {photoStripImages.length > 1 && (
+                <>
+                  {/* Left arrow */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={navigateToPrevPhoto}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 rounded-full h-10 w-10"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                  </Button>
+                  
+                  {/* Right arrow */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={navigateToNextPhoto}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 rounded-full h-10 w-10"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                  </Button>
+                </>
+              )}
+              
+              {/* Close button */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setFullscreenPhoto(null)}
+                className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70 rounded-full"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+              
+              {/* Photo counter */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-2 py-1 rounded-full">
+                {currentPhotoIndex + 1} / {photoStripImages.length}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   };
   
   const handlePhotoOverlayUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    if (!photoStripData) return;
     const file = event.target.files?.[0];
     if (!file) return;
     
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        const previewContainer = overlayPreviewRefs.current[index];
-        const position = { x: 50, y: 50 };
-        
+        // Simplified overlay - no position or scale needed since it's displayed full-screen
         const newOverlay: PhotoOverlay = {
           url: e.target.result as string,
-          position: position,
-          scale: 1.0,
-          canvasSize: photoStripData?.canvasSize,
-          photoPosition: photoStripData?.photoPositions[index] || null
+          position: { x: 0, y: 0 }, // Position doesn't matter for full-screen display
+          scale: 1.0, // Scale doesn't matter for full-screen display
+          canvasSize: photoStripData.canvasSize,
+          photoPosition: photoStripData.photoPositions[index] || null
         };
         
         setOverlayPreviews({
@@ -268,111 +592,17 @@ const PhotoBooth: React.FC = () => {
         updatedOverlays[index] = newOverlay;
         setCurrentPhotoOverlays(updatedOverlays);
         
-        if (photoStripData) {
-          setPhotoStripData({
-            ...photoStripData,
-            photoOverlays: updatedOverlays
-          });
-        }
+        // 使用新对象更新
+        const updatedData = {
+          ...photoStripData,
+          photoOverlays: updatedOverlays
+        };
+        setPhotoStripData(updatedData);
         
         toast.success(`Photo overlay ${index + 1} updated`);
       }
     };
     reader.readAsDataURL(file);
-  };
-  
-  const handleOverlayMouseDown = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    setIsDragging(true);
-    setDraggedOverlayIndex(index);
-  };
-  
-  const handleOverlayMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || draggedOverlayIndex === null) return;
-    
-    const containerRef = overlayPreviewRefs.current[draggedOverlayIndex];
-    if (!containerRef) return;
-    
-    const rect = containerRef.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    let absoluteX = x;
-    let absoluteY = y;
-    
-    if (photoStripData && photoStripData.photoPositions[draggedOverlayIndex]) {
-      const photoPosition = photoStripData.photoPositions[draggedOverlayIndex];
-      const containerWidth = rect.width;
-      const containerHeight = rect.height;
-      
-      const widthRatio = photoPosition.width / containerWidth;
-      const heightRatio = photoPosition.height / containerHeight;
-      
-      absoluteX = x * widthRatio;
-      absoluteY = y * heightRatio;
-    }
-    
-    const updatedOverlays = [...currentPhotoOverlays];
-    if (!updatedOverlays[draggedOverlayIndex]) {
-      updatedOverlays[draggedOverlayIndex] = {
-        url: overlayPreviews[draggedOverlayIndex] || "/placeholder.svg",
-        position: { x: absoluteX, y: absoluteY },
-        scale: 1.0,
-        canvasSize: photoStripData?.canvasSize,
-        photoPosition: photoStripData?.photoPositions[draggedOverlayIndex] || null
-      };
-    } else {
-      updatedOverlays[draggedOverlayIndex] = {
-        ...updatedOverlays[draggedOverlayIndex],
-        position: { x: absoluteX, y: absoluteY }
-      };
-    }
-    
-    setCurrentPhotoOverlays(updatedOverlays);
-    
-    if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
-        photoOverlays: updatedOverlays
-      });
-    }
-  };
-  
-  const handleOverlayMouseUp = () => {
-    setIsDragging(false);
-    setDraggedOverlayIndex(null);
-  };
-  
-  const handleOverlayMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      setDraggedOverlayIndex(null);
-    }
-  };
-  
-  const handleScaleChange = (index: number, newScale: number) => {
-    const updatedOverlays = [...currentPhotoOverlays];
-    if (!updatedOverlays[index]) {
-      updatedOverlays[index] = {
-        url: overlayPreviews[index] || "/placeholder.svg",
-        position: { x: 50, y: 50 },
-        scale: newScale
-      };
-    } else {
-      updatedOverlays[index] = {
-        ...updatedOverlays[index],
-        scale: newScale
-      };
-    }
-    
-    setCurrentPhotoOverlays(updatedOverlays);
-    
-    if (photoStripData) {
-      setPhotoStripData({
-        ...photoStripData,
-        photoOverlays: updatedOverlays
-      });
-    }
   };
   
   const renderOverlayPreviews = () => {
@@ -386,15 +616,10 @@ const PhotoBooth: React.FC = () => {
           <div 
             className="relative bg-black mb-4 overflow-hidden"
             style={{ 
-              aspectRatio: aspectRatio === '4:3' ? '4/3' : 
-                          aspectRatio === '1:1' ? '1/1' : 
-                          aspectRatio === '3:2' ? '3/2' : '4/5',
+              aspectRatio: '4/3', // Always use 4:3 aspect ratio for preview
               maxHeight: '250px'
             }}
             ref={el => overlayPreviewRefs.current[i] = el}
-            onMouseMove={handleOverlayMouseMove}
-            onMouseUp={handleOverlayMouseUp}
-            onMouseLeave={handleOverlayMouseLeave}
           >
             <div className="absolute inset-0 flex items-center justify-center text-white opacity-30">
               Camera Preview
@@ -402,20 +627,17 @@ const PhotoBooth: React.FC = () => {
             
             {currentPhotoOverlays[i] && currentPhotoOverlays[i].url && currentPhotoOverlays[i].url !== "/placeholder.svg" && (
               <div 
-                className="absolute cursor-move"
+                className="absolute inset-0"
                 style={{
-                  left: `${currentPhotoOverlays[i].position.x}px`,
-                  top: `${currentPhotoOverlays[i].position.y}px`,
-                  transform: `translate(-50%, -50%) scale(${currentPhotoOverlays[i].scale})`,
-                  transformOrigin: 'center',
-                  zIndex: draggedOverlayIndex === i ? 100 : 10
+                  width: '100%',
+                  height: '100%',
+                  zIndex: 10
                 }}
-                onMouseDown={(e) => handleOverlayMouseDown(e, i)}
               >
                 <img 
                   src={currentPhotoOverlays[i].url} 
                   alt={`Overlay ${i + 1}`} 
-                  className="max-w-[150px] max-h-[150px] object-contain pointer-events-none"
+                  className="w-full h-full object-contain pointer-events-none"
                   draggable={false}
                 />
               </div>
@@ -442,27 +664,9 @@ const PhotoBooth: React.FC = () => {
                   className="text-sm w-full"
                 />
               </div>
-            </div>
-            
-            <div>
-              <Label className="mb-1 block">Scale</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min="0.1"
-                  max="2"
-                  step="0.1"
-                  value={currentPhotoOverlays[i]?.scale || 1.0}
-                  onChange={(e) => handleScaleChange(i, parseFloat(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="w-10 text-center">{(currentPhotoOverlays[i]?.scale || 1.0).toFixed(1)}x</span>
-              </div>
-            </div>
-            
-            <div className="text-sm text-gray-500">
-              <p>Position: {Math.round(currentPhotoOverlays[i]?.position.x || 0)}px, {Math.round(currentPhotoOverlays[i]?.position.y || 0)}px</p>
-              <p className="italic mt-1 text-xs">Drag image above to position</p>
+              <p className="text-xs text-gray-500 mt-1">
+                For best results, upload images with a 4:3 aspect ratio. The image will be displayed at full size.
+              </p>
             </div>
           </div>
         </div>
@@ -471,31 +675,6 @@ const PhotoBooth: React.FC = () => {
     
     return previews;
   };
-  
-  useEffect(() => {
-    if (!photoStripData) {
-      // 创建默认photoStripData
-      const defaultData = {
-        templateId: "default",
-        category: "general",
-        photoBoothSettings: {
-          aspectRatio: aspectRatio,
-          countdown: countdown,
-          photoNum: photoNum,
-          filter: filter,
-          lightColor: lightColor,
-          sound: playSound
-        },
-        canvasSize: { width: 480, height: 1390 },
-        background: { type: "color" as const, color: "#FFFFFF" },
-        photoPositions: [
-          // 生成默认位置
-        ],
-        photos: [] // 空数组，稍后会填充
-      };
-      setPhotoStripData(defaultData);
-    }
-  }, []);
   
   return (
     <div className="min-h-screen">
@@ -648,25 +827,19 @@ const PhotoBooth: React.FC = () => {
                   </TabsContent>
                   
                   <TabsContent value="overlays" className="py-4">
-                    <div className="space-y-6">
-                      <p className="text-sm text-gray-500">
-                        Upload and position overlay images for each photo. These will appear over your photos when captured.
-                      </p>
-                      
                       {renderOverlayPreviews()}
-                    </div>
                   </TabsContent>
                 </Tabs>
                 
                 <DialogClose asChild>
-                  <Button className="w-full mt-4">Save Settings</Button>
+                  <Button className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600">Save Settings</Button>
                 </DialogClose>
               </DialogContent>
             </Dialog>
           </div>
           
           <div className="flex flex-col items-center">
-            <div className="w-full max-w-xl mx-auto mb-6">
+            <div className="w-full max-w-xl mx-auto mb-6" ref={videoContainerRef}>
               <WebcamCapture 
                 onCapture={handlePhotoStripCapture}
                 aspectRatio={aspectRatio}

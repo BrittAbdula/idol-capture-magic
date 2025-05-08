@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useCallback } from 'react';
 
 // Define all required interfaces
@@ -74,6 +73,12 @@ export interface Template {
   caption?: string; // Add caption property for backward compatibility
 }
 
+// Define interface for the dynamic photo strip session data
+export interface PhotoStripSessionData extends Template {
+  photoStripId: string; // Unique ID for the photo strip session
+  photos: string[]; // Array of captured photos (data URLs)
+}
+
 export const defaultAspectRatios: Record<string, number> = {
   '1:1': 1,
   '4:3': 4/3,
@@ -92,8 +97,8 @@ interface PhotoStripContextProps {
   setPhotoBoothImage: (photoBoothImage: string | null) => void;
   reset: () => void;
   // Add the missing properties
-  photoStripData: Template | null;
-  setPhotoStripData: (data: Template | null) => void;
+  photoStripData: PhotoStripSessionData | null;
+  setPhotoStripData: (data: PhotoStripSessionData | null | ((prevData: PhotoStripSessionData | null) => PhotoStripSessionData | null)) => void;
   updatePhotos: (photos: string[]) => void;
   updatePhotoOverlays: (overlays: PhotoOverlay[]) => void;
   updateBackground: (background: Background) => void;
@@ -109,7 +114,7 @@ export const PhotoStripProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [photos, setPhotos] = useState<string[]>([]);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [photoBoothImage, setPhotoBoothImage] = useState<string | null>(null);
-  const [photoStripData, setPhotoStripData] = useState<Template | null>(null);
+  const [photoStripData, setPhotoStripData] = useState<PhotoStripSessionData | null>(null);
   const [currentTemplate, setCurrentTemplate] = useState<Template | null>(null);
 
   const addPhoto = useCallback((photo: string) => {

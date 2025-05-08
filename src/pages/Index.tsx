@@ -46,8 +46,8 @@ const Index = () => {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover"
-            poster="/placeholder.svg"
+            className="w-full h-full object-cover  m-2"
+            poster="/images/hero.svg"
           >
             <source src="https://assets.mixkit.co/videos/preview/mixkit-people-taking-pictures-in-a-concert-4839-large.mp4" type="video/mp4" />
           </video>
@@ -208,9 +208,9 @@ const Index = () => {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-black/70 z-10" />
           <img
-            src="/placeholder.svg"
+            src="/images/cta.svg"
             alt="K-pop concert"
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
         </div>
         
