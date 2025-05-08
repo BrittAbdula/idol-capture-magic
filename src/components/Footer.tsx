@@ -83,7 +83,7 @@ const Footer = () => {
               <a href="#" className="text-gray-400 hover:text-idol-gold transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-idol-gold transition-colors">
+              <a href="https://github.com/BrittAbdula/idol-capture-magic" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
                 <Github className="w-5 h-5" />
               </a>
             </div>
