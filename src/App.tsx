@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { PhotoStripProvider } from "./contexts/PhotoStripContext";
+
+// Import the new component
+import ScrollToTop from '@/components/ScrollToTop';
 
 import Index from "./pages/Index";
 import PhotoBooth from "./pages/PhotoBooth";
@@ -72,6 +74,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <TitleUpdater />
               <Routes>
                 <Route path="/" element={<Index />} />

@@ -48,8 +48,8 @@ const PhotoStripPage: React.FC = () => {
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
   // New state for adaptive layout
-  const [selectedMargin, setSelectedMargin] = useState<string>('10');
-  const [selectedCols, setSelectedCols] = useState<string>('2');
+  const [selectedMargin, setSelectedMargin] = useState<string>('20');
+  const [selectedCols, setSelectedCols] = useState<string>('1');
 
   console.log("------PhotoStripPage - photoStripData:", photoStripData);
 
@@ -476,7 +476,8 @@ const PhotoStripPage: React.FC = () => {
                                 {[
                                   { value: '1', label: '1 Column' },
                                   { value: '2', label: '2 Columns' },
-                                  { value: '3', label: '3 Columns' }
+                                  { value: '3', label: '3 Columns' },
+                                  { value: '4', label: '4 Columns' }
                                 ].map((col) => (
                                   <label 
                                     key={col.value}
@@ -487,6 +488,7 @@ const PhotoStripPage: React.FC = () => {
                                       {col.value === '1' && <div className="w-full h-full bg-gray-300 rounded-sm"></div>}
                                       {col.value === '2' && <div className="flex h-full gap-1"><div className="w-1/2 bg-gray-300 rounded-sm"></div><div className="w-1/2 bg-gray-300 rounded-sm"></div></div>}
                                       {col.value === '3' && <div className="flex h-full gap-1"><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div></div>}
+                                      {col.value === '4' && <div className="flex h-full gap-1"><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div></div>}
                                       <RadioGroupItem value={col.value} id={`cols-${col.value}-mobile`} className="sr-only" />
                                     </div>
                                     <span className={`block text-xs text-center mt-1 ${selectedCols === col.value ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
@@ -703,7 +705,8 @@ const PhotoStripPage: React.FC = () => {
                         {[
                           { value: '1', label: '1 Column' },
                           { value: '2', label: '2 Columns' },
-                          { value: '3', label: '3 Columns' }
+                          { value: '3', label: '3 Columns' },
+                          { value: '4', label: '4 Columns' }  
                         ].map((col) => (
                           <label 
                             key={col.value}
@@ -714,6 +717,7 @@ const PhotoStripPage: React.FC = () => {
                               {col.value === '1' && <div className="w-full h-full bg-gray-300 rounded-sm"></div>}
                               {col.value === '2' && <div className="flex h-full w-full gap-1"><div className="w-1/2 bg-gray-300 rounded-sm"></div><div className="w-1/2 bg-gray-300 rounded-sm"></div></div>}
                               {col.value === '3' && <div className="flex h-full w-full gap-1"><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div></div>}
+                              {col.value === '4' && <div className="flex h-full w-full gap-1"><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div></div>}
                               <RadioGroupItem value={col.value} id={`cols-${col.value}`} className="sr-only" />
                             </div>
                             <span className={`block text-sm text-center mt-1 ${selectedCols === col.value ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>

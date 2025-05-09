@@ -279,6 +279,23 @@ const PhotoBooth: React.FC = () => {
     if (selectedAspectRatio) {
       setAspectRatio(selectedAspectRatio);
     }
+    
+    // If all photos have been taken, scroll to the photo results section
+    if (images.length === photoNum) {
+      setTimeout(() => {
+        // Scroll to the photos section
+        const photoSection = document.querySelector('.polaroid-frame');
+        if (photoSection) {
+          photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          // Fallback to scrolling to bottom
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 800); // Slightly longer delay to ensure photos are rendered
+    }
   };
   
   const handleNavigateToPhotoStrip = () => {
@@ -286,7 +303,20 @@ const PhotoBooth: React.FC = () => {
   };
   
   const handleRetakePhotos = () => {
+    // Clear all photos from state
     setPhotoStripImages([]);
+    setPhotoCount(0);
+    
+    // Also clear photos from context to ensure complete reset
+    if (photoStripData) {
+      const updatedData = {
+        ...photoStripData,
+        photos: []
+      };
+      setPhotoStripData(updatedData);
+    }
+    
+    toast.info("Ready to take new photos");
   };
   
   // Function to open fullscreen photo with index
@@ -330,6 +360,40 @@ const PhotoBooth: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [fullscreenPhoto, currentPhotoIndex, photoStripImages.length]);
+
+  // Function to delete the current photo in fullscreen view
+  const deleteCurrentPhoto = () => {
+    if (photoStripImages.length === 0 || fullscreenPhoto === null) return;
+    
+    // Create a new array without the current photo
+    const newPhotos = photoStripImages.filter((_, index) => index !== currentPhotoIndex);
+    setPhotoStripImages(newPhotos);
+    
+    // Update the context data
+    if (photoStripData) {
+      const updatedData = {
+        ...photoStripData,
+        photos: newPhotos
+      };
+      setPhotoStripData(updatedData);
+    }
+    
+    // Handle UI updates after deletion
+    if (newPhotos.length === 0) {
+      // If no more photos, close the dialog
+      setFullscreenPhoto(null);
+    } else {
+      // Navigate to the next available photo or the last one if we deleted the last photo
+      const nextIndex = currentPhotoIndex >= newPhotos.length ? newPhotos.length - 1 : currentPhotoIndex;
+      setFullscreenPhoto(newPhotos[nextIndex]);
+      setCurrentPhotoIndex(nextIndex);
+    }
+    
+    toast.success("Photo deleted");
+  };
+  
+  // Added a photoCount state to track the current photo count for the camera
+  const [photoCount, setPhotoCount] = useState(0);
 
   const renderPolaroidPhotos = () => {
     if (photoStripImages.length === 0) {
@@ -389,7 +453,6 @@ const PhotoBooth: React.FC = () => {
                   className="polaroid-frame bg-white shadow-lg p-2 pb-6 flex flex-col items-center hover:shadow-xl"
                   style={{ 
                     maxWidth: '180px',
-                    order: photoStripImages.length - index,
                     transform: `rotate(${rotation}deg)`,
                     transformOrigin: 'top center',
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12)',
@@ -545,15 +608,34 @@ const PhotoBooth: React.FC = () => {
                 </>
               )}
               
-              {/* Close button */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setFullscreenPhoto(null)}
-                className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70 rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              {/* Control buttons */}
+              <div className="absolute top-2 right-2 flex gap-2">
+                {/* Delete button */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={deleteCurrentPhoto}
+                  className="text-white bg-red-500/70 hover:bg-red-600/90 rounded-full"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </Button>
+                
+                {/* Close button */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setFullscreenPhoto(null)}
+                  className="text-white bg-black/50 hover:bg-black/70 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
               
               {/* Photo counter */}
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-2 py-1 rounded-full">

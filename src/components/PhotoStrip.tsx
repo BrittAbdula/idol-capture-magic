@@ -33,7 +33,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   text,
   decoration = [],
   showDate = true,
-  margin = 10,
+  margin = 20,
   cols = 1,
 }) => {
   const [loaded, setLoaded] = useState(false);

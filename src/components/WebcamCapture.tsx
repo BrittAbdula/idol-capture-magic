@@ -273,20 +273,20 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           height = targetHeight;
         }
       } else {
-        if (currentAspectRatio === '1:1') {
-          const size = Math.min(width, height);
-          offsetX = (width - size) / 2;
-          offsetY = (height - size) / 2;
-          width = size;
-          height = size;
-        } else if (currentAspectRatio === '3:2') {
-          const newWidth = (height * 3) / 2;
-          offsetX = (width - newWidth) / 2;
-          width = newWidth;
-        } else if (currentAspectRatio === '4:5') {
-          const newWidth = (height * 4) / 5;
-          offsetX = (width - newWidth) / 2;
-          width = newWidth;
+      if (currentAspectRatio === '1:1') {
+        const size = Math.min(width, height);
+        offsetX = (width - size) / 2;
+        offsetY = (height - size) / 2;
+        width = size;
+        height = size;
+      } else if (currentAspectRatio === '3:2') {
+        const newWidth = (height * 3) / 2;
+        offsetX = (width - newWidth) / 2;
+        width = newWidth;
+      } else if (currentAspectRatio === '4:5') {
+        const newWidth = (height * 4) / 5;
+        offsetX = (width - newWidth) / 2;
+        width = newWidth;
         }
       }
       
@@ -375,6 +375,13 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       console.log(`Photo strip complete! Took ${photoCount} of ${photoLimit} photos`);
       toast.success("Photo strip complete!");
       sessionCompleteRef.current = true;
+      
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 500);
     } else if (photoCount > 0 && photoCount < photoLimit) {
       console.log(`Preparing for next photo: ${photoCount + 1} of ${photoLimit}`);
       const timer = setTimeout(() => {
@@ -405,6 +412,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   const startPhotoSession = useCallback(() => {
     setCapturedImages([]);
     setPhotoCount(0);
+    sessionCompleteRef.current = false;
     
     onCapture([], currentAspectRatio);
     
@@ -544,7 +552,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
                                        photoOverlays[photoCount]?.url && photoOverlays[photoCount]?.url !== "/placeholder.svg";
 
     const aspectRatioRect = isOverlayActiveForCapture ? { aspectRatio: '4/3' } : getAspectRatioRect();
-
+    
     return {
       position: 'absolute' as const,
       pointerEvents: 'none' as const,
