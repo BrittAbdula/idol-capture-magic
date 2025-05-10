@@ -101,7 +101,7 @@ const TemplateCategoryPage: React.FC = () => {
                   <div key={index} className="glass-panel p-6 transition-all hover:shadow-lg">
                     <div className="aspect-video bg-gray-100 mb-4 rounded overflow-hidden">
                       <img 
-                        src="/placeholder.svg" 
+                        src={template.previewUrl} 
                         alt={`Template ${template.templateId}`}
                         className="w-full h-full object-cover"
                       />

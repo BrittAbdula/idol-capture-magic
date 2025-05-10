@@ -29,43 +29,30 @@ export const templates: Template[] = [
       { x: 100, y: 700, width: 400, height: 500 },
       { x: 600, y: 700, width: 400, height: 500 }
     ],
-    previewUrl: "/placeholder.svg",
+    previewUrl: "https://store.genmojionline.com/cdn-cgi/imagedelivery/DEOVdDdfeGzASe0KdtD7FA//0cb13c3f-fa14-4d45-087b-34e33c3db000/public",
     photoOverlays: [
       {
-        url: "/placeholder.svg",
+        url: "https://store.genmojionline.com/cdn-cgi/imagedelivery/DEOVdDdfeGzASe0KdtD7FA//0cb13c3f-fa14-4d45-087b-34e33c3db000/public",
         position: { x: 50, y: 100 },
         scale: 1.2
       },
       {
-        url: "/placeholder.svg",
+        url: "https://store.genmojionline.com/cdn-cgi/imagedelivery/DEOVdDdfeGzASe0KdtD7FA//3a3f5674-e5fc-4669-9a30-56417377a600/public",
         position: { x: 40, y: 120 },
         scale: 1.1
       },
       {
-        url: "/placeholder.svg",
+        url: "https://store.genmojionline.com/cdn-cgi/imagedelivery/DEOVdDdfeGzASe0KdtD7FA//9c7c18ba-a1e8-47e6-1614-656a1867c200/public",
         position: { x: 60, y: 90 },
         scale: 1.3
       },
       {
-        url: "/placeholder.svg",
+        url: "https://store.genmojionline.com/cdn-cgi/imagedelivery/DEOVdDdfeGzASe0KdtD7FA//27d2bac5-281d-4ca6-006a-1301afd6dc00/public",
         position: { x: 55, y: 110 },
         scale: 1.0
       }
     ],
     decoration: [
-      {
-        type: "sticker",
-        url: "/placeholder.svg",
-        position: {
-          x: 200,
-          y: 300
-        },
-        scale: 0.8
-      },
-      {
-        type: "frame",
-        url: "/placeholder.svg"
-      }
     ]
   },
   {

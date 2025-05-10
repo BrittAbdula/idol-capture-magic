@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
-import { PhotoOverlay } from '@/contexts/PhotoStripContext';
 
 interface PhotoStripProps {
   images: string[];

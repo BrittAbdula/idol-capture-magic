@@ -113,9 +113,13 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           }
           
           const img = new Image();
+          img.crossOrigin = 'anonymous';
           img.src = overlay.url;
           img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
+          img.onerror = () => {
+            console.error("Error loading overlay image:", overlay.url);
+            resolve(null);
+          };
         });
       });
       
@@ -142,6 +146,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       photoOverlays.forEach((overlay, index) => {
         if (overlay && overlay.url) {
           const img = new Image();
+          img.crossOrigin = 'anonymous';
           img.src = overlay.url;
           img.onload = () => {
             photoOverlayRefs.current[index] = img;
