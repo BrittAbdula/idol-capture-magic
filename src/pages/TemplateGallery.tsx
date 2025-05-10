@@ -38,7 +38,7 @@ const TemplateGallery: React.FC = () => {
               >
                 <div className="aspect-video bg-gray-100 mb-4 rounded overflow-hidden">
                   <img 
-                    src="/placeholder.svg" 
+                    src={`/images/${category}.png`} 
                     alt={`${category} templates`}
                     className="w-full h-full object-cover"
                   />

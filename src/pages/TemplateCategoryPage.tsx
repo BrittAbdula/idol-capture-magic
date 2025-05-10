@@ -71,7 +71,7 @@ const TemplateCategoryPage: React.FC = () => {
                   >
                     <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full overflow-hidden mb-4">
                       <img 
-                        src="/placeholder.svg" 
+                        src="/images/elsa.png" 
                         alt={idolName}
                         className="w-full h-full object-cover"
                       />
