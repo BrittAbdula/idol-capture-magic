@@ -246,125 +246,106 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        console.error("Canvas context not available");
+        toast.error("Failed to capture image: canvas error");
+        return;
+      }
+
       if (audioRef.current) {
         audioRef.current.play().catch(e => console.log("Audio play failed", e));
       }
-      
-      let width = video.videoWidth;
-      let height = video.videoHeight;
-      let offsetX = 0;
-      let offsetY = 0;
-      
-      const currentOverlay = photoOverlays && photoCount < photoOverlays.length ? photoOverlays[photoCount] : null;
-      const currentOverlayImgElement = overlayImages[photoCount];
 
-      if (currentOverlay && currentOverlayImgElement && currentOverlay.url && currentOverlay.url !== "/placeholder.svg") {
-        const targetAspectRatio = 4 / 3;
-        const videoAspectRatio = width / height;
+      // Get the actual displayed size and position of the video element
+      const videoRect = video.getBoundingClientRect();
+      const displayWidth = videoRect.width;
+      const displayHeight = videoRect.height;
 
-        if (videoAspectRatio > targetAspectRatio) {
-          const targetWidth = height * targetAspectRatio;
-          offsetX = (width - targetWidth) / 2;
-          width = targetWidth;
-        } else {
-          const targetHeight = width / targetAspectRatio;
-          offsetY = (height - targetHeight) / 2;
-          height = targetHeight;
-        }
+      // Set canvas dimensions to match the displayed size
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+
+      // Calculate the source rectangle from the video based on object-fit 'cover' logic
+      // This ensures we capture the same area that is visible
+      const videoAspectRatio = video.videoWidth / video.videoHeight;
+      const displayAspectRatio = displayWidth / displayHeight;
+
+      let sourceX = 0;
+      let sourceY = 0;
+      let sourceWidth = video.videoWidth;
+      let sourceHeight = video.videoHeight;
+
+      if (videoAspectRatio > displayAspectRatio) {
+        // Video is wider than display area, crop sides
+        sourceWidth = video.videoHeight * displayAspectRatio;
+        sourceX = (video.videoWidth - sourceWidth) / 2;
       } else {
-      if (currentAspectRatio === '1:1') {
-        const size = Math.min(width, height);
-        offsetX = (width - size) / 2;
-        offsetY = (height - size) / 2;
-        width = size;
-        height = size;
-      } else if (currentAspectRatio === '3:2') {
-        const newWidth = (height * 3) / 2;
-        offsetX = (width - newWidth) / 2;
-        width = newWidth;
-      } else if (currentAspectRatio === '4:5') {
-        const newWidth = (height * 4) / 5;
-        offsetX = (width - newWidth) / 2;
-        width = newWidth;
-        }
+        // Video is taller than display area, crop top/bottom
+        sourceHeight = video.videoWidth / displayAspectRatio;
+        sourceY = (video.videoHeight - sourceHeight) / 2;
       }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        if (mirrored) {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-        }
-        
+
+      ctx.save(); // Save the context state before applying transforms and filters
+
+      if (mirrored) {
+        // Apply mirroring transformation to the canvas
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+
+      // Apply filter to the context *before* drawing the image
+      switch (activeFilter) {
+        case 'Warm': ctx.filter = 'sepia(0.3) brightness(1.05)'; break;
+        case 'Cool': ctx.filter = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)'; break;
+        case 'Vintage': ctx.filter = 'sepia(0.5) brightness(0.9) contrast(1.1)'; break;
+        case 'B&W': ctx.filter = 'grayscale(1)'; break;
+        case 'Dramatic': ctx.filter = 'contrast(1.25) brightness(0.9)'; break;
+        default: ctx.filter = 'none'; break; // Explicitly set filter to none for Normal
+      }
+
+      // Draw the visible portion of the video onto the canvas
+      ctx.drawImage(
+        video,
+        sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle from video
+        0, 0, canvas.width, canvas.height             // Destination rectangle on canvas
+      );
+
+      ctx.restore(); // Restore context state (removes filter and mirroring for overlay)
+
+      // Draw the overlay onto the canvas if active
+      const currentOverlay = photoOverlays && photoCount < photoOverlays.length ? photoOverlays[photoCount] : null;
+      const currentOverlayImgElement = overlayImages[photoCount]; // Use preloaded image
+
+      if (
+        currentOverlay &&
+        currentOverlayImgElement &&
+        currentOverlay.url &&
+        currentOverlay.url !== "/placeholder.svg"
+      ) {
+        // Draw overlay directly on the canvas matching its dimensions
         ctx.drawImage(
-          video, 
-          offsetX, offsetY, width, height, 
-          0, 0, width, height
+          currentOverlayImgElement,
+          0, 0, canvas.width, canvas.height // Draw overlay to cover the entire canvas
         );
-        
-        if (activeFilter !== 'Normal') {
-          ctx.save();
-          
-          switch (activeFilter) {
-            case 'Warm':
-              ctx.filter = 'sepia(0.3) brightness(1.05)';
-              break;
-            case 'Cool':
-              ctx.filter = 'brightness(1.1) contrast(1.1) saturate(1.25) hue-rotate(-10deg)';
-              break;
-            case 'Vintage':
-              ctx.filter = 'sepia(0.5) brightness(0.9) contrast(1.1)';
-              break;
-            case 'B&W':
-              ctx.filter = 'grayscale(1)';
-              break;
-            case 'Dramatic':
-              ctx.filter = 'contrast(1.25) brightness(0.9)';
-              break;
-          }
-          
-          ctx.drawImage(
-            video, 
-            offsetX, offsetY, width, height, 
-            0, 0, width, height
-          );
-          
-          ctx.restore();
-        }
-        
-        if (
-          currentOverlay &&
-          currentOverlayImgElement &&
-          currentOverlay.url &&
-          currentOverlay.url !== "/placeholder.svg"
-        ) {
-          ctx.resetTransform();
-          
-          ctx.drawImage(
-            currentOverlayImgElement,
-            0, 0, canvas.width, canvas.height
-          );
-        }
-        
-        const imageDataURL = canvas.toDataURL('image/jpeg');
-        const newCapturedImages = [...capturedImages, imageDataURL];
-        
-        setCapturedImages(newCapturedImages);
-        
-        const nextPhotoCount = photoCount + 1;
-        setPhotoCount(nextPhotoCount);
-        
-        onCapture(newCapturedImages, currentAspectRatio);
-        
-        setIsCapturing(true);
-        setTimeout(() => setIsCapturing(false), 300);
       }
+
+      const imageDataURL = canvas.toDataURL('image/jpeg');
+      const newCapturedImages = [...capturedImages, imageDataURL];
+
+      setCapturedImages(newCapturedImages);
+
+      const nextPhotoCount = photoCount + 1;
+      setPhotoCount(nextPhotoCount);
+
+      // Pass the captured images and current aspect ratio up
+      onCapture(newCapturedImages, currentAspectRatio);
+
+      setIsCapturing(true);
+      setTimeout(() => setIsCapturing(false), 300);
     }
-  }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays, overlayImages]);
+  }, [capturedImages, onCapture, mirrored, activeFilter, currentAspectRatio, photoCount, photoOverlays, overlayImages, audioRef]); // Added audioRef to dependencies
 
   useEffect(() => {
     if (photoCount === 0) {
