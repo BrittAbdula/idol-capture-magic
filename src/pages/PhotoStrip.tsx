@@ -97,30 +97,6 @@ const PhotoStripPage: React.FC = () => {
     }
   }, [photoStripData, dataInitialized]);
 
-  const handleTemplateChange = (templateId: string) => {
-    const template = templates.find(t => t.templateId === templateId);
-    if (template) {
-      setSelectedTemplate(templateId);
-      setCurrentTemplate(template);
-      
-      if (photoStripData) {
-        const newPhotoStripData = {
-          ...photoStripData,
-          templateId: template.templateId,
-          category: template.category,
-          idol: template.idol,
-          canvasSize: template.canvasSize,
-          background: template.background,
-          photoPositions: template.photoPositions,
-          photoOverlays: template.photoOverlays,
-          decoration: template.decoration,
-          photoBoothSettings: template.photoBoothSettings
-        };
-        setPhotoStripData(newPhotoStripData);
-      }
-    }
-  };
-
   const handlePhotoUploadComplete = (photos: string[]) => {
     console.log("Upload complete with", photos.length, "photos");
     if (photos.length > 0) {
@@ -406,7 +382,6 @@ const PhotoStripPage: React.FC = () => {
                   <PhotoStrip 
                     images={processedData.processedPhotos}
                     filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
-                    photoOverlays={processedData.processedOverlays}
                     backgroundColor={photoStripData?.background?.color || '#F7DC6F'}
                     text={photoStripData?.text}
                     decoration={photoStripData?.decoration}
@@ -425,7 +400,7 @@ const PhotoStripPage: React.FC = () => {
                         <span>Settings</span>
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="bottom" className="h-[80vh] overflow-auto">
+                    <SheetContent side="bottom" className="h-[40vh] overflow-auto">
                       <SheetHeader className="mb-4">
                         <SheetTitle>Photo Strip Settings</SheetTitle>
                         <SheetDescription>
@@ -446,7 +421,7 @@ const PhotoStripPage: React.FC = () => {
                                 onValueChange={setSelectedMargin}
                                 className="flex gap-3"
                               >
-                                {['5', '10', '20', '30'].map((margin) => (
+                                {['5', '10', '20', '40'].map((margin) => (
                                   <label 
                                     key={margin}
                                     htmlFor={`margin-${margin}-mobile`}
@@ -675,7 +650,7 @@ const PhotoStripPage: React.FC = () => {
                         onValueChange={setSelectedMargin}
                         className="flex gap-4"
                       >
-                        {['5', '10', '20', '30'].map((margin) => (
+                        {['5', '10', '20', '40'].map((margin) => (
                           <label 
                             key={margin}
                             htmlFor={`margin-${margin}`}

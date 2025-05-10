@@ -312,9 +312,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         0, 0, canvas.width, canvas.height             // Destination rectangle on canvas
       );
 
-      ctx.restore(); // Restore context state (removes filter and mirroring for overlay)
-
-      // Draw the overlay onto the canvas if active
+      // Draw the overlay onto the canvas if active *before* restoring context
       const currentOverlay = photoOverlays && photoCount < photoOverlays.length ? photoOverlays[photoCount] : null;
       const currentOverlayImgElement = overlayImages[photoCount]; // Use preloaded image
 
@@ -324,12 +322,42 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         currentOverlay.url &&
         currentOverlay.url !== "/placeholder.svg"
       ) {
-        // Draw overlay directly on the canvas matching its dimensions
+        // Calculate overlay position and size to fit proportionally in the center of the canvas
+        const overlayAspectRatio = currentOverlayImgElement.width / currentOverlayImgElement.height;
+        const canvasAspectRatio = canvas.width / canvas.height;
+
+        let overlayDestX = 0;
+        let overlayDestY = 0;
+        let overlayDestWidth = canvas.width;
+        let overlayDestHeight = canvas.height;
+
+        if (overlayAspectRatio > canvasAspectRatio) {
+          // Overlay is wider than canvas aspect ratio, fit to width
+          overlayDestWidth = canvas.width;
+          overlayDestHeight = canvas.width / overlayAspectRatio;
+          overlayDestX = 0;
+          overlayDestY = (canvas.height - overlayDestHeight) / 2;
+        } else {
+          // Overlay is taller or square compared to canvas aspect ratio, fit to height
+          overlayDestHeight = canvas.height;
+          overlayDestWidth = canvas.height * overlayAspectRatio;
+          overlayDestX = (canvas.width - overlayDestWidth) / 2;
+          overlayDestY = 0;
+        }
+
+        // Adjust overlay position if mirroring is active
+        if (mirrored) {
+            overlayDestX = canvas.width - (overlayDestX + overlayDestWidth);
+        }
+
+        // Draw overlay onto the canvas using calculated dimensions
         ctx.drawImage(
           currentOverlayImgElement,
-          0, 0, canvas.width, canvas.height // Draw overlay to cover the entire canvas
+          overlayDestX, overlayDestY, overlayDestWidth, overlayDestHeight
         );
       }
+
+      ctx.restore(); // Restore context state (removes filter and mirroring)
 
       const imageDataURL = canvas.toDataURL('image/jpeg');
       const newCapturedImages = [...capturedImages, imageDataURL];
@@ -587,47 +615,16 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     const isOverlayActiveForCapture = photoOverlays && photoCount < photoOverlays.length &&
                                        photoOverlays[photoCount]?.url && photoOverlays[photoCount]?.url !== "/placeholder.svg";
 
-    if (isOverlayActiveForCapture) {
-      return {
-        position: 'absolute' as const,
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '100%',
-        height: '100%',
-        objectFit: 'contain' as const,
-        pointerEvents: 'none' as const,
-      };
-    }
-
-    if (!overlay || !overlay.position) return {};
-    
-    const photoPosition = overlay.photoPosition;
-    if (photoPosition && videoDisplaySize.width && videoDisplaySize.height) {
-      const widthRatio = videoDisplaySize.width / photoPosition.width;
-      const heightRatio = videoDisplaySize.height / photoPosition.height;
-      
-      return {
-        position: 'absolute' as const,
-        left: `${overlay.position.x * widthRatio}px`,
-        top: `${overlay.position.y * heightRatio}px`,
-        transform: `translate(-50%, -50%) scale(${overlay.scale})`,
-        transformOrigin: 'center',
-        pointerEvents: 'none' as const,
-        maxWidth: '60%',
-        maxHeight: '60%',
-      };
-    }
-    
+    // Simplified logic: Always center and contain the overlay
     return {
       position: 'absolute' as const,
-      left: `${overlay.position.x}%`,
-      top: `${overlay.position.y}%`,
-      transform: `translate(-50%, -50%) scale(${overlay.scale})`,
-      transformOrigin: 'center',
+      left: '50%',
+      top: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: '100%',
+      height: '100%',
+      objectFit: 'contain' as const,
       pointerEvents: 'none' as const,
-      maxWidth: '60%',
-      maxHeight: '60%',
     };
   };
 

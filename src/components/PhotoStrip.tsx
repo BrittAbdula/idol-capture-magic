@@ -6,7 +6,6 @@ interface PhotoStripProps {
   images: string[];
   filter: string;
   showControls?: boolean;
-  photoOverlays?: PhotoOverlay[];
   backgroundColor?: string;
   text?: {
     content: string;
@@ -28,7 +27,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   images, 
   filter, 
   showControls = true,
-  photoOverlays,
   backgroundColor = '#F7DC6F',
   text,
   decoration = [],
@@ -38,7 +36,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [renderedImages, setRenderedImages] = useState<string[]>([]);
-  const [renderedOverlays, setRenderedOverlays] = useState<PhotoOverlay[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const stripRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -68,28 +65,14 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     }
   }, [images]); // Only depend on images, not derived state
   
-  // Process overlays separately to avoid dependency cycles
-  useEffect(() => {
-    // Process overlays if they exist
-    if (photoOverlays && photoOverlays.length > 0) {
-      console.log("PhotoStrip - Overlays received:", photoOverlays.length);
-      const validOverlays = photoOverlays.filter(overlay => 
-        overlay && overlay.url && overlay.url !== "/placeholder.svg"
-      );
-      
-      console.log("PhotoStrip - Setting", validOverlays.length, "valid overlays");
-      setRenderedOverlays(validOverlays);
-    } else {
-      setRenderedOverlays([]);
-    }
-  }, [photoOverlays]); // Only depend on photoOverlays
+
   
   // Generate preview when relevant props change
   useEffect(() => {
     if (loaded && renderedImages.length > 0) {
       generatePhotoStripPreview();
     }
-  }, [loaded, renderedImages, renderedOverlays, backgroundColor, text, decoration, showDate, filter, margin, cols]);
+  }, [loaded, renderedImages, backgroundColor, text, decoration, showDate, filter, margin, cols]);
 
   const getFilterClassName = () => {
     switch (filter) {
@@ -268,21 +251,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
     });
     imagesToLoad.push(...decorationPromises);
     
-    // Load overlays
-    const overlayPromises = renderedOverlays.map((overlay, index) => {
-      if (!overlay.url || overlay.url === "/placeholder.svg") return Promise.resolve(null);
-      return new Promise<{img: HTMLImageElement | null, index: number}>((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve({img, index});
-        img.onerror = () => {
-          console.warn(`Failed to load overlay at index ${index}`);
-          resolve({img: null, index});
-        };
-        img.src = overlay.url;
-      });
-    });
-    imagesToLoad.push(...overlayPromises);
+    
     
     // Wait for all images to load then render
     Promise.all(imagesToLoad)
@@ -382,43 +351,8 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
           );
         });
         
-        // Draw overlays on top of photos - position relative to photo center
-        const loadedOverlays = loadedImages.filter(item => 
-          item && 'index' in item &&
-          item.index >= renderedImages.length + decoration.length &&
-          item.index < renderedImages.length + decoration.length + renderedOverlays.length // Ensure we only process loaded overlays
-        ) as {img: HTMLImageElement | null, index: number}[];
-        
-        loadedOverlays.forEach(({img, index}) => {
-          if (!img) return;
-          
-          const overlayIndex = index - renderedImages.length - decoration.length;
-          const overlay = renderedOverlays[overlayIndex]; // Use renderedOverlays here
-          
-          // Find the corresponding photo position for the overlay
-          const photoPosForOverlay = symmetricPositions[overlayIndex];
-          
-          if (overlay && photoPosForOverlay) {
-            const scale = overlay.scale || 1;
-            
-            // Position overlay at the center of its associated photo
-            const overlayDrawX = photoPosForOverlay.x + photoPosForOverlay.width / 2;
-            const overlayDrawY = photoPosForOverlay.y + photoPosForOverlay.height / 2;
-            
-            // Scale overlay drawing relative to photo width
-            const overlayScaleFactor = photoPosForOverlay.width / img.width; // Scale overlay to fit photo width by default
-            const finalOverlayWidth = img.width * scale * overlayScaleFactor;
-            const finalOverlayHeight = img.height * scale * overlayScaleFactor; // Use img.height for correct aspect ratio
-              
-              ctx.drawImage(
-              img,
-              overlayDrawX - (finalOverlayWidth / 2),
-              overlayDrawY - (finalOverlayHeight / 2),
-              finalOverlayWidth,
-              finalOverlayHeight
-            );
-          }
-        });
+      
+    
         
         // Calculate bottom area position - using the fixed footer height
         const footerTopPosition = height - footerHeight;
@@ -489,7 +423,7 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
         
         setPreviewUrl(canvas.toDataURL('image/jpeg'));
       });
-  }, [renderedImages, renderedOverlays, backgroundColor, text, decoration, showDate, filter, margin, cols]);
+  }, [renderedImages, backgroundColor, text, decoration, showDate, filter, margin, cols]);
 
   const isDarkColor = (hexColor: string): boolean => {
     const hex = hexColor.replace('#', '');
@@ -619,25 +553,6 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                     onLoad={() => console.log(`Photo ${index + 1} loaded`)}
                     onError={() => console.error(`Failed to load photo ${index + 1}`)}
                   />
-                  
-                  {renderedOverlays[index] && renderedOverlays[index].url && 
-                   renderedOverlays[index].url !== "/placeholder.svg" && (
-                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                      <img 
-                        src={renderedOverlays[index].url}
-                        alt={`Overlay ${index + 1}`}
-                        style={{
-                          position: 'absolute',
-                          left: `${renderedOverlays[index].position.x}px`,
-                          top: `${renderedOverlays[index].position.y}px`,
-                          transform: `translate(-50%, -50%) scale(${renderedOverlays[index].scale || 1})`,
-                          transformOrigin: 'center'
-                        }}
-                        onLoad={() => console.log(`Overlay ${index + 1} loaded`)}
-                        onError={() => console.error(`Failed to load overlay ${index + 1}`)}
-                      />
-                    </div>
-                  )}
                 </div>
                   {showDate && (
                 <div className="pt-2 text-xs text-gray-600 font-mono">

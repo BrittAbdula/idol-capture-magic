@@ -178,59 +178,85 @@ const PhotoBooth: React.FC = () => {
 
   // Sync local settings state back to photoStripData in context whenever local state changes
   useEffect(() => {
-    if (photoStripData) {
-      setPhotoStripData((prevData: PhotoStripSessionData | null) => {
-        if (!prevData) return null;
-        return {
-          ...prevData,
-          photoBoothSettings: {
-            ...prevData.photoBoothSettings,
-            aspectRatio: aspectRatio,
-            countdown: countdown,
-            photoNum: photoNum,
-            filter: filter,
-            lightColor: lightColor,
-            sound: playSound
-          },
-          // Note: photoOverlays are synced in the other useEffect that depends on photoNum
-        };
-      });
+    if (!photoStripData) return;
+    
+    // Skip the update if we're already in sync to prevent infinite loops
+    const currentSettings = photoStripData.photoBoothSettings;
+    if (
+      currentSettings.aspectRatio === aspectRatio &&
+      currentSettings.countdown === countdown &&
+      currentSettings.photoNum === photoNum &&
+      currentSettings.filter === filter &&
+      currentSettings.lightColor === lightColor &&
+      currentSettings.sound === playSound
+    ) {
+      return;
     }
+
+    setPhotoStripData((prevData: PhotoStripSessionData | null) => {
+      if (!prevData) return null;
+      return {
+        ...prevData,
+        photoBoothSettings: {
+          ...prevData.photoBoothSettings,
+          aspectRatio: aspectRatio,
+          countdown: countdown,
+          photoNum: photoNum,
+          filter: filter,
+          lightColor: lightColor,
+          sound: playSound
+        },
+      };
+    });
   }, [aspectRatio, countdown, photoNum, filter, lightColor, playSound, photoStripData]);
 
   // Ensure currentPhotoOverlays is synced with photoStripData and photoNum
+  // This useEffect is separated to break the circular dependency
   useEffect(() => {
-    if (!photoStripData) return; // Wait for photoStripData to be initialized
-
+    if (!photoStripData) return;
+    
+    // Only update if photoNum doesn't match or we don't have enough overlays
+    if (photoStripData.photoBoothSettings.photoNum === photoNum && 
+        currentPhotoOverlays.length === photoNum) {
+      return;
+    }
+    
     // Ensure we have the right number of overlays and update their associated data
     const updatedOverlays = Array(photoNum).fill(null).map((_, index) => {
       const existingOverlay = currentPhotoOverlays[index];
       const photoPos = photoStripData.photoPositions?.[index] || null;
 
       return {
-        url: existingOverlay?.url || photoStripData.photoOverlays?.[index]?.url || "/placeholder.svg", // Prefer existing, then data from context, then default
+        url: existingOverlay?.url || photoStripData.photoOverlays?.[index]?.url || "/placeholder.svg",
         position: existingOverlay?.position || photoStripData.photoOverlays?.[index]?.position || { x: photoStripData.canvasSize.width / 2, y: photoStripData.canvasSize.height / (photoNum + 1) * (index + 1) },
         scale: existingOverlay?.scale || photoStripData.photoOverlays?.[index]?.scale || 1.0,
-        // Always use current photoStripData's canvasSize and photoPosition
         canvasSize: photoStripData.canvasSize,
         photoPosition: photoPos,
       };
     });
 
-    // Deep comparison needed for objects/arrays to avoid infinite loops
-    if (JSON.stringify(updatedOverlays) !== JSON.stringify(currentPhotoOverlays)) {
-      setCurrentPhotoOverlays(updatedOverlays);
-      // Update photoStripData in context with the new overlay structure
-      setPhotoStripData((prevData: PhotoStripSessionData | null) => {
-         if (!prevData) return null;
-         return {
-           ...prevData,
-           photoOverlays: updatedOverlays
-         };
-      });
+    // Update local state first
+    setCurrentPhotoOverlays(updatedOverlays);
+    
+  }, [photoNum, photoStripData]);
+  
+  // Separate effect to update photoStripData.photoOverlays when currentPhotoOverlays changes
+  useEffect(() => {
+    if (!photoStripData || currentPhotoOverlays.length === 0) return;
+    
+    // Skip if photoOverlays in context are already the same
+    if (JSON.stringify(photoStripData.photoOverlays) === JSON.stringify(currentPhotoOverlays)) {
+      return;
     }
-
-  }, [photoNum, photoStripData, currentPhotoOverlays]); // Added currentPhotoOverlays to dependencies for two-way sync
+    
+    setPhotoStripData(prevData => {
+      if (!prevData) return null;
+      return {
+        ...prevData,
+        photoOverlays: currentPhotoOverlays
+      };
+    });
+  }, [currentPhotoOverlays, photoStripData]);
 
   const handlePhotoNumChange = (value: string) => {
     const newPhotoNum = Number(value);
