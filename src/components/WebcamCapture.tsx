@@ -317,7 +317,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         0, 0, canvas.width, canvas.height             // Destination rectangle on canvas
       );
 
-      // Draw the overlay onto the canvas if active *before* restoring context
+      ctx.restore(); // Restore context state (removes filter and mirroring)
+
+      // Draw the overlay onto the canvas if active *after* restoring context
       const currentOverlay = photoOverlays && photoCount < photoOverlays.length ? photoOverlays[photoCount] : null;
       const currentOverlayImgElement = overlayImages[photoCount]; // Use preloaded image
 
@@ -347,12 +349,7 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           overlayDestHeight = canvas.height;
           overlayDestWidth = canvas.height * overlayAspectRatio;
           overlayDestX = (canvas.width - overlayDestWidth) / 2;
-          overlayDestY = 0;
-        }
-
-        // Adjust overlay position if mirroring is active
-        if (mirrored) {
-            overlayDestX = canvas.width - (overlayDestX + overlayDestWidth);
+          overlayDestY = (canvas.height - overlayDestHeight) / 2; // Centering vertically too
         }
 
         // Draw overlay onto the canvas using calculated dimensions
@@ -361,8 +358,6 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({
           overlayDestX, overlayDestY, overlayDestWidth, overlayDestHeight
         );
       }
-
-      ctx.restore(); // Restore context state (removes filter and mirroring)
 
       const imageDataURL = canvas.toDataURL('image/jpeg');
       const newCapturedImages = [...capturedImages, imageDataURL];
