@@ -18,6 +18,7 @@ import TemplateCreator from "./pages/TemplateCreator";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import SharePage from "./pages/SharePage";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ const App = () => {
                 {/* <Route path="/template-creator" element={<TemplateCreator />} /> */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/share" element={<SharePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

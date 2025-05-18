@@ -36,6 +36,7 @@ const PhotoStripPage: React.FC = () => {
   const { photoStripData, setPhotoStripData, updatePhotos, updateBackground, updateText, updateDecoration, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const stripCanvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#F7DC6F');
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [showDate, setShowDate] = useState<boolean>(true);
@@ -308,40 +309,52 @@ const PhotoStripPage: React.FC = () => {
     }
 
     setIsSharing(true);
-    
+
     try {
-      const imgElement = document.querySelector('.photo-strip-preview img');
-      
-      if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
-        throw new Error("Could not find photo strip image element");
+      // Use canvas ref to get image blob
+      const blob = await new Promise<Blob | null>(resolve => {
+        if (stripCanvasRef.current) {
+          stripCanvasRef.current.toBlob(resolve, 'image/png');
+        } else {
+          resolve(null);
+        }
+      });
+
+      if (!blob) {
+        throw new Error("Could not generate image blob from canvas.");
       }
-      
-      const response = await fetch(imgElement.src);
-      const blob = await response.blob();
-      
-      if (navigator.share) {
-        await navigator.share({
-          title: 'My Photo Strip from IdolBooth',
-          text: 'Check out my photo strip from IdolBooth!',
-          files: [new File([blob], 'photo-strip.jpg', { type: 'image/jpeg' })]
-        });
-        toast.success("Photo strip shared successfully!");
-      } else {
-        const shareUrl = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.download = `photo_strip_${Date.now()}.jpg`;
-        link.href = shareUrl;
-        link.click();
-        
-        URL.revokeObjectURL(shareUrl);
-        
-        toast.info("Sharing not supported on this browser. Photo strip downloaded instead.");
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', blob, 'photostrip.png');
+
+      // Upload to server
+      const response = await fetch('https://api.idolbooth.com/api/photos/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to upload image: ${errorData.message || response.statusText}`);
       }
+
+      const data = await response.json();
+      const imageUrl = data.imageUrl;
+
+      if (!imageUrl) {
+          throw new Error("Upload successful, but no imageUrl returned.");
+      }
+
+      // Navigate to the new share page with the image URL
+      navigate('/share', { state: { imageUrl: imageUrl } });
+
+      toast.success("Photo strip uploaded. Redirecting to share page.");
+
     } catch (error) {
       console.error("Share error:", error);
-      if (error instanceof Error && error.name === 'AbortError') {
-        toast.info("Share operation was cancelled");
+      if (error instanceof Error) {
+        toast.error(`Failed to share photo strip: ${error.message}`);
       } else {
         toast.error("Failed to share photo strip");
       }
@@ -380,6 +393,7 @@ const PhotoStripPage: React.FC = () => {
               <div className="flex flex-col items-center">
                 <div className="mb-4 relative mx-auto photo-strip-preview max-h-[60vh] overflow-auto md:max-h-none md:overflow-visible">
                   <PhotoStrip 
+                    ref={stripCanvasRef}
                     images={processedData.processedPhotos}
                     filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
                     backgroundColor={photoStripData?.background?.color || '#F7DC6F'}

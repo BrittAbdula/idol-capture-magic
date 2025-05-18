@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { toast } from 'sonner';
 
 interface PhotoStripProps {
@@ -22,7 +22,7 @@ interface PhotoStripProps {
   cols?: number;
 }
 
-const PhotoStrip: React.FC<PhotoStripProps> = ({ 
+const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({ 
   images, 
   filter, 
   showControls = true,
@@ -32,12 +32,15 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   showDate = true,
   margin = 20,
   cols = 1,
-}) => {
+}, ref) => {
   const [loaded, setLoaded] = useState(false);
   const [renderedImages, setRenderedImages] = useState<string[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const stripRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Expose the internal canvas ref to the external ref
+  useImperativeHandle(ref, () => canvasRef.current!, []);
   
   // Process incoming images and set them for rendering - with stable dependency array
   useEffect(() => {
@@ -507,43 +510,56 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
   }, [margin, cols, loaded, renderedImages, generatePhotoStripPreview]);
 
   return (
-    <div className="flex flex-col items-center" ref={stripRef}>
-      {/* Hidden canvas for rendering */}
-      <canvas ref={canvasRef} className="hidden" />
-      
+    <div 
+      ref={stripRef} // Keep internal ref for layout calculations if needed
+      style={{
+        width: '100%',
+        // Background color applied to the container when previewUrl is not ready
+        backgroundColor: (!previewUrl && backgroundColor) ? (isDarkColor(backgroundColor) ? '#333' : backgroundColor) : undefined,
+        padding: `${margin}px` // Apply overall padding/margin
+      }}
+      className="photo-strip-container relative flex justify-center"
+    >
+      {/* Hidden canvas for rendering - not displayed directly */}
+      <canvas ref={canvasRef} className="hidden"></canvas>
+
       {!loaded || renderedImages.length === 0 ? (
+        // Loading or no photos state
         <div className="text-center text-gray-400 p-4">
           <p>Take photos to see your photo strip here</p>
         </div>
       ) : (
-        <div className="flex flex-col items-center mt-4 max-w-full">
-          {previewUrl ? (
-            <div 
-              className="shadow-lg"
-              style={{ 
-                maxWidth: '280px',
-                maxHeight: '600px',
-                backgroundColor: backgroundColor || '#FFFFFF' // Apply background to the container
-              }}
-            >
-              <img 
-                src={previewUrl} 
-                alt="Photo Strip Preview" 
-                className="w-full h-auto" 
-                style={{ backgroundColor: backgroundColor || '#FFFFFF' }} // Apply background to the image as well
-              />
-            </div>
-          ) : (
+        // Render the preview image or individual images while generating
+        previewUrl ? (
+          // Final rendered photo strip image
+          <div 
+            className="shadow-lg"
+            style={{
+              maxWidth: '280px',
+              maxHeight: '600px',
+              // Background color applied here when previewUrl is ready
+              backgroundColor: backgroundColor || '#FFFFFF'
+            }}
+          >
+            <img 
+              src={previewUrl} 
+              alt="Photo Strip Preview" 
+              className="w-full h-auto block" // Ensure image takes up full width of its container
+              style={{ backgroundColor: backgroundColor || '#FFFFFF' }} // Apply background to the image as well (optional, container should suffice)
+            />
+          </div>
+        ) : (
+          // Show individual images while generating the canvas preview
           <div 
             className="bg-white p-5 pb-10"
-            style={{ 
+            style={{
               maxWidth: '280px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                backgroundColor: backgroundColor || '#FFFFFF'
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              backgroundColor: backgroundColor || '#FFFFFF'
             }}
           >
             {renderedImages.map((image, index) => (
-              <div key={index} className="mb-4">
+              <div key={index} className="mb-4 last:mb-0">
                 <div className={`${getFilterClassName()} overflow-hidden relative`}>
                   <img 
                     src={image} 
@@ -553,30 +569,23 @@ const PhotoStrip: React.FC<PhotoStripProps> = ({
                     onError={() => console.error(`Failed to load photo ${index + 1}`)}
                   />
                 </div>
-                  {showDate && (
+                  {showDate && ( // Only show date below each individual photo in this state
                 <div className="pt-2 text-xs text-gray-600 font-mono">
                       {new Date().toLocaleDateString()}
                 </div>
                   )}
-                {index < renderedImages.length - 1 && (
-                  <div className="w-full border-t border-gray-300 my-4"></div>
-                )}
+                {/* No separator between images when using canvas for final output */}
               </div>
             ))}
-              {text && text.content && (
-                <div className="text-center mt-4" style={{ color: text.color || '#000000' }}>
-                  {text.content}
-                </div>
-              )}
-            <div className="text-center text-xs text-gray-500 font-mono mt-2">
-              Thank you for using IdolBooth!
+            {/* Text and Watermark only shown on final canvas output, not individual previews */}
+            <div className="text-center text-xs text-gray-500 font-mono mt-4">
+              Generating preview...
+            </div>
           </div>
-        </div>
-      )}
-        </div>
+        )
       )}
     </div>
   );
-};
+});
 
 export default PhotoStrip;
