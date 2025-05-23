@@ -236,19 +236,6 @@ const MultiPhotoUpload: React.FC<MultiPhotoUploadProps> = ({
                 </div>
               ))}
               
-              {photos.length < 9 && (
-                <div 
-                  onClick={triggerFileInput}
-                  className="relative cursor-pointer"
-                >
-                  <AspectRatio ratio={getRatioValue()}>
-                    <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md hover:border-idol-gold transition-colors bg-gray-50">
-                      <Plus className="w-6 h-6 text-gray-400" />
-                      <span className="text-xs text-gray-500 mt-1">Add more</span>
-                    </div>
-                  </AspectRatio>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -257,7 +244,7 @@ const MultiPhotoUpload: React.FC<MultiPhotoUploadProps> = ({
       <div className="flex justify-center">
         <Button
           onClick={handleComplete}
-          className="idol-button px-6 py-2"
+          className="idol-button-square text-sm py-2"
           disabled={photos.length < 1}
         >
           Create Photo Strip

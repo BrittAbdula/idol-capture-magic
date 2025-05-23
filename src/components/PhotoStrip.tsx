@@ -20,6 +20,7 @@ interface PhotoStripProps {
   showDate?: boolean;
   margin?: number;
   cols?: number;
+  showBorder?: boolean;
 }
 
 const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({ 
@@ -32,6 +33,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
   showDate = true,
   margin = 20,
   cols = 1,
+  showBorder = false,
 }, ref) => {
   const [loaded, setLoaded] = useState(false);
   const [renderedImages, setRenderedImages] = useState<string[]>([]);
@@ -74,7 +76,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
     if (loaded && renderedImages.length > 0) {
       generatePhotoStripPreview();
     }
-  }, [loaded, renderedImages, backgroundColor, text, decoration, showDate, filter, margin, cols]);
+  }, [loaded, renderedImages, backgroundColor, text, decoration, showDate, filter, margin, cols, showBorder]);
 
   const getFilterClassName = () => {
     switch (filter) {
@@ -87,7 +89,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
     }
   };
 
-  // 新增函数：计算对称的照片位置
+  // Updated function: Calculate symmetric photo positions with proper 0px margin handling
   const calculateSymmetricPositions = (
     photoCount: number,
     canvasWidth: number,
@@ -96,9 +98,9 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
   ) => {
     const positions = [];
 
-    // Margin around the canvas edges (same as photo margin for symmetry)
-    const outerMargin = margin;
-    const photoMargin = margin;
+    // Handle 0px margin case - use minimal outer margin for canvas structure
+    const outerMargin = margin === 0 ? 0 : margin;
+    const photoMargin = margin; // Photo spacing can be 0
 
     // Available dimensions for photos
     const availableWidth = canvasWidth - (outerMargin * 2);
@@ -109,8 +111,8 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
     // Calculate photo size, maintaining fixed aspect ratio (4:3)
     const photoRatio = 4 / 3; // Standard photo aspect ratio
 
-    // Calculate column width
-    const totalHorizontalMargin = photoMargin * (cols - 1);
+    // Calculate column width - handle 0 margin case
+    const totalHorizontalMargin = photoMargin * Math.max(0, cols - 1);
     const photoWidth = (availableWidth - totalHorizontalMargin) / cols;
     // Calculate height based on aspect ratio
     const photoHeight = photoWidth / photoRatio;
@@ -118,7 +120,8 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
     // Calculate total canvas height: top outer margin + photo height of all rows + row spacing + bottom area height
     // Bottom area height is a fixed pixel value, used for placing text, date, and watermark
     const footerHeight = 150; // Reserve 150px as the bottom footer area
-    const canvasHeight = outerMargin * 2 + (rows * photoHeight) + ((rows - 1) * photoMargin) + footerHeight;
+    const totalVerticalPhotoMargin = photoMargin * Math.max(0, rows - 1);
+    const canvasHeight = outerMargin * 2 + (rows * photoHeight) + totalVerticalPhotoMargin + footerHeight;
 
     // Determine vertical starting position for photos
     const verticalStart = outerMargin; // Photos start after top outer margin
@@ -151,7 +154,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
     return { positions, canvasHeight, footerHeight };
   };
 
-  // 新增函数：绘制照片时保持原始比例
+  // Updated function: Draw photo maintaining aspect ratio with proper border handling for 0px margin
   const drawPhotoMaintainingAspectRatio = (
     ctx: CanvasRenderingContext2D, 
     img: HTMLImageElement, 
@@ -272,24 +275,26 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
           
           if (!pos) { // Skip if position is undefined
             console.warn(`Skipping photo ${index} due to missing position data`);
-        return;
-      }
-      
-          // Draw white border/frame
-          const borderWidth = 5 * (pos.width / 800); // Scale border with photo size relative to standard 800 width
-      ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(
-            pos.x - borderWidth, 
-            pos.y - borderWidth, 
-            pos.width + (borderWidth * 2), 
-            pos.height + (borderWidth * 2)
-          );
+            return;
+          }
+          
+          // Draw white border/frame based on showBorder setting
+          if (showBorder) {
+            const borderWidth = Math.max(2, 5 * (pos.width / 800)); // Scaled border width
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(
+              pos.x - borderWidth, 
+              pos.y - borderWidth, 
+              pos.width + (borderWidth * 2), 
+              pos.height + (borderWidth * 2)
+            );
+          }
           
           // Apply filter if needed
-      if (filter !== 'Normal') {
+          if (filter !== 'Normal') {
             ctx.save();
             
-        switch (filter) {
+            switch (filter) {
               case 'Warm':
                 ctx.filter = 'sepia(0.3) brightness(1.05)';
                 break;
@@ -425,7 +430,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
         
         setPreviewUrl(canvas.toDataURL('image/jpeg'));
       });
-  }, [renderedImages, backgroundColor, text, decoration, showDate, filter, margin, cols]);
+  }, [renderedImages, backgroundColor, text, decoration, showDate, filter, margin, cols, showBorder]);
 
   const isDarkColor = (hexColor: string): boolean => {
     const hex = hexColor.replace('#', '');
@@ -474,14 +479,14 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
     // Give it time to render and update previewUrl
     setTimeout(() => {
       if (previewUrl) { // Check previewUrl again after timeout
-      const link = document.createElement('a');
-      link.download = `photo_strip_${Date.now()}.jpg`;
+        const link = document.createElement('a');
+        link.download = `photo_strip_${Date.now()}.jpg`;
         link.href = previewUrl;
         document.body.appendChild(link);
-      link.click();
+        link.click();
         document.body.removeChild(link);
       
-      toast.success("Photo strip downloaded successfully!");
+        toast.success("Photo strip downloaded successfully!");
       } else {
         toast.error("Failed to generate photo strip");
       }
@@ -507,7 +512,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [margin, cols, loaded, renderedImages, generatePhotoStripPreview]);
+  }, [margin, cols, showBorder, loaded, renderedImages, generatePhotoStripPreview]);
 
   return (
     <div 
@@ -516,7 +521,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
         width: '100%',
         // Background color applied to the container when previewUrl is not ready
         backgroundColor: (!previewUrl && backgroundColor) ? (isDarkColor(backgroundColor) ? '#333' : backgroundColor) : undefined,
-        padding: `${margin}px` // Apply overall padding/margin
+        padding: margin === 0 ? '0px' : `${margin}px` // Handle 0px margin case for container padding
       }}
       className="photo-strip-container relative flex justify-center"
     >
@@ -555,11 +560,12 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
             style={{
               maxWidth: '280px',
               boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-              backgroundColor: backgroundColor || '#FFFFFF'
+              backgroundColor: backgroundColor || '#FFFFFF',
+              padding: margin === 0 ? '0px' : undefined // Remove padding for 0px margin
             }}
           >
             {renderedImages.map((image, index) => (
-              <div key={index} className="mb-4 last:mb-0">
+              <div key={index} className={margin === 0 ? "mb-0" : "mb-4 last:mb-0"}>
                 <div className={`${getFilterClassName()} overflow-hidden relative`}>
                   <img 
                     src={image} 
@@ -569,11 +575,11 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
                     onError={() => console.error(`Failed to load photo ${index + 1}`)}
                   />
                 </div>
-                  {showDate && ( // Only show date below each individual photo in this state
-                <div className="pt-2 text-xs text-gray-600 font-mono">
-                      {new Date().toLocaleDateString()}
-                </div>
-                  )}
+                {showDate && ( // Only show date below each individual photo in this state
+                  <div className="pt-2 text-xs text-gray-600 font-mono">
+                    {new Date().toLocaleDateString()}
+                  </div>
+                )}
                 {/* No separator between images when using canvas for final output */}
               </div>
             ))}

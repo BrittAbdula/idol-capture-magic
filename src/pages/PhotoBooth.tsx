@@ -30,17 +30,89 @@ import { getTemplate } from '../data/templates';
 import { Position, PhotoOverlay, defaultAspectRatios, PhotoStripSessionData } from '../contexts/PhotoStripContext';
 import SEO from '../components/SEO'; 
 
+// 定义本地存储的设置接口
+interface LocalSettings {
+  aspectRatio: string;
+  filter: string;
+  photoNum: number;
+  countdown: number;
+  playSound: boolean;
+  lightColor: string;
+}
+
+// 默认设置
+const defaultSettings: LocalSettings = {
+  aspectRatio: '4:3',
+  filter: 'Normal',
+  photoNum: 4,
+  countdown: 3,
+  playSound: false,
+  lightColor: '#FFD700'
+};
+
+// 本地存储键名
+const LOCAL_STORAGE_KEY = 'photoBoothSettings';
+
+// 本地存储工具函数
+const settingsStorage = {
+  // 保存设置到本地存储
+  save: (settings: LocalSettings) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.warn('Failed to save settings to localStorage:', error);
+    }
+  },
+
+  // 从本地存储加载设置
+  load: (): LocalSettings => {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // 验证并合并设置，确保所有字段都存在
+        return {
+          aspectRatio: parsed.aspectRatio || defaultSettings.aspectRatio,
+          filter: parsed.filter || defaultSettings.filter,
+          photoNum: parsed.photoNum || defaultSettings.photoNum,
+          countdown: parsed.countdown || defaultSettings.countdown,
+          playSound: parsed.playSound !== undefined ? parsed.playSound : defaultSettings.playSound,
+          lightColor: parsed.lightColor || defaultSettings.lightColor
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to load settings from localStorage:', error);
+    }
+    return defaultSettings;
+  },
+
+  // 清除本地存储的设置
+  clear: () => {
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch (error) {
+      console.warn('Failed to clear settings from localStorage:', error);
+    }
+  }
+};
+
 const PhotoBooth: React.FC = () => {
   const [searchParams] = useSearchParams();
   const templateFromQuery = searchParams.get('template');
   
   const [photoStripImages, setPhotoStripImages] = useState<string[]>([]);
-  const [aspectRatio, setAspectRatio] = useState<string>('4:3');
-  const [filter, setFilter] = useState('Normal');
-  const [photoNum, setPhotoNum] = useState(4);
-  const [countdown, setCountdown] = useState(1);
-  const [playSound, setPlaySound] = useState(false);
-  const [lightColor, setLightColor] = useState('#FFD700');
+  
+  // 从本地存储加载初始设置
+  const [localSettings, setLocalSettings] = useState<LocalSettings>(() => settingsStorage.load());
+  
+  // 使用本地设置初始化状态
+  const [aspectRatio, setAspectRatio] = useState<string>(localSettings.aspectRatio);
+  const [filter, setFilter] = useState(localSettings.filter);
+  const [photoNum, setPhotoNum] = useState(localSettings.photoNum);
+  const [countdown, setCountdown] = useState(localSettings.countdown);
+  const [playSound, setPlaySound] = useState(localSettings.playSound);
+  const [lightColor, setLightColor] = useState(localSettings.lightColor);
+  
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState('general');
   
@@ -67,6 +139,44 @@ const PhotoBooth: React.FC = () => {
 
   const { photoStripData, setPhotoStripData, updatePhotos, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
   const navigate = useNavigate();
+
+  // 保存设置到本地存储的函数
+  const saveSettingsToLocal = (newSettings: Partial<LocalSettings>) => {
+    const updatedSettings = { ...localSettings, ...newSettings };
+    setLocalSettings(updatedSettings);
+    settingsStorage.save(updatedSettings);
+  };
+
+  // 包装设置更新函数，自动保存到本地存储
+  const updateAspectRatio = (value: string) => {
+    setAspectRatio(value);
+    saveSettingsToLocal({ aspectRatio: value });
+  };
+
+  const updateFilter = (value: string) => {
+    setFilter(value);
+    saveSettingsToLocal({ filter: value });
+  };
+
+  const updatePhotoNum = (value: number) => {
+    setPhotoNum(value);
+    saveSettingsToLocal({ photoNum: value });
+  };
+
+  const updateCountdown = (value: number) => {
+    setCountdown(value);
+    saveSettingsToLocal({ countdown: value });
+  };
+
+  const updatePlaySound = (value: boolean) => {
+    setPlaySound(value);
+    saveSettingsToLocal({ playSound: value });
+  };
+
+  const updateLightColor = (value: string) => {
+    setLightColor(value);
+    saveSettingsToLocal({ lightColor: value });
+  };
   
   useEffect(() => {
     const loadInitialData = () => {
@@ -79,7 +189,7 @@ const PhotoBooth: React.FC = () => {
         if (template) {
           setCurrentTemplate(template);
 
-          // Initialize photoStripData from template
+          // Initialize photoStripData from template, but use local settings for photoBoothSettings
           initialPhotoStripData = {
             photoStripId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
             templateId: template.templateId,
@@ -92,7 +202,15 @@ const PhotoBooth: React.FC = () => {
             decoration: template.decoration,
             photos: [], // Start with empty photos array
             text: template.text, // Use template text config
-            photoBoothSettings: template.photoBoothSettings,
+            photoBoothSettings: {
+              // 使用本地保存的设置，而不是模板设置
+              aspectRatio: localSettings.aspectRatio,
+              countdown: localSettings.countdown,
+              photoNum: localSettings.photoNum,
+              filter: localSettings.filter,
+              lightColor: localSettings.lightColor,
+              sound: localSettings.playSound
+            },
           };
 
           // Initialize currentPhotoOverlays state from template overlays
@@ -111,7 +229,6 @@ const PhotoBooth: React.FC = () => {
 
       // If photoStripData is still null (no template or template not found), create default data
       if (!initialPhotoStripData) {
-        const defaultPhotoNum = 4; // Default photo number
         const defaultCanvasSize = { width: 1200, height: 1600 }; // Default canvas size
         const defaultPhotoPositions = [
           { x: 100, y: 100, width: 400, height: 500 },
@@ -138,19 +255,20 @@ const PhotoBooth: React.FC = () => {
             position: { x: defaultCanvasSize.width / 2, y: defaultCanvasSize.height - 100 },
           },
           photoBoothSettings: {
-            aspectRatio: '4:3',
-            countdown: 3,
-            photoNum: defaultPhotoNum,
-            filter: 'Normal',
-            lightColor: '#FFD700',
-            sound: false
+            // 使用本地保存的设置
+            aspectRatio: localSettings.aspectRatio,
+            countdown: localSettings.countdown,
+            photoNum: localSettings.photoNum,
+            filter: localSettings.filter,
+            lightColor: localSettings.lightColor,
+            sound: localSettings.playSound
           },
         };
         
-        // Initialize currentPhotoOverlays state with default empty overlays based on default photoNum
-        initialOverlays = Array(defaultPhotoNum).fill(null).map((_, index) => ({
+        // Initialize currentPhotoOverlays state with default empty overlays based on local photoNum
+        initialOverlays = Array(localSettings.photoNum).fill(null).map((_, index) => ({
           url: "/placeholder.svg",
-          position: { x: defaultCanvasSize.width / 2, y: defaultCanvasSize.height / (defaultPhotoNum + 1) * (index + 1) },
+          position: { x: defaultCanvasSize.width / 2, y: defaultCanvasSize.height / (localSettings.photoNum + 1) * (index + 1) },
           scale: 1.0,
           canvasSize: defaultCanvasSize,
           photoPosition: defaultPhotoPositions?.[index] || null,
@@ -160,13 +278,14 @@ const PhotoBooth: React.FC = () => {
       // Set the initialized data to context and local state
       setPhotoStripData(initialPhotoStripData);
       setCurrentPhotoOverlays(initialOverlays);
-      setPhotoNum(initialPhotoStripData.photoBoothSettings.photoNum); // Sync local photoNum state
-      setAspectRatio(initialPhotoStripData.photoBoothSettings.aspectRatio); // Sync local aspectRatio state
-      setFilter(initialPhotoStripData.photoBoothSettings.filter || 'Normal'); // Sync local filter state
-      setCountdown(initialPhotoStripData.photoBoothSettings.countdown); // Sync local countdown state
-      setPlaySound(initialPhotoStripData.photoBoothSettings.sound); // Sync local sound state
-      setLightColor(initialPhotoStripData.photoBoothSettings.lightColor || '#FFD700'); // Sync local lightColor state
-
+      
+      // 确保组件状态与本地设置保持同步
+      setPhotoNum(localSettings.photoNum);
+      setAspectRatio(localSettings.aspectRatio);
+      setFilter(localSettings.filter);
+      setCountdown(localSettings.countdown);
+      setPlaySound(localSettings.playSound);
+      setLightColor(localSettings.lightColor);
     };
 
     // Load data only once on mount or when templateFromQuery changes
@@ -174,7 +293,7 @@ const PhotoBooth: React.FC = () => {
        loadInitialData();
     }
 
-  }, [templateFromQuery]); // Depend only on templateFromQuery to avoid unnecessary re-runs
+  }, [templateFromQuery, localSettings]); // 添加 localSettings 依赖
 
   // Sync local settings state back to photoStripData in context whenever local state changes
   useEffect(() => {
@@ -260,8 +379,24 @@ const PhotoBooth: React.FC = () => {
 
   const handlePhotoNumChange = (value: string) => {
     const newPhotoNum = Number(value);
-    setPhotoNum(newPhotoNum);
+    updatePhotoNum(newPhotoNum); // 使用新的更新函数
     // The useEffect above will sync this change to photoStripData and currentPhotoOverlays
+  };
+  
+  // 添加重置设置到默认值的函数
+  const resetSettingsToDefault = () => {
+    setAspectRatio(defaultSettings.aspectRatio);
+    setFilter(defaultSettings.filter);
+    setPhotoNum(defaultSettings.photoNum);
+    setCountdown(defaultSettings.countdown);
+    setPlaySound(defaultSettings.playSound);
+    setLightColor(defaultSettings.lightColor);
+    
+    // 保存默认设置到本地存储
+    settingsStorage.save(defaultSettings);
+    setLocalSettings(defaultSettings);
+    
+    toast.success("Settings reset to default");
   };
   
   useEffect(() => {
@@ -303,7 +438,7 @@ const PhotoBooth: React.FC = () => {
     }
     
     if (selectedAspectRatio) {
-      setAspectRatio(selectedAspectRatio);
+      updateAspectRatio(selectedAspectRatio); // 使用新的更新函数
     }
     
     // If all photos have been taken, scroll to the photo results section
@@ -811,7 +946,7 @@ const PhotoBooth: React.FC = () => {
                 <DialogHeader>
                   <DialogTitle>Photo Booth Settings</DialogTitle>
                   <DialogDescription>
-                    Customize your photo booth experience
+                    Customize your photo booth experience. Settings are automatically saved locally.
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -827,7 +962,7 @@ const PhotoBooth: React.FC = () => {
                         <Label htmlFor="aspect-ratio">Aspect Ratio</Label>
                         <Select 
                           value={aspectRatio}
-                          onValueChange={setAspectRatio}
+                          onValueChange={updateAspectRatio} // 使用新的更新函数
                         >
                           <SelectTrigger id="aspect-ratio">
                             <SelectValue placeholder="Select aspect ratio" />
@@ -864,7 +999,7 @@ const PhotoBooth: React.FC = () => {
                         <Label htmlFor="countdown">Countdown Timer</Label>
                         <Select 
                           value={countdown.toString()}
-                          onValueChange={(value) => setCountdown(Number(value))}
+                          onValueChange={(value) => updateCountdown(Number(value))} // 使用新的更新函数
                         >
                           <SelectTrigger id="countdown">
                             <SelectValue placeholder="Select countdown time" />
@@ -882,7 +1017,7 @@ const PhotoBooth: React.FC = () => {
                         <Label htmlFor="filter">Default Filter</Label>
                         <Select 
                           value={filter}
-                          onValueChange={setFilter}
+                          onValueChange={updateFilter} // 使用新的更新函数
                         >
                           <SelectTrigger id="filter">
                             <SelectValue placeholder="Select filter" />
@@ -903,7 +1038,7 @@ const PhotoBooth: React.FC = () => {
                         <Switch
                           id="sound"
                           checked={playSound}
-                          onCheckedChange={setPlaySound}
+                          onCheckedChange={updatePlaySound} // 使用新的更新函数
                         />
                       </div>
                       
@@ -914,7 +1049,7 @@ const PhotoBooth: React.FC = () => {
                             type="color"
                             id="light-color"
                             value={lightColor}
-                            onChange={(e) => setLightColor(e.target.value)}
+                            onChange={(e) => updateLightColor(e.target.value)} // 使用新的更新函数
                             className="w-10 h-10 p-0 border-0 rounded-full cursor-pointer"
                           />
                           <input
@@ -923,13 +1058,27 @@ const PhotoBooth: React.FC = () => {
                             onChange={(e) => {
                               const color = e.target.value;
                               if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
-                                setLightColor(color);
+                                updateLightColor(color); // 使用新的更新函数
                               }
                             }}
                             placeholder="#RRGGBB"
                             className="w-24 px-2 py-1 border rounded-md text-sm"
                           />
                         </div>
+                      </div>
+                      
+                      {/* 添加重置按钮 */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <Button 
+                          variant="outline" 
+                          onClick={resetSettingsToDefault}
+                          className="w-full"
+                        >
+                          Reset to Default Settings
+                        </Button>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          This will reset all settings to default values and clear saved preferences.
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
@@ -940,7 +1089,9 @@ const PhotoBooth: React.FC = () => {
                 </Tabs>
                 
                 <DialogClose asChild>
-                  <Button className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600">Save Settings</Button>
+                  <Button className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600">
+                    Save Settings
+                  </Button>
                 </DialogClose>
               </DialogContent>
             </Dialog>
