@@ -1,13 +1,14 @@
-
 import React, { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Camera, Star, Image, Sparkles, ArrowRight, Upload, Download } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO'; 
+import { Button } from '../components/ui/button';
 
 const Index = () => {
   const animatedElementsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -32,7 +33,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white" ref={animatedElementsRef}>
       <SEO 
-        title="Free Idol Photo Booth Online: Take a Virtual Photo with Your Favorite Idol | IdolBooth.com"
+        title="Take a Virtual Photo with Your Favorite Idol Free| IdolBooth.com"
         description="Use our free Idol Photo Booth online to take stunning virtual photos with your favorite Kpop idols, anime characters, and celebrities. Capture your special moments and print them instantly. Try IdolBooth now!"
       />
       <Navbar />
@@ -57,32 +58,32 @@ const Index = () => {
         <div className="container mx-auto px-4 md:px-6 relative z-10 pt-16">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-full py-1 px-4 mb-8 animate-fade-in">
-              <Star className="w-4 h-4 text-idol-gold mr-2" />
-              <span className="text-sm text-white/90">Free Idol Photo Booth Online</span>
+              <Sparkles className="w-4 h-4 text-idol-gold mr-2" />
+              <span className="text-sm text-white/90">AI-Powered Idol Photo Booth</span>
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-up font-montserrat">
-              Capture Your Favorite 
-              <span className="text-idol-gold ml-2">Idol Moments</span>
+              Take Photos with Your 
+              <span className="text-idol-gold ml-2">Favorite Idols</span>
             </h1>
             
             <p className="text-xl text-white/80 mb-8 leading-relaxed animate-fade-up delay-100 font-open-sans">
-              Create amazing K-pop & J-pop style photo strips with our advanced 
-              AI image processing for high-quality, realistic, and captivating results.
+              Create stunning K-pop & J-pop style photo strips with AI-generated idol photos.
+              No photos needed - just describe your dream idol moment!
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-200">
-              <Link to="/template" className="idol-button">
+              <Link to="/photo-strip" className="idol-button">
                 <span className="flex items-center">
-                  <Image className="w-5 h-5 mr-2" />
-                  <span>With Idol</span>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  <span>Upload Your Photos</span>
                 </span>
               </Link>
               
               <Link to="/photo-booth" className="idol-button-outline">
                 <span className="flex items-center">
-                  <Camera className="w-5 h-5 mr-2" />
-                  <span>Quick Shot</span>
+                  <Image className="w-5 h-5 mr-2" />
+                  <span>Capture Your Photo</span>
                 </span>
               </Link>
             </div>
@@ -114,31 +115,31 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             <div className="neo-panel hover-scale animate-on-scroll">
               <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
-                <Camera className="w-6 h-6 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">AI Subject Extraction</h3>
-              <p className="text-gray-600">
-                Our advanced AI automatically extracts subjects from your idol photos for perfect composition.
-              </p>
-            </div>
-            
-            <div className="neo-panel hover-scale animate-on-scroll">
-              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
-                <Star className="w-6 h-6 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Premium Filters</h3>
-              <p className="text-gray-600">
-                Access a variety of filters designed specifically to enhance your idol photo strips.
-              </p>
-            </div>
-            
-            <div className="neo-panel hover-scale animate-on-scroll">
-              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
                 <Sparkles className="w-6 h-6 text-idol-gold" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Instant Photo Strips</h3>
+              <h3 className="text-xl font-semibold mb-3 font-montserrat">AI-Generated Idol Photos</h3>
               <p className="text-gray-600">
-                Generate beautiful photo strips instantly that you can share with friends or download.
+                Create realistic photos with any idol using our advanced AI technology.
+              </p>
+            </div>
+            
+            <div className="neo-panel hover-scale animate-on-scroll">
+              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
+                <Camera className="w-6 h-6 text-idol-gold" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3 font-montserrat">Professional Photo Editing</h3>
+              <p className="text-gray-600">
+                Apply premium filters and effects to create authentic idol-style photos.
+              </p>
+            </div>
+            
+            <div className="neo-panel hover-scale animate-on-scroll">
+              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
+                <Download className="w-6 h-6 text-idol-gold" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3 font-montserrat">Instant Download & Share</h3>
+              <p className="text-gray-600">
+                Download high-quality photo strips or share directly to social media.
               </p>
             </div>
           </div>
@@ -164,11 +165,11 @@ const Index = () => {
             <div className="text-center animate-on-scroll">
               <div className="w-20 h-20 bg-idol-gold/10 rounded-full flex items-center justify-center mb-6 mx-auto relative">
                 <span className="absolute -top-2 -right-2 w-8 h-8 bg-idol-gold rounded-full flex items-center justify-center text-black font-bold">1</span>
-                <Upload className="w-8 h-8 text-idol-gold" />
+                <Sparkles className="w-8 h-8 text-idol-gold" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Upload Idol Photo</h3>
+              <h3 className="text-xl font-semibold mb-3 font-montserrat">Describe Your Idol</h3>
               <p className="text-gray-600">
-                Choose your favorite idol photo or use one from our gallery.
+                Enter the name of your favorite idol or describe the scene you want.
               </p>
             </div>
             
@@ -177,9 +178,9 @@ const Index = () => {
                 <span className="absolute -top-2 -right-2 w-8 h-8 bg-idol-gold rounded-full flex items-center justify-center text-black font-bold">2</span>
                 <Camera className="w-8 h-8 text-idol-gold" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Take Your Photo</h3>
+              <h3 className="text-xl font-semibold mb-3 font-montserrat">AI Generates Your Photo</h3>
               <p className="text-gray-600">
-                Use your webcam to capture your photo or upload an existing one.
+                Our AI creates a realistic photo of you with your idol in seconds.
               </p>
             </div>
             
@@ -196,7 +197,7 @@ const Index = () => {
           </div>
           
           <div className="text-center mt-12 animate-on-scroll">
-            <Link to="/photo-booth" className="idol-button inline-flex items-center">
+            <Link to="/photo-strip" className="idol-button inline-flex items-center">
               Try Now <ArrowRight className="ml-2 w-4 h-4" />
             </Link>
           </div>
@@ -208,23 +209,68 @@ const Index = () => {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-black/70 z-10" />
           <img
-            src="/images/cta.svg"
-            alt="K-pop concert"
-            className="w-full h-full"
+            src="/images/ai-idol.jpg"
+            alt="AI-generated idol photo"
+            className="w-full h-full object-cover"
           />
         </div>
         
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-on-scroll font-montserrat">
-            Idol Concert
+              Your Dream Idol Moment Awaits
             </h2>
             <p className="text-xl text-white/80 mb-8 animate-on-scroll">
-              Capture the Moment, Cherish the Star
+              Create memories with your favorite idols - no camera needed!
             </p>
-            <Link to="/photo-booth" className="idol-button animate-on-scroll">
-              Create Your Photo Strip Now
+            <Link to="/photo-strip" className="idol-button animate-on-scroll">
+              <span className="flex items-center justify-center">
+                <Sparkles className="w-5 h-5 mr-2" />
+                <span>Generate Your Idol Photo Now</span>
+              </span>
             </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* AI Generated Idol Moments Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="text-center mb-12">
+            <h2 className="inline-block text-3xl md:text-4xl font-bold mb-4 animate-on-scroll font-montserrat">
+              <span className="relative">
+                AI-Generated Idol Moments
+                <span className="absolute bottom-0 left-0 w-full h-1 bg-idol-gold opacity-70" />
+              </span>
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto animate-on-scroll">
+              See how our AI creates realistic photos with your favorite idols
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { idol: "BTS", desc: "Concert moment with BTS", image: "/images/bts.png" },
+              { idol: "BLACKPINK", desc: "Backstage with BLACKPINK", image: "/images/blackpink.png" },
+              { idol: "Anime Character", desc: "Meet your favorite anime character", image: "/images/anime.png" }
+            ].map((item, index) => (
+              <div key={index} className="bg-gray-50 rounded-xl overflow-hidden shadow-lg animate-on-scroll">
+                <img src={item.image} alt={item.idol} className="w-full h-48 object-cover" />
+                <div className="p-6">
+                  <h3 className="font-semibold text-lg mb-2">{item.desc}</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Our AI creates realistic photos that look like you were really there
+                  </p>
+                  <Button 
+                    asChild 
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    onClick={() => navigate('/photo-strip')}
+                  >
+                    <Link to="/photo-strip">Try with {item.idol}</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
