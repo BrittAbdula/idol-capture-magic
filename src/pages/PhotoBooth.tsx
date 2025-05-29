@@ -460,7 +460,24 @@ const PhotoBooth: React.FC = () => {
   };
   
   const handleNavigateToPhotoStrip = () => {
-    navigate('/photo-strip');
+    if (!photoStripData) return;
+    
+    // 确保照片数据是最新的
+    const updatedData = {
+      ...photoStripData,
+      photos: photoStripImages,
+      photoOverlays: currentPhotoOverlays
+    };
+    
+    // 更新上下文数据
+    setPhotoStripData(updatedData);
+    
+    // 导航到photo-strip页面，并传递必要数据
+    navigate('/photo-strip', {
+      state: {
+        photoStripData: updatedData
+      }
+    });
   };
   
   const handleRetakePhotos = () => {

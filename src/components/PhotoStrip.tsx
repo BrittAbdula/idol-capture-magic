@@ -21,6 +21,7 @@ interface PhotoStripProps {
   margin?: number;
   cols?: number;
   showBorder?: boolean;
+  isGenerating?: boolean;
 }
 
 const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({ 
@@ -34,6 +35,7 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
   margin = 20,
   cols = 1,
   showBorder = false,
+  isGenerating = false,
 }, ref) => {
   const [loaded, setLoaded] = useState(false);
   const [renderedImages, setRenderedImages] = useState<string[]>([]);
@@ -515,81 +517,91 @@ const PhotoStrip = forwardRef<HTMLCanvasElement, PhotoStripProps>(({
   }, [margin, cols, showBorder, loaded, renderedImages, generatePhotoStripPreview]);
 
   return (
-    <div 
-      ref={stripRef} // Keep internal ref for layout calculations if needed
-      style={{
-        width: '100%',
-        // Background color applied to the container when previewUrl is not ready
-        backgroundColor: (!previewUrl && backgroundColor) ? (isDarkColor(backgroundColor) ? '#333' : backgroundColor) : undefined,
-        padding: margin === 0 ? '0px' : `${margin}px` // Handle 0px margin case for container padding
-      }}
-      className="photo-strip-container relative flex justify-center"
-    >
-      {/* Hidden canvas for rendering - not displayed directly */}
-      <canvas ref={canvasRef} className="hidden"></canvas>
-
-      {!loaded || renderedImages.length === 0 ? (
-        // Loading or no photos state
-        <div className="text-center text-gray-400 p-4">
-          <p>Take photos to see your photo strip here</p>
+    <div className="relative">
+      {isGenerating && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-idol-gold border-t-transparent rounded-full animate-spin mb-3"></div>
+            <span className="text-white font-medium">Generating...</span>
+          </div>
         </div>
-      ) : (
-        // Render the preview image or individual images while generating
-        previewUrl ? (
-          // Final rendered photo strip image
-          <div 
-            className="shadow-lg"
-            style={{
-              maxWidth: '280px',
-              maxHeight: '600px',
-              // Background color applied here when previewUrl is ready
-              backgroundColor: backgroundColor || '#FFFFFF'
-            }}
-          >
-            <img 
-              src={previewUrl} 
-              alt="Photo Strip Preview" 
-              className="w-full h-auto block" // Ensure image takes up full width of its container
-              style={{ backgroundColor: backgroundColor || '#FFFFFF' }} // Apply background to the image as well (optional, container should suffice)
-            />
+      )}
+      <div 
+        ref={stripRef} // Keep internal ref for layout calculations if needed
+        style={{
+          width: '100%',
+          // Background color applied to the container when previewUrl is not ready
+          backgroundColor: (!previewUrl && backgroundColor) ? (isDarkColor(backgroundColor) ? '#333' : backgroundColor) : undefined,
+          padding: margin === 0 ? '0px' : `${margin}px` // Handle 0px margin case for container padding
+        }}
+        className="photo-strip-container relative flex justify-center"
+      >
+        {/* Hidden canvas for rendering - not displayed directly */}
+        <canvas ref={canvasRef} className="hidden"></canvas>
+
+        {!loaded || renderedImages.length === 0 ? (
+          // Loading or no photos state
+          <div className="text-center text-gray-400 p-4">
+            <p>Take photos to see your photo strip here</p>
           </div>
         ) : (
-          // Show individual images while generating the canvas preview
-          <div 
-            className="bg-white p-5 pb-10"
-            style={{
-              maxWidth: '280px',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-              backgroundColor: backgroundColor || '#FFFFFF',
-              padding: margin === 0 ? '0px' : undefined // Remove padding for 0px margin
-            }}
-          >
-            {renderedImages.map((image, index) => (
-              <div key={index} className={margin === 0 ? "mb-0" : "mb-4 last:mb-0"}>
-                <div className={`${getFilterClassName()} overflow-hidden relative`}>
-                  <img 
-                    src={image} 
-                    alt={`Photo ${index + 1}`} 
-                    className="w-full mx-auto block" 
-                    onLoad={() => console.log(`Photo ${index + 1} loaded`)}
-                    onError={() => console.error(`Failed to load photo ${index + 1}`)}
-                  />
-                </div>
-                {showDate && ( // Only show date below each individual photo in this state
-                  <div className="pt-2 text-xs text-gray-600 font-mono">
-                    {new Date().toLocaleDateString()}
-                  </div>
-                )}
-                {/* No separator between images when using canvas for final output */}
-              </div>
-            ))}
-            {/* Text and Watermark only shown on final canvas output, not individual previews */}
-            <div className="text-center text-xs text-gray-500 font-mono mt-4">
-              Generating preview...
+          // Render the preview image or individual images while generating
+          previewUrl ? (
+            // Final rendered photo strip image
+            <div 
+              className="shadow-lg"
+              style={{
+                maxWidth: '280px',
+                maxHeight: '600px',
+                // Background color applied here when previewUrl is ready
+                backgroundColor: backgroundColor || '#FFFFFF'
+              }}
+            >
+              <img 
+                src={previewUrl} 
+                alt="Photo Strip Preview" 
+                className="w-full h-auto block" // Ensure image takes up full width of its container
+                style={{ backgroundColor: backgroundColor || '#FFFFFF' }} // Apply background to the image as well (optional, container should suffice)
+              />
             </div>
-          </div>
-        )
-      )}
+          ) : (
+            // Show individual images while generating the canvas preview
+            <div 
+              className="bg-white p-5 pb-10"
+              style={{
+                maxWidth: '280px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                backgroundColor: backgroundColor || '#FFFFFF',
+                padding: margin === 0 ? '0px' : undefined // Remove padding for 0px margin
+              }}
+            >
+              {renderedImages.map((image, index) => (
+                <div key={index} className={margin === 0 ? "mb-0" : "mb-4 last:mb-0"}>
+                  <div className={`${getFilterClassName()} overflow-hidden relative`}>
+                    <img 
+                      src={image} 
+                      alt={`Photo ${index + 1}`} 
+                      className="w-full mx-auto block" 
+                      onLoad={() => console.log(`Photo ${index + 1} loaded`)}
+                      onError={() => console.error(`Failed to load photo ${index + 1}`)}
+                    />
+                  </div>
+                  {showDate && ( // Only show date below each individual photo in this state
+                    <div className="pt-2 text-xs text-gray-600 font-mono">
+                      {new Date().toLocaleDateString()}
+                    </div>
+                  )}
+                  {/* No separator between images when using canvas for final output */}
+                </div>
+              ))}
+              {/* Text and Watermark only shown on final canvas output, not individual previews */}
+              <div className="text-center text-xs text-gray-500 font-mono mt-4">
+                Generating preview...
+              </div>
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 });

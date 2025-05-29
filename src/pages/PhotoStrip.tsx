@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2, Settings } from 'lucide-react';
+import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2, Settings, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from "@/components/ui/checkbox";
@@ -50,6 +50,8 @@ const PhotoStripPage: React.FC = () => {
   const [showShareDialog, setShowShareDialog] = useState<boolean>(false);
   const [shareUrl, setShareUrl] = useState<string>('');
   const [isCopying, setIsCopying] = useState<boolean>(false);
+  const [customIdol, setCustomIdol] = useState<string>("");
+  const [isGeneratingIdol, setIsGeneratingIdol] = useState<boolean>(false);
 
   // New state for adaptive layout
   const [selectedMargin, setSelectedMargin] = useState<string>('20');
@@ -388,6 +390,49 @@ const PhotoStripPage: React.FC = () => {
     '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
   ];
 
+  const handleGenerateIdol = async () => {
+    setIsGeneratingIdol(true);
+    try {
+      // 获取当前照片条画布
+      const stripCanvas = stripCanvasRef.current;
+      if (!stripCanvas) {
+        throw new Error("Could not find photo strip canvas");
+      }
+
+      // 将画布转换为 Blob
+      const blob = await new Promise<Blob | null>((resolve) => {
+        stripCanvas.toBlob(resolve, 'image/png');
+      });
+      
+      if (!blob) {
+        throw new Error("Failed to convert canvas to blob");
+      }
+
+      const formData = new FormData();
+      formData.append('image', blob, 'photostrip.png');
+      formData.append('idolPrompt', customIdol);
+
+      // 生成偶像照片条
+      const idolResponse = await fetch('https://api.idolbooth.com/api/ai/generate-photo-with-idol', {
+        method: 'POST',
+        body: formData
+      }); 
+
+      if (!idolResponse.ok) {
+        throw new Error("Failed to generate idol photo");
+      }
+
+      const { data } = await idolResponse.json();
+      updatePhotos([data.image_url]); 
+      toast.success("Idol photo strip generated successfully!");
+    } catch (error) {
+      console.error("Generate idol error:", error);
+      toast.error("Failed to generate idol photo strip");
+    } finally {
+      setIsGeneratingIdol(false);
+    }
+  };
+
   console.log("PhotoStripPage render - showUpload:", showUpload);
   console.log("PhotoStripPage render - photoStripData:", processedData.processedPhotos.length, "photos");
 
@@ -399,7 +444,7 @@ const PhotoStripPage: React.FC = () => {
       />
       <Navbar />
 
-      <main className="pt-28 pb-20 px-4">
+      <main className="pt-28 px-4">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center font-montserrat">
             IdolBooth Photo Strip
@@ -420,6 +465,7 @@ const PhotoStripPage: React.FC = () => {
                     margin={parseInt(selectedMargin, 10)}
                     cols={parseInt(selectedCols, 10)}
                     showBorder={showBorder}
+                    isGenerating={isGeneratingIdol}
                   />
                 </div>
 
@@ -432,7 +478,7 @@ const PhotoStripPage: React.FC = () => {
                         <span>Settings</span>
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="bottom" className="h-[40vh] overflow-auto">
+                    <SheetContent side="bottom" className="h-[50vh] overflow-auto">
                       <SheetHeader className="mb-4">
                         <SheetTitle>Photo Strip Settings</SheetTitle>
                         <SheetDescription>
@@ -440,6 +486,71 @@ const PhotoStripPage: React.FC = () => {
                         </SheetDescription>
                       </SheetHeader>
                       <ScrollArea className="h-full pr-4">
+                        {/* 添加生成偶像面板 */}
+                        <div className="glass-panel p-6 mb-6">
+                          <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                            Create with Idol
+                          </h2>
+                          <div className="space-y-6">
+                            <div>
+                              <div className="space-y-3">
+                                <input
+                                  type="text"
+                                  value={customIdol}
+                                  onChange={(e) => setCustomIdol(e.target.value)}
+                                  placeholder="Enter idol name"
+                                  className="w-full px-3 py-2 border rounded-md"
+                                  maxLength={40}
+                                />
+                                <div className="mt-2">
+                                  <p className="text-xs text-gray-500 mb-2">Popular idols:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {[
+                                      "Ariana Grande",
+                                      "BTS",
+                                      "BLACKPINK",
+                                      "JENNIE",
+                                      "Lisa",
+                                      "Rosé",
+                                      "Jisoo",
+                                    ].map(idol => (
+                                      <button
+                                        key={idol}
+                                        onClick={() => setCustomIdol(idol)}
+                                        className={`text-xs px-2 py-1 rounded-full ${customIdol === idol ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'}`}
+                                      >
+                                        {idol}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div className="mt-2">
+                                    <button 
+                                      onClick={handleGenerateIdol}
+                                      disabled={isGeneratingIdol}
+                                      className={`text-xs px-2 py-1 rounded-full flex items-center justify-center w-full ${
+                                        isGeneratingIdol 
+                                          ? 'bg-gray-300 cursor-not-allowed' 
+                                          : customIdol 
+                                            ? 'bg-idol-gold text-black hover:bg-amber-400' 
+                                            : 'bg-gray-100 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {isGeneratingIdol ? (
+                                        <>
+                                          <span className="animate-spin mr-1">🌀</span>
+                                          <span>Generating...</span>
+                                        </>
+                                      ) : (
+                                        <span>Generate with Idol</span>
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
                         {/* Layout Settings */}
                         <div className="glass-panel p-6 mb-6">
                           <h2 className="text-xl font-semibold mb-4 font-montserrat">
@@ -589,7 +700,9 @@ const PhotoStripPage: React.FC = () => {
                                       "My idol moment 💫",
                                       "Forever memory 💖",
                                       "Main character energy ⚡",
-                                      "Ultimate fan moment 🔥"
+                                      "Ultimate fan moment 🔥",
+                                      "Fandom life 💕",
+                                      "Dream came true 🌟"
                                     ].map(caption => (
                                       <button
                                         key={caption}
@@ -674,11 +787,93 @@ const PhotoStripPage: React.FC = () => {
                     <Upload className="w-5 h-5" />
                     <span>Upload Photos</span>
                   </Button>
+
+                  <Button
+                    onClick={handleGenerateIdol}
+                    className="flex-1 idol-button flex items-center justify-center gap-2 py-3 bg-purple-500 hover:bg-purple-600 mb-2"
+                    disabled={isGeneratingIdol}
+                  >
+                    {isGeneratingIdol ? (
+                      <>
+                        <span className="animate-spin mr-1">🌀</span>
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Star className="w-5 h-5" />
+                        <span>Generate with Idol</span>
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
 
               {/* Desktop settings panel - only visible on desktop */}
               <div className="hidden md:flex md:flex-col">
+                <div className="glass-panel p-6 mb-6">
+                  <h2 className="text-xl font-semibold mb-4 font-montserrat">
+                    Create a Photo Strip with your favorite Idol
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={customIdol}
+                          onChange={(e) => setCustomIdol(e.target.value)}
+                          placeholder="Custom idol and scene"
+                          className="w-full px-3 py-2 border rounded-md"
+                          maxLength={40}
+                        />
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500 mb-2">Quick captions:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              "Ariana Grande",
+                              "BTS",
+                              "BLACKPINK",
+                              "JENNIE",
+                              "Lisa",
+                              "Rosé",
+                              "Jisoo",
+                            ].map(idol => (
+                              <button
+                                key={idol}
+                                onClick={() => setCustomIdol(idol)}
+                                className={`text-xs px-2 py-1 rounded-full ${customIdol === idol ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'
+                                  }`}
+                              >
+                                {idol + " " + "💖"}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="mt-2">
+                            <button 
+                              onClick={handleGenerateIdol}
+                              disabled={isGeneratingIdol}
+                              className={`text-xs px-2 py-1 rounded-full flex items-center justify-center ${
+                                isGeneratingIdol 
+                                  ? 'bg-gray-300 cursor-not-allowed' 
+                                  : customIdol 
+                                    ? 'bg-idol-gold text-black hover:bg-amber-400' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                              }`}
+                            >
+                              {isGeneratingIdol ? (
+                                <>
+                                  <span className="animate-spin mr-1">🌀</span> Generating...
+                                </>
+                              ) : (
+                                <span>Generate</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="glass-panel p-6 mb-6">
                   <h2 className="text-xl font-semibold mb-4 font-montserrat">
                     Layout Settings
