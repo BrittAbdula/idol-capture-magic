@@ -20,9 +20,8 @@ const PhotoWithIdol = () => {
 
   const sizeOptions = [
     { label: '1:1', value: '1:1', description: 'Square' },
-    { label: '2:3', value: '2:3', description: 'Portrait' },
     { label: '3:2', value: '3:2', description: 'Landscape' },
-    { label: '4:5', value: '4:5', description: 'Photo' }
+    { label: '2:3', value: '2:3', description: 'Portrait' }
   ];
 
   const uploadImage = async (file: File): Promise<string> => {
@@ -153,10 +152,42 @@ const PhotoWithIdol = () => {
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
+            <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
               {/* Upload Section */}
-              <div className="space-y-6">
-                <Card className="glass-panel">
+              <div className="space-y-4 lg:space-y-6 order-1">
+                {/* Mobile: Combined Upload Card */}
+                <Card className="glass-panel lg:hidden">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Users className="w-5 h-5" />
+                      Upload Photos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Your Photo</label>
+                        <PhotoUpload
+                          onUpload={setUserPhoto}
+                          label="Upload Your Photo"
+                          className="h-32 sm:h-40"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Idol Photo</label>
+                        <PhotoUpload
+                          onUpload={setIdolPhoto}
+                          label="Upload Idol Photo"
+                          className="h-32 sm:h-40"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Desktop: Separate Upload Cards */}
+                <Card className="glass-panel hidden lg:block">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="w-5 h-5" />
@@ -185,17 +216,17 @@ const PhotoWithIdol = () => {
                 </Card>
 
                 <Card className="glass-panel">
-                  <CardHeader>
-                    <CardTitle>Generation Settings</CardTitle>
+                  <CardHeader className="pb-4 lg:pb-6">
+                    <CardTitle className="text-lg lg:text-xl">Generation Settings</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-4 lg:space-y-6">
                     <div>
                       <label className="block text-sm font-medium mb-2">Prompt</label>
                       <Textarea
                         placeholder="Describe how you want the photos to be combined (e.g., 'Create a photo of me and Taylor Swift together at a concert')"
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
-                        className="min-h-[100px]"
+                        className="min-h-[80px] lg:min-h-[100px] resize-none"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         {prompt.length}/100 characters
@@ -204,19 +235,19 @@ const PhotoWithIdol = () => {
 
                     <div>
                       <label className="block text-sm font-medium mb-3">Aspect Ratio</label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-2 lg:gap-3">
                         {sizeOptions.map((option) => (
                           <button
                             key={option.value}
                             onClick={() => setSelectedSize(option.value)}
-                            className={`p-4 rounded-lg border transition-all ${
+                            className={`p-3 lg:p-4 rounded-lg border transition-all hover-scale ${
                               selectedSize === option.value
-                                ? 'border-primary bg-primary/10 text-primary'
-                                : 'border-border hover:border-primary/50'
+                                ? 'border-primary bg-primary/10 text-primary shadow-md'
+                                : 'border-border hover:border-primary/50 hover:bg-primary/5'
                             }`}
                           >
-                            <div className="font-medium">{option.label}</div>
-                            <div className="text-sm text-muted-foreground">{option.description}</div>
+                            <div className="font-medium text-sm lg:text-base">{option.label}</div>
+                            <div className="text-xs lg:text-sm text-muted-foreground mt-1">{option.description}</div>
                           </button>
                         ))}
                       </div>
@@ -225,7 +256,7 @@ const PhotoWithIdol = () => {
                     <Button
                       onClick={handleGenerate}
                       disabled={!userPhoto || !idolPhoto || !prompt.trim() || isGenerating}
-                      className="w-full"
+                      className="w-full animate-fade-in"
                       size="lg"
                     >
                       {isGenerating ? (
@@ -245,25 +276,26 @@ const PhotoWithIdol = () => {
               </div>
 
               {/* Result Section */}
-              <div>
+              <div className="order-2 lg:order-none">
                 <Card className="glass-panel h-full">
-                  <CardHeader>
-                    <CardTitle>Generated Result</CardTitle>
+                  <CardHeader className="pb-4 lg:pb-6">
+                    <CardTitle className="text-lg lg:text-xl">Generated Result</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {generatedImage ? (
-                      <div className="space-y-4">
+                      <div className="space-y-4 animate-fade-in">
                         <div className="relative group">
                           <img
                             src={generatedImage}
                             alt="Generated photo with idol"
-                            className="w-full rounded-lg shadow-lg"
+                            className="w-full rounded-lg shadow-lg hover-scale"
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                             <Button
                               onClick={downloadImage}
                               variant="secondary"
                               size="sm"
+                              className="animate-scale-in"
                             >
                               <Download className="w-4 h-4 mr-2" />
                               Download
@@ -280,23 +312,23 @@ const PhotoWithIdol = () => {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-96 text-center">
+                      <div className="flex flex-col items-center justify-center h-64 lg:h-96 text-center px-4">
                         {isGenerating ? (
-                          <>
-                            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                            <h3 className="text-lg font-medium mb-2">Generating Your Photo</h3>
-                            <p className="text-muted-foreground">This may take up to a minute...</p>
-                          </>
+                          <div className="animate-fade-in">
+                            <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                            <h3 className="text-base lg:text-lg font-medium mb-2">Generating Your Photo</h3>
+                            <p className="text-sm lg:text-base text-muted-foreground">This may take up to a minute...</p>
+                          </div>
                         ) : (
-                          <>
-                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                              <Upload className="w-8 h-8 text-muted-foreground" />
+                          <div className="animate-fade-in">
+                            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                              <Upload className="w-6 h-6 lg:w-8 lg:h-8 text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-medium mb-2">Upload Photos to Get Started</h3>
-                            <p className="text-muted-foreground">
+                            <h3 className="text-base lg:text-lg font-medium mb-2">Upload Photos to Get Started</h3>
+                            <p className="text-sm lg:text-base text-muted-foreground max-w-sm mx-auto">
                               Upload your photo and an idol's photo, then add a prompt to generate amazing composite images.
                             </p>
-                          </>
+                          </div>
                         )}
                       </div>
                     )}
