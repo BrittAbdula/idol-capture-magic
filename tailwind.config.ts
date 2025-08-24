@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -69,7 +70,13 @@ export default {
 					silver: '#C0C0C0',
 					white: '#FFFFFF',
 					gray: '#F0F0F0',
-				}
+				},
+				// Add aliases for backward compatibility
+				'idol-gold': '#FFD700',
+				'idol-black': '#000000',
+				'idol-silver': '#C0C0C0',
+				'idol-white': '#FFFFFF',
+				'idol-gray': '#F0F0F0',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -157,5 +164,5 @@ export default {
 			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 } satisfies Config;

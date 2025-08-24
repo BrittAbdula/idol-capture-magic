@@ -4,15 +4,17 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PhotoUploadProps {
-  onUpload: (file: File) => void;
+  onUpload: (file: File) => void | Promise<void>;
   label?: string;
   className?: string;
+  isUploading?: boolean;
 }
 
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ 
   onUpload, 
   label = "Upload Photo", 
-  className = "" 
+  className = "",
+  isUploading = false
 }) => {
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -35,23 +37,23 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     e.stopPropagation();
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
+      await handleFile(e.dataTransfer.files[0]);
     }
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleFile(e.target.files[0]);
+      await handleFile(e.target.files[0]);
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     // Check if file is an image
     if (!file.type.match('image.*')) {
       toast.error("Please upload an image file");
@@ -74,8 +76,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     reader.readAsDataURL(file);
     
     // Pass the file to parent component
-    onUpload(file);
-    toast.success("Photo uploaded successfully!");
+    await onUpload(file);
   };
 
   const clearFile = () => {
@@ -90,7 +91,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   };
 
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`w-full flex flex-col ${className}`}>
       <input 
         type="file" 
         ref={fileInputRef}
@@ -100,7 +101,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       />
       
       <div 
-        className={`border-2 border-dashed rounded-lg transition-all duration-300 overflow-hidden
+        className={`border-2 border-dashed rounded-lg transition-all duration-300 overflow-hidden bg-gray-50 flex items-center justify-center
                    ${dragging ? 'border-idol-gold bg-idol-gold/5' : 'border-gray-300 hover:border-idol-gold/50'}
                    ${preview ? 'p-0' : 'p-8'}`}
         onDragEnter={handleDragEnter}
@@ -110,13 +111,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         onClick={preview ? undefined : triggerFileInput}
       >
         {preview ? (
-          <div className="relative group">
+          <div className="relative group w-full h-full flex items-center justify-center">
             <img 
               src={preview} 
               alt="Preview" 
-              className="w-full h-full object-cover" 
+              className="max-w-full max-h-full object-contain rounded-lg" 
             />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -130,12 +131,22 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
-              <Upload className="w-8 h-8 text-idol-gold" />
-            </div>
-            <p className="text-lg font-medium mb-2">{label}</p>
-            <p className="text-sm text-gray-500 mb-4">Drag & drop your image here or click to browse</p>
-            <p className="text-xs text-gray-400">JPG, PNG, GIF up to 10MB</p>
+            {isUploading ? (
+              <>
+                <div className="w-16 h-16 border-4 border-idol-gold border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-lg font-medium mb-2">Uploading...</p>
+                <p className="text-sm text-gray-500">Please wait while we upload your image</p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
+                  <Upload className="w-8 h-8 text-idol-gold" />
+                </div>
+                <p className="text-lg font-medium mb-2">{label}</p>
+                <p className="text-sm text-gray-500 mb-4">Drag & drop your image here or click to browse</p>
+                <p className="text-xs text-gray-400">JPG, PNG, GIF up to 10MB</p>
+              </>
+            )}
           </div>
         )}
       </div>

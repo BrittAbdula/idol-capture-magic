@@ -84,6 +84,9 @@ const Navbar = () => {
           <Link to="/" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/' ? 'text-idol-gold' : ''}`}>
             Home
           </Link>
+          <Link to="/photo-with-idol" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-with-idol' ? 'text-idol-gold' : ''}`}>
+            Photo with Idol
+          </Link>
           <Link to="/photo-booth" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : ''}`}>
             Photo Booth
           </Link>
@@ -92,9 +95,6 @@ const Navbar = () => {
           </Link>
           <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
             Photo Strip
-          </Link>
-          <Link to="/photo-with-idol" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-with-idol' ? 'text-idol-gold' : ''}`}>
-            AI Photo
           </Link>
           <Link to="/photo-booth" className="idol-button-square text-sm py-2">
             Try Now
@@ -118,6 +118,9 @@ const Navbar = () => {
             <Link to="/" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/' ? 'text-idol-gold' : 'text-white'}`}>
               Home
             </Link>
+            <Link to="/photo-with-idol" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-with-idol' ? 'text-idol-gold' : 'text-white'}`}>
+              Photo with Idol
+            </Link>
             <Link to="/photo-booth" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : 'text-white'}`}>
               Photo Booth
             </Link>
@@ -129,9 +132,6 @@ const Navbar = () => {
             </Link>
             <Link to="/photo-strip" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : 'text-white'}`}>
               Photo Strip
-            </Link>
-            <Link to="/photo-with-idol" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-with-idol' ? 'text-idol-gold' : 'text-white'}`}>
-              AI Photo
             </Link>
             <Link to="/photo-booth" className="idol-button-square mt-4">
               Try Now

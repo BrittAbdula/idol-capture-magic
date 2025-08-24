@@ -73,10 +73,10 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-200">
-              <Link to="/photo-strip" className="idol-button">
+              <Link to="/photo-with-idol" className="idol-button">
                 <span className="flex items-center">
                   <Sparkles className="w-5 h-5 mr-2" />
-                  <span>Upload Your Photos</span>
+                  <span>Photo with Idol</span>
                 </span>
               </Link>
               
@@ -207,15 +207,15 @@ const Index = () => {
       {/* Call to Action Section */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-black/70 z-10" />
           <img
-            src="/images/ai-idol.jpg"
+            src="/sample/sample-4.jpg"
             alt="AI-generated idol photo"
             className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-black/70 z-10" />
         </div>
         
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="container mx-auto px-4 md:px-6 relative z-20">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-on-scroll font-montserrat">
               Your Dream Idol Moment Awaits
@@ -223,10 +223,10 @@ const Index = () => {
             <p className="text-xl text-white/80 mb-8 animate-on-scroll">
               Create memories with your favorite idols - no camera needed!
             </p>
-            <Link to="/photo-strip" className="idol-button animate-on-scroll">
+            <Link to="/photo-with-idol" className="idol-button animate-on-scroll inline-block">
               <span className="flex items-center justify-center">
                 <Sparkles className="w-5 h-5 mr-2" />
-                <span>Generate Your Idol Photo Now</span>
+                <span>Photo with Idol Now</span>
               </span>
             </Link>
           </div>
