@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import SharePage from "./pages/SharePage";
+import PhotoWithIdol from "./pages/PhotoWithIdol";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -39,9 +40,12 @@ const TitleUpdater = () => {
       } else if (path === "/photo-booth") {
         title = "Take Photos with Your Favorite Idols | Free Online Photo Booth | IdolBooth";
         description = "Our free online Kpop photo booth lets you take virtual photos with your favorite idols. Easy to use, instant results. Try now at IdolBooth.com!";
-      } else if (path === "/photo-strip") {
-        title = "Create Stunning Photo Strips with Idols | IdolBooth";
-        description = "Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator.";
+        } else if (path === "/photo-strip") {
+          title = "Create Stunning Photo Strips with Idols | IdolBooth";
+          description = "Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator.";
+        } else if (path === "/photo-with-idol") {
+          title = "AI Photo with Idol Generator | Create Photos with Your Favorite Stars | IdolBooth";
+          description = "Generate realistic photos with your favorite idols using AI. Upload your photo and an idol's photo to create amazing composite images.";
       } else if (path.includes("/template")) {
         title = "Idol Photo Templates | Choose from Kpop & Anime Templates | IdolBooth";
         description = "Browse our collection of Kpop idol, anime, and celebrity photo templates. Find the perfect template for your virtual photo booth experience.";
@@ -85,6 +89,7 @@ const App = () => {
                 <Route path="/template/:category" element={<TemplateCategoryPage />} />
                 <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
                 {/* <Route path="/template-creator" element={<TemplateCreator />} /> */}
+                <Route path="/photo-with-idol" element={<PhotoWithIdol />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/share" element={<SharePage />} />
