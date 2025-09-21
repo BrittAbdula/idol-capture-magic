@@ -163,15 +163,15 @@ const PhotoWithIdol = () => {
     success: boolean;
     data?: {
       taskId: string;
-      status: string;
-      progress: number;
-      successFlag: boolean;
-      createTime: string;
-      completeTime?: string;
+      state: string; // Changed from 'status' to 'state'
+      model: string;
+      createTime: number;
+      completeTime?: number;
+      costTime?: number;
       params: Record<string, unknown>;
       resultUrls: string[];
-      errorCode?: string;
-      errorMessage?: string;
+      failCode?: string;
+      failMsg?: string;
       statusDescription: string;
     };
     message?: string;
@@ -197,7 +197,8 @@ const PhotoWithIdol = () => {
         attempts++;
         const result = await checkTaskResult(taskId);
 
-        if (result.data?.successFlag && result.data?.resultUrls && result.data.resultUrls.length > 0) {
+        // Updated condition to check for 'success' state and resultUrls
+        if (result.data?.state === 'success' && result.data?.resultUrls && result.data.resultUrls.length > 0) {
           setGeneratedImage(result.data.resultUrls[0]);
           setIsGenerating(false);
           toast.success('Photo generated successfully!');
@@ -207,16 +208,19 @@ const PhotoWithIdol = () => {
           setTimeout(() => setShowConfetti(false), 3000); // 3秒后停止撒花
           
           return;
-        } else if (result.data?.status === 'failed' || result.data?.errorCode) {
+        } else if (result.data?.state === 'failed' || result.data?.failCode) {
           setIsGenerating(false);
-          const errorMsg = result.data?.errorMessage || 'Failed to generate photo. Please try again.';
+          const errorMsg = result.data?.failMsg || 'Failed to generate photo. Please try again.';
           toast.error(errorMsg);
           return;
         } else if (attempts < maxAttempts) {
-          // 显示进度信息
-          if (result.data?.progress) {
-            setGenerationProgress(result.data.progress);
-            console.log(`Generation progress: ${result.data.progress}%`);
+          // Show progress information based on state
+          if (result.data?.state === 'waiting') {
+            setGenerationProgress(10);
+            console.log('Task is waiting to be processed...');
+          } else if (result.data?.state === 'processing') {
+            setGenerationProgress(50);
+            console.log('Task is being processed...');
           }
           setTimeout(poll, 2000); // Check again after 2 seconds
         } else {
