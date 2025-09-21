@@ -50,37 +50,35 @@ const PhotoWithIdol = () => {
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Add ideas keywords
-  const allIdeas = [
-    'fan meeting booth',
-    'red carpet event',
-    'backstage dressing room',
-    'concert stage',
-    'idol practice room',
-    'cafe date vibe',
-    'airport fashion',
-    'street night neon',
-    'finger heart',
-    'V sign',
-    'cheek heart',
-    'hand wave',
-    'peace pose',
-    'shoulder touch',
-    'back-to-back',
-    'ending fairy look'
-  ];
-
   const [displayedIdeas, setDisplayedIdeas] = useState<string[]>([]);
+
+  const refreshIdeas = React.useCallback(() => {
+    const allIdeas = [
+      'fan meeting booth',
+      'red carpet event',
+      'backstage dressing room',
+      'concert stage',
+      'idol practice room',
+      'cafe date vibe',
+      'airport fashion',
+      'street night neon',
+      'finger heart',
+      'V sign',
+      'cheek heart',
+      'hand wave',
+      'peace pose',
+      'shoulder touch',
+      'back-to-back',
+      'ending fairy look'
+    ];
+    const shuffled = [...allIdeas].sort(() => Math.random() - 0.5);
+    setDisplayedIdeas(shuffled.slice(0, 5));
+  }, []);
 
   // Initialize displayed ideas on component mount
   React.useEffect(() => {
     refreshIdeas();
-  }, []);
-
-  const refreshIdeas = () => {
-    const shuffled = [...allIdeas].sort(() => Math.random() - 0.5);
-    setDisplayedIdeas(shuffled.slice(0, 5));
-  };
+  }, [refreshIdeas]);
 
   const addIdeaToPrompt = (idea: string) => {
     setPrompt(idea);
@@ -181,6 +179,7 @@ const PhotoWithIdol = () => {
     try {
       const response = await fetch(`https://api.idolbooth.com/api/ai/photo-with-idol/${taskId}`);
       const data = await response.json();
+      console.log('API Response:', data);
       return data;
     } catch (error) {
       console.error('Error checking task result:', error);
@@ -196,9 +195,16 @@ const PhotoWithIdol = () => {
       try {
         attempts++;
         const result = await checkTaskResult(taskId);
+        
+        // 添加调试信息
+        console.log('Polling result:', result);
+        console.log('Result data:', result.data);
+        console.log('State:', result.data?.state);
+        console.log('ResultUrls:', result.data?.resultUrls);
 
         // Updated condition to check for 'success' state and resultUrls
         if (result.data?.state === 'success' && result.data?.resultUrls && result.data.resultUrls.length > 0) {
+          console.log('Success! Setting generated image to:', result.data.resultUrls[0]);
           setGeneratedImage(result.data.resultUrls[0]);
           setIsGenerating(false);
           toast.success('Photo generated successfully!');
@@ -209,6 +215,7 @@ const PhotoWithIdol = () => {
           
           return;
         } else if (result.data?.state === 'failed' || result.data?.failCode) {
+          console.log('Failed:', result.data?.failMsg);
           setIsGenerating(false);
           const errorMsg = result.data?.failMsg || 'Failed to generate photo. Please try again.';
           toast.error(errorMsg);
@@ -221,6 +228,8 @@ const PhotoWithIdol = () => {
           } else if (result.data?.state === 'processing') {
             setGenerationProgress(50);
             console.log('Task is being processed...');
+          } else {
+            console.log('Unknown state:', result.data?.state);
           }
           setTimeout(poll, 2000); // Check again after 2 seconds
         } else {
@@ -228,6 +237,7 @@ const PhotoWithIdol = () => {
           toast.error('Generation timeout. Please try again.');
         }
       } catch (error) {
+        console.error('Polling error:', error);
         setIsGenerating(false);
         toast.error('Error checking generation status.');
       }
@@ -475,6 +485,15 @@ const PhotoWithIdol = () => {
                     <CardTitle className="text-lg lg:text-xl">Generated Result</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {/* 调试信息 */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+                        <div>Generated Image: {generatedImage || 'null'}</div>
+                        <div>Is Generating: {isGenerating.toString()}</div>
+                        <div>Generation Progress: {generationProgress}%</div>
+                      </div>
+                    )}
+                    
                     {generatedImage ? (
                       <div className="space-y-4 animate-fade-in">
                         <div className="relative group">
@@ -482,6 +501,8 @@ const PhotoWithIdol = () => {
                             src={generatedImage}
                             alt="Generated photo with idol"
                             className="w-full rounded-lg shadow-lg hover-scale"
+                            onLoad={() => console.log('Image loaded successfully')}
+                            onError={(e) => console.error('Image load error:', e)}
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                             <Button
