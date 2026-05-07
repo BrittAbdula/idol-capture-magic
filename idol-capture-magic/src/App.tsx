@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { PhotoStripProvider } from "./contexts/PhotoStripContext";
+import { ErrorBoundary } from "@/components/app/ErrorBoundary";
 
 // Import the new component
 import ScrollToTop from '@/components/ScrollToTop';
@@ -74,9 +75,49 @@ const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> =
     description: "Create a K-pop inspired four-cut photo strip."
   },
   {
+    match: /^\/c\/[^/]+$/,
+    title: "K-pop Concept Photo Maker | IdolBooth",
+    description: "Explore campaign-inspired AI selca and photocard presets."
+  },
+  {
+    match: /^\/calendar$/,
+    title: "K-pop Calendar | IdolBooth",
+    description: "Browse upcoming IdolBooth concept campaigns and group dates."
+  },
+  {
+    match: /^\/me$/,
+    title: "My IdolBooth Dashboard | IdolBooth",
+    description: "Review quota, recent generations, and Binder shortcuts."
+  },
+  {
+    match: /^\/me\/binder$/,
+    title: "My Binder | IdolBooth",
+    description: "Manage saved IdolBooth photocards and generations."
+  },
+  {
+    match: /^\/binder\/[^/]+$/,
+    title: "Public Binder | IdolBooth",
+    description: "View a public IdolBooth fan Binder."
+  },
+  {
+    match: /^\/share\/[^/]+$/,
+    title: "Shared AI Photo | IdolBooth",
+    description: "View a public watermarked IdolBooth generation."
+  },
+  {
     match: /^\/pricing$/,
     title: "Pricing | IdolBooth",
     description: "Compare Free, Plus, and Pro generation plans."
+  },
+  {
+    match: /^\/legal\/safety$/,
+    title: "Safety | IdolBooth",
+    description: "Learn how IdolBooth handles fan-safe AI outputs and watermarking."
+  },
+  {
+    match: /^\/legal\/takedown$/,
+    title: "Takedown | IdolBooth",
+    description: "Request review or removal of generated IdolBooth content."
   }
 ];
 
@@ -117,36 +158,38 @@ const App = () => {
             <BrowserRouter>
               <ScrollToTop />
               <TitleUpdater />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/g/:groupSlug" element={<GroupHub />} />
-                <Route path="/g/:groupSlug/:memberSlug" element={<MemberHub />} />
-                <Route path="/c/:slug" element={<CampaignPage />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/selca" element={<SelcaPage />} />
-                <Route path="/photocard" element={<PhotocardPage />} />
-                <Route path="/strip" element={<StripPage />} />
-                <Route path="/photo-strip" element={<PhotoStrip />} />
-                <Route path="/templates" element={<TemplateGallery />} />
-                <Route path="/templates/:category" element={<TemplateCategoryPage />} />
-                <Route path="/templates/:category/:idol" element={<TemplateCategoryPage />} />
-                <Route path="/template" element={<Navigate to="/templates" replace />} />
-                <Route path="/template/:category" element={<TemplateCategoryPage />} />
-                <Route path="/me" element={<Dashboard />} />
-                <Route path="/me/binder" element={<MyBinder />} />
-                <Route path="/me/settings" element={<Settings />} />
-                <Route path="/binder/:handle" element={<PublicBinder />} />
-                <Route path="/share/:id" element={<ShareById />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/legal/safety" element={<SafetyPage />} />
-                <Route path="/legal/takedown" element={<TakedownPage />} />
-                <Route path="/photo-booth" element={<Navigate to="/strip" replace />} />
-                <Route path="/photo-with-idol" element={<Navigate to="/selca" replace />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/share" element={<SharePage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/g/:groupSlug" element={<GroupHub />} />
+                  <Route path="/g/:groupSlug/:memberSlug" element={<MemberHub />} />
+                  <Route path="/c/:slug" element={<CampaignPage />} />
+                  <Route path="/calendar" element={<CalendarPage />} />
+                  <Route path="/selca" element={<SelcaPage />} />
+                  <Route path="/photocard" element={<PhotocardPage />} />
+                  <Route path="/strip" element={<StripPage />} />
+                  <Route path="/photo-strip" element={<PhotoStrip />} />
+                  <Route path="/templates" element={<TemplateGallery />} />
+                  <Route path="/templates/:category" element={<TemplateCategoryPage />} />
+                  <Route path="/templates/:category/:idol" element={<TemplateCategoryPage />} />
+                  <Route path="/template" element={<Navigate to="/templates" replace />} />
+                  <Route path="/template/:category" element={<TemplateCategoryPage />} />
+                  <Route path="/me" element={<Dashboard />} />
+                  <Route path="/me/binder" element={<MyBinder />} />
+                  <Route path="/me/settings" element={<Settings />} />
+                  <Route path="/binder/:handle" element={<PublicBinder />} />
+                  <Route path="/share/:id" element={<ShareById />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/legal/safety" element={<SafetyPage />} />
+                  <Route path="/legal/takedown" element={<TakedownPage />} />
+                  <Route path="/photo-booth" element={<Navigate to="/strip" replace />} />
+                  <Route path="/photo-with-idol" element={<Navigate to="/selca" replace />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/share" element={<SharePage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ErrorBoundary>
             </BrowserRouter>
           </TooltipProvider>
         </PhotoStripProvider>

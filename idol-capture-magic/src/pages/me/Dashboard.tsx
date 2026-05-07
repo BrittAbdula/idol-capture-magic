@@ -5,6 +5,7 @@ import { ArrowRight, CreditCard, Image, Sparkles } from "lucide-react";
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { AuthStatus } from "@/components/app/AuthStatus";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuota } from "@/hooks/useQuota";
@@ -25,6 +26,8 @@ export default function Dashboard() {
 
   return (
     <AppPageShell title="My IdolBooth" description="Your generations, quota, and binder shortcuts.">
+      {auth.isLoading && <LoadingSkeleton rows={2} />}
+
       <div className="flex flex-col justify-between gap-4 border-b border-black/10 pb-6 md:flex-row md:items-center">
         <AuthStatus />
         <span className="text-sm text-gray-600">

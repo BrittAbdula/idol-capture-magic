@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 
 function parsePalette(value: string | undefined): string[] {
   if (!value) {
@@ -70,6 +71,8 @@ export default function CampaignPage() {
       description={campaign.data?.campaign.description ?? "Explore comeback-inspired fan concepts."}
       image={campaign.data?.campaign.heroImage ?? group.data?.group.coverImage ?? "/placeholders/group_newjeans.png"}
     >
+      {campaign.isLoading && <LoadingSkeleton rows={3} />}
+
       <div
         className="mb-8 border border-black/10 p-5"
         style={{

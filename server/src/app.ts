@@ -38,6 +38,25 @@ export function createApp(options: CreateAppOptions): Hono {
   );
 
   app.get("/health", (c) => c.json({ ok: true }));
+  if (options.storage) {
+    app.get("/storage/*", async (c) => {
+      const key = c.req.path.replace(/^\/storage\//, "");
+      try {
+        const buffer = await options.storage?.readBuffer(key);
+        if (!buffer) {
+          return c.notFound();
+        }
+        return new Response(buffer, {
+          headers: {
+            "Content-Type": contentTypeForKey(key),
+            "Cache-Control": "public, max-age=31536000, immutable"
+          }
+        });
+      } catch {
+        return c.notFound();
+      }
+    });
+  }
   if (options.client) {
     app.route("/api", createDomainRoutes({ client: options.client }));
     app.route(
@@ -90,4 +109,14 @@ export function createApp(options: CreateAppOptions): Hono {
   );
 
   return app;
+}
+
+function contentTypeForKey(key: string): string {
+  if (key.endsWith(".jpg") || key.endsWith(".jpeg")) {
+    return "image/jpeg";
+  }
+  if (key.endsWith(".webp")) {
+    return "image/webp";
+  }
+  return "image/png";
 }

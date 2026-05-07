@@ -4,6 +4,7 @@ import { Image } from "lucide-react";
 
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 
 export default function PublicBinder() {
   const { handle = "" } = useParams();
@@ -20,6 +21,8 @@ export default function PublicBinder() {
       description="A public IdolBooth binder."
       image="/illustrations/empty-binder.png"
     >
+      {binder.isLoading && <LoadingSkeleton rows={4} />}
+
       {binder.isError && (
         <div className="border border-black/10 p-8 text-center">
           <h2 className="text-2xl font-semibold">Binder not found</h2>

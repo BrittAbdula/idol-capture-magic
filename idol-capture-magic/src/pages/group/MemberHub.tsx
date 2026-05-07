@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays, Lock, Sparkles } from "lucide-react";
 
 import { api, type ApiConcept, type ApiMember } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 
 const FILTERS = ["All", "Comeback", "Daily", "Birthday", "Concert", "Polaroid"];
 
@@ -39,7 +40,7 @@ function factsText(member: ApiMember | undefined, groupName: string | undefined)
 export default function MemberHub() {
   const { groupSlug = "", memberSlug = "" } = useParams();
   const [filter, setFilter] = useState("All");
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["member", groupSlug, memberSlug],
     queryFn: () => api.member(groupSlug, memberSlug),
     enabled: Boolean(groupSlug && memberSlug)
@@ -68,6 +69,8 @@ export default function MemberHub() {
       description="Choose a format, upload your photo, and generate a watermarked fan-safe image."
       image={member?.silhouetteImage ?? "/placeholders/silhouette_1.png"}
     >
+      {isLoading && <LoadingSkeleton rows={3} />}
+
       <div
         className="mb-8 grid gap-4 border border-black/10 p-5 md:grid-cols-3"
         style={{ background: group ? `${group.themeColor}22` : undefined }}
@@ -128,6 +131,7 @@ export default function MemberHub() {
             ))}
           </div>
         </div>
+        {concepts.isLoading && <LoadingSkeleton rows={4} />}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {filteredConcepts.map((concept) => (
             <ConceptCard key={concept.id} concept={concept} memberId={member?.id} />

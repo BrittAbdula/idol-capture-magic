@@ -13,7 +13,7 @@ interface AppPageShellProps {
 export function AppPageShell({ title, description, image, children }: AppPageShellProps) {
   return (
     <div className="min-h-screen bg-white text-gray-950">
-      <SEO title={`${title} | IdolBooth`} description={description} />
+      <SEO title={`${title} | IdolBooth`} description={description} image={image} />
       <Navbar />
       <main className="pt-28">
         <section className="relative overflow-hidden border-b border-black/10">

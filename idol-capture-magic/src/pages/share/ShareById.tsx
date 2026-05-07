@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 import { Button } from "@/components/ui/button";
 
 export default function ShareById() {
@@ -28,6 +29,8 @@ export default function ShareById() {
       description="A public, watermarked IdolBooth AI-generated image."
       image={generation?.outputUrl ?? "/samples/polaroid-selca.png"}
     >
+      {share.isLoading && <LoadingSkeleton rows={4} />}
+
       {share.isError && (
         <div className="border border-black/10 p-8 text-center">
           <h2 className="text-2xl font-semibold">Shared image not found</h2>

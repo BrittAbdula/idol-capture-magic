@@ -4,6 +4,7 @@ import { CalendarDays, Star } from "lucide-react";
 
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 
 export default function CalendarPage() {
   const campaigns = useQuery({
@@ -23,6 +24,7 @@ export default function CalendarPage() {
     >
       <section>
         <h2 className="text-2xl font-semibold">Upcoming events</h2>
+        {campaigns.isLoading && <div className="mt-5"><LoadingSkeleton rows={3} /></div>}
         <div className="mt-5 divide-y divide-black/10 border border-black/10">
           {sortedCampaigns.map((campaign) => (
             <Link key={campaign.id} to={`/c/${campaign.slug}`} className="flex items-center justify-between gap-4 p-5">

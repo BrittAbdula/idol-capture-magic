@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 
 const recentSamples = [
   "/samples/polaroid-selca.png",
@@ -36,7 +37,7 @@ export default function GroupHub() {
       }
       image={group?.coverImage ?? "/placeholders/group_newjeans.png"}
     >
-      {isLoading && <div className="h-40 animate-pulse bg-gray-100" />}
+      {isLoading && <LoadingSkeleton rows={3} />}
 
       {group && (
         <div className="mb-8 grid gap-4 border-b border-black/10 pb-8 md:grid-cols-3">

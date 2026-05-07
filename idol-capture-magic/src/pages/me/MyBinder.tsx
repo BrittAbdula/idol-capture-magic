@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -104,6 +105,7 @@ export default function MyBinder() {
       </div>
 
       <div className={`mt-8 grid gap-3 ${dense ? "grid-cols-3 md:grid-cols-6" : "grid-cols-2 md:grid-cols-4"}`}>
+        {binder.isLoading && <div className="col-span-full"><LoadingSkeleton rows={4} /></div>}
         {items.length ? (
           items.map((item) => (
             <button key={item.id} onClick={() => setSelected(item)} className="border border-black/10 text-left">
@@ -117,12 +119,12 @@ export default function MyBinder() {
               <p className="truncate p-3 text-sm font-semibold">{item.customCaption ?? "Untitled card"}</p>
             </button>
           ))
-        ) : (
+        ) : !binder.isLoading ? (
           <Link to="/selca" className="col-span-full border border-black/10 p-8 text-center">
             <img src="/illustrations/empty-binder.png" alt="" className="mx-auto h-40 w-40 object-cover" />
             <p className="mt-4 font-semibold">Create your first Binder item</p>
           </Link>
-        )}
+        ) : null}
       </div>
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>

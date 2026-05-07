@@ -7,6 +7,7 @@ import { api, type ApiMember } from "@/api/client";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
+import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 
 const heroSamples = [
   "/samples/polaroid-selca.png",
@@ -139,6 +140,7 @@ export default function Index() {
 
         <section id="bias-picker" className="px-4 py-16 md:px-8 lg:px-14">
           <h2 className="text-3xl font-semibold">Pick your bias</h2>
+          {groups.isLoading && <div className="mt-6"><LoadingSkeleton rows={2} /></div>}
           <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
             {groups.data?.map((group) => (
               <button
@@ -175,6 +177,7 @@ export default function Index() {
             </div>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {campaigns.isLoading && <div className="md:col-span-3"><LoadingSkeleton rows={2} /></div>}
             {campaigns.data?.map((campaign) => (
               <Link key={campaign.id} to={`/c/${campaign.slug}`} className="border border-black/10 p-5">
                 <p className="text-sm uppercase tracking-wide text-idol-gold">{campaign.status}</p>

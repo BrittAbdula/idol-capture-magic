@@ -253,17 +253,17 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-7** — all pages render, no broken links
 
 ### Phase 8 — Integration & Polish
-- [ ] T-8.1 SEO: per-route `<title>` and meta description (extend existing `TitleUpdater`)
-- [ ] T-8.2 Generate `sitemap.xml` including all `/g/*/*` and `/c/*` URLs (extend existing script)
-- [ ] T-8.3 Add OpenGraph / Twitter card meta to `/share/:id`
-- [ ] T-8.4 Wire watermark service into actual generation
-- [ ] T-8.5 Add error boundaries to App and key pages
-- [ ] T-8.6 Add loading skeletons for all async pages
-- [ ] T-8.7 Configure Vite proxy in dev so `/api/*` → backend
-- [ ] T-8.8 Run `npm run lint` and fix all errors in both projects
-- [ ] T-8.9 Write `README.md` at repo root with setup instructions
-- [ ] T-8.10 Smoke test full user journey (Section 14)
-- [ ] **CKPT-8** — full E2E demo runs successfully
+- [x] T-8.1 SEO: per-route `<title>` and meta description (extend existing `TitleUpdater`)
+- [x] T-8.2 Generate `sitemap.xml` including all `/g/*/*` and `/c/*` URLs (extend existing script)
+- [x] T-8.3 Add OpenGraph / Twitter card meta to `/share/:id`
+- [x] T-8.4 Wire watermark service into actual generation
+- [x] T-8.5 Add error boundaries to App and key pages
+- [x] T-8.6 Add loading skeletons for all async pages
+- [x] T-8.7 Configure Vite proxy in dev so `/api/*` → backend
+- [x] T-8.8 Run `npm run lint` and fix all errors in both projects
+- [x] T-8.9 Write `README.md` at repo root with setup instructions
+- [x] T-8.10 Smoke test full user journey (Section 14)
+- [x] **CKPT-8** — full E2E demo runs successfully
 
 ---
 
