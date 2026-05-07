@@ -3,26 +3,81 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { PhotoStripProvider } from "./contexts/PhotoStripContext";
 
 // Import the new component
 import ScrollToTop from '@/components/ScrollToTop';
 
 import Index from "./pages/Index";
-import PhotoBooth from "./pages/PhotoBooth";
 import PhotoStrip from "./pages/PhotoStrip";
 import TemplateGallery from "./pages/TemplateGallery";
 import TemplateCategoryPage from "./pages/TemplateCategoryPage";
-import TemplateCreator from "./pages/TemplateCreator";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import SharePage from "./pages/SharePage";
-import PhotoWithIdol from "./pages/PhotoWithIdol";
+import GroupHub from "./pages/group/GroupHub";
+import MemberHub from "./pages/group/MemberHub";
+import CampaignPage from "./pages/campaign/CampaignPage";
+import CalendarPage from "./pages/CalendarPage";
+import SelcaPage from "./pages/generate/SelcaPage";
+import PhotocardPage from "./pages/generate/PhotocardPage";
+import StripPage from "./pages/generate/StripPage";
+import Dashboard from "./pages/me/Dashboard";
+import MyBinder from "./pages/me/MyBinder";
+import Settings from "./pages/me/Settings";
+import PublicBinder from "./pages/share/PublicBinder";
+import Pricing from "./pages/pricing/Pricing";
+import SafetyPage from "./pages/legal/SafetyPage";
+import TakedownPage from "./pages/legal/TakedownPage";
 
-// Create a client
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      retry: 1
+    }
+  }
+});
+
+const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> = [
+  {
+    match: /^\/$/,
+    title: "Free K-pop AI Selca, Photocard & Photobooth | IdolBooth",
+    description: "Make a selca, photocard, or 4-cut strip with your bias in seconds."
+  },
+  {
+    match: /^\/g\/[^/]+$/,
+    title: "K-pop Group AI Photo Hub | IdolBooth",
+    description: "Pick a member and start a fan-safe AI photo generation flow."
+  },
+  {
+    match: /^\/g\/[^/]+\/[^/]+$/,
+    title: "AI Photo with Your Bias | IdolBooth",
+    description: "Create an AI selca, photocard, or strip with a fan-safe companion silhouette."
+  },
+  {
+    match: /^\/selca$/,
+    title: "AI Selca Maker | IdolBooth",
+    description: "Upload a photo and create a watermarked AI selca."
+  },
+  {
+    match: /^\/photocard$/,
+    title: "AI Photocard Maker | IdolBooth",
+    description: "Generate collectible photocard-style fan images."
+  },
+  {
+    match: /^\/strip$/,
+    title: "4-cut AI Photo Strip | IdolBooth",
+    description: "Create a K-pop inspired four-cut photo strip."
+  },
+  {
+    match: /^\/pricing$/,
+    title: "Pricing | IdolBooth",
+    description: "Compare Free, Plus, and Pro generation plans."
+  }
+];
 
 // Title update component
 const TitleUpdater = () => {
@@ -31,31 +86,11 @@ const TitleUpdater = () => {
   useEffect(() => {
     const updateTitle = () => {
       const path = location.pathname;
-      let title = "Free Idol Photo Booth Online | IdolBooth";
-      let description = "Use our free Idol Photo Booth online to take stunning virtual photos with your favorite Kpop idols. Capture special moments instantly!";
-      
-      if (path === "/") {
-        title = "Free Idol Photo Booth: Take Photos with Your Idol | IdolBooth";
-        description = "Use our free Idol Photo Booth online to take stunning photos with your favorite Kpop idols. Capture your special moments. Try IdolBooth now!";
-      } else if (path === "/photo-booth") {
-        title = "Take Photos with Your Favorite Idols | Free Online Photo Booth | IdolBooth";
-        description = "Our free online Kpop photo booth lets you take virtual photos with your favorite idols. Easy to use, instant results. Try now at IdolBooth.com!";
-        } else if (path === "/photo-strip") {
-          title = "Create Stunning Photo Strips with Idols | IdolBooth";
-          description = "Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator.";
-        } else if (path === "/photo-with-idol") {
-          title = "AI Photo with Idol Generator | Create Photos with Your Favorite Stars | IdolBooth";
-          description = "Generate realistic photos with your favorite idols using AI. Upload your photo and an idol's photo to create amazing composite images.";
-      } else if (path.includes("/template")) {
-        title = "Idol Photo Templates | Choose from Kpop & Anime Templates | IdolBooth";
-        description = "Browse our collection of Kpop idol, anime, and celebrity photo templates. Find the perfect template for your virtual photo booth experience.";
-      } else if (path === "/privacy") {
-        title = "Privacy Policy | IdolBooth";
-        description = "Read our privacy policy to understand how we collect and use your data. Your privacy is important to us.";
-      } else if (path === "/terms") {
-        title = "Terms of Service | IdolBooth";
-        description = "Read our terms of service to understand how we operate our service. By using IdolBooth, you agree to these terms.";
-      }
+      const routeMeta = ROUTE_META.find((item) => item.match.test(path));
+      const title = routeMeta?.title ?? "IdolBooth | K-pop AI Photo Maker";
+      const description =
+        routeMeta?.description ??
+        "Create fan-safe, watermarked K-pop AI selcas, photocards, and photo strips.";
       
       document.title = title;
       const metaDescription = document.querySelector('meta[name="description"]');
@@ -83,13 +118,29 @@ const App = () => {
               <TitleUpdater />
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/photo-booth" element={<PhotoBooth />} />
+                <Route path="/g/:groupSlug" element={<GroupHub />} />
+                <Route path="/g/:groupSlug/:memberSlug" element={<MemberHub />} />
+                <Route path="/c/:slug" element={<CampaignPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/selca" element={<SelcaPage />} />
+                <Route path="/photocard" element={<PhotocardPage />} />
+                <Route path="/strip" element={<StripPage />} />
                 <Route path="/photo-strip" element={<PhotoStrip />} />
-                <Route path="/template" element={<TemplateGallery />} />
+                <Route path="/templates" element={<TemplateGallery />} />
+                <Route path="/templates/:category" element={<TemplateCategoryPage />} />
+                <Route path="/templates/:category/:idol" element={<TemplateCategoryPage />} />
+                <Route path="/template" element={<Navigate to="/templates" replace />} />
                 <Route path="/template/:category" element={<TemplateCategoryPage />} />
-                <Route path="/template/:category/:idol" element={<TemplateCategoryPage />} />
-                {/* <Route path="/template-creator" element={<TemplateCreator />} /> */}
-                <Route path="/photo-with-idol" element={<PhotoWithIdol />} />
+                <Route path="/me" element={<Dashboard />} />
+                <Route path="/me/binder" element={<MyBinder />} />
+                <Route path="/me/settings" element={<Settings />} />
+                <Route path="/binder/:handle" element={<PublicBinder />} />
+                <Route path="/share/:id" element={<SharePage />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/legal/safety" element={<SafetyPage />} />
+                <Route path="/legal/takedown" element={<TakedownPage />} />
+                <Route path="/photo-booth" element={<Navigate to="/strip" replace />} />
+                <Route path="/photo-with-idol" element={<Navigate to="/selca" replace />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/share" element={<SharePage />} />

@@ -8,6 +8,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/api": "http://localhost:8787",
+      "/auth": "http://localhost:8787",
+      "/webhooks": "http://localhost:8787",
+      "/storage": "http://localhost:8787",
+    },
   },
   plugins: [
     react(),

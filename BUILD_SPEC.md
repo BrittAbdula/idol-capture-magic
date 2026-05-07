@@ -224,15 +224,15 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-5** — `npm run seed` populates DB; `/public/placeholders/` and `/public/samples/` populated
 
 ### Phase 6 — Frontend: Foundation
-- [ ] T-6.1 Set up `src/api/client.ts` with typed fetch wrappers
-- [ ] T-6.2 Set up react-query providers (already mounted, configure)
-- [ ] T-6.3 Set up react-i18next with English locale stub
-- [ ] T-6.4 Implement `useAuth` hook → calls `/auth/me`
-- [ ] T-6.5 Implement `useQuota` hook
-- [ ] T-6.6 Add zustand store for generation flow state
-- [ ] T-6.7 Update `App.tsx` routing per Section 7.1
-- [ ] T-6.8 Add 301-style redirects for legacy routes (`/photo-booth` → `/strip`, `/photo-with-idol` → `/selca`)
-- [ ] **CKPT-6** — all routes resolve, auth state visible
+- [x] T-6.1 Set up `src/api/client.ts` with typed fetch wrappers
+- [x] T-6.2 Set up react-query providers (already mounted, configure)
+- [x] T-6.3 Set up react-i18next with English locale stub
+- [x] T-6.4 Implement `useAuth` hook → calls `/auth/me`
+- [x] T-6.5 Implement `useQuota` hook
+- [x] T-6.6 Add zustand store for generation flow state
+- [x] T-6.7 Update `App.tsx` routing per Section 7.1
+- [x] T-6.8 Add 301-style redirects for legacy routes (`/photo-booth` → `/strip`, `/photo-with-idol` → `/selca`)
+- [x] **CKPT-6** — all routes resolve, auth state visible
 
 ### Phase 7 — Frontend: Pages
 - [ ] T-7.1 New homepage `/` per Section 7.2

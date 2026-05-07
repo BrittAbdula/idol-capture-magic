@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Camera, Menu, X } from 'lucide-react';
+import { AuthStatus } from '@/components/app/AuthStatus';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -84,19 +85,20 @@ const Navbar = () => {
           <Link to="/" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/' ? 'text-idol-gold' : ''}`}>
             Home
           </Link>
-          <Link to="/photo-with-idol" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-with-idol' ? 'text-idol-gold' : ''}`}>
-            Photo with Idol
+          <Link to="/selca" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/selca' ? 'text-idol-gold' : ''}`}>
+            Selca
           </Link>
-          <Link to="/photo-booth" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : ''}`}>
-            Photo Booth
+          <Link to="/photocard" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photocard' ? 'text-idol-gold' : ''}`}>
+            Photocard
           </Link>
-          <Link to="/template" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : ''}`}>
+          <Link to="/templates" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : ''}`}>
             Templates
           </Link>
-          <Link to="/photo-strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : ''}`}>
-            Photo Strip
+          <Link to="/strip" className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === '/strip' ? 'text-idol-gold' : ''}`}>
+            Strip
           </Link>
-          <Link to="/photo-booth" className="idol-button-square text-sm py-2">
+          <AuthStatus />
+          <Link to="/selca" className="idol-button-square text-sm py-2">
             Try Now
           </Link>
         </nav>
@@ -118,22 +120,22 @@ const Navbar = () => {
             <Link to="/" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/' ? 'text-idol-gold' : 'text-white'}`}>
               Home
             </Link>
-            <Link to="/photo-with-idol" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-with-idol' ? 'text-idol-gold' : 'text-white'}`}>
-              Photo with Idol
+            <Link to="/selca" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/selca' ? 'text-idol-gold' : 'text-white'}`}>
+              Selca
             </Link>
-            <Link to="/photo-booth" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/photo-booth') ? 'text-idol-gold' : 'text-white'}`}>
-              Photo Booth
+            <Link to="/photocard" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photocard' ? 'text-idol-gold' : 'text-white'}`}>
+              Photocard
             </Link>
-            <Link to="/template" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : 'text-white'}`}>
+            <Link to="/templates" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : 'text-white'}`}>
               Templates
             </Link>
             <Link to="/template-creator" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : 'text-white'}`}>
               Create Template
             </Link>
-            <Link to="/photo-strip" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/photo-strip' ? 'text-idol-gold' : 'text-white'}`}>
-              Photo Strip
+            <Link to="/strip" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/strip' ? 'text-idol-gold' : 'text-white'}`}>
+              Strip
             </Link>
-            <Link to="/photo-booth" className="idol-button-square mt-4">
+            <Link to="/selca" className="idol-button-square mt-4">
               Try Now
             </Link>
           </nav>
