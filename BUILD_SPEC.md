@@ -172,16 +172,16 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-0** — `git add . && git commit -m "feat: bootstrap server scaffold"`
 
 ### Phase 1 — Backend Foundation
-- [ ] T-1.1 Implement `server/src/config/env.ts` with zod validation
-- [ ] T-1.2 Set up Hono app with CORS for `PUBLIC_APP_ORIGIN`
-- [ ] T-1.3 Define drizzle schema (Section 6.1)
-- [ ] T-1.4 Generate migrations and run them
-- [ ] T-1.5 Implement Lucia auth with Google OAuth
-- [ ] T-1.6 Implement `/auth/google`, `/auth/google/callback`, `/auth/logout`, `/auth/me`
-- [ ] T-1.7 Implement storage service (local filesystem now, R2-ready interface)
-- [ ] T-1.8 Implement quota service (per-user daily counter)
-- [ ] T-1.9 Implement safety service (Section 12 blocklist)
-- [ ] **CKPT-1** — backend boots, auth round-trip works
+- [x] T-1.1 Implement `server/src/config/env.ts` with zod validation
+- [x] T-1.2 Set up Hono app with CORS for `PUBLIC_APP_ORIGIN`
+- [x] T-1.3 Define drizzle schema (Section 6.1)
+- [x] T-1.4 Generate migrations and run them
+- [x] T-1.5 Implement Lucia auth with Google OAuth
+- [x] T-1.6 Implement `/auth/google`, `/auth/google/callback`, `/auth/logout`, `/auth/me`
+- [x] T-1.7 Implement storage service (local filesystem now, R2-ready interface)
+- [x] T-1.8 Implement quota service (per-user daily counter)
+- [x] T-1.9 Implement safety service (Section 12 blocklist)
+- [x] **CKPT-1** — backend boots, auth round-trip works
 
 ### Phase 2 — AI Generation Pipeline
 - [ ] T-2.1 Implement `GenerationProvider` interface
