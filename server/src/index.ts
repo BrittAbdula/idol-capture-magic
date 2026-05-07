@@ -4,6 +4,8 @@ import { createLucia } from "./auth/lucia.js";
 import { getEnv } from "./config/env.js";
 import { createDatabaseClient } from "./db/client.js";
 import { startServer } from "./server.js";
+import { OpenAIImageProvider } from "./services/generation/openai.js";
+import { createLocalStorageService } from "./services/storage.js";
 
 const env = getEnv();
 const client = createDatabaseClient(env.DATABASE_URL);
@@ -13,13 +15,24 @@ const google = new GoogleOAuthService({
   clientSecret: env.GOOGLE_CLIENT_SECRET,
   redirectUri: env.GOOGLE_REDIRECT_URI
 });
+const storage = createLocalStorageService({ rootDir: env.STORAGE_DIR });
+const generationProvider = new OpenAIImageProvider(
+  env.OPENAI_API_KEY,
+  pathFromStorage(env.STORAGE_DIR, "raw")
+);
 
 const app = createApp({
   publicAppOrigin: env.PUBLIC_APP_ORIGIN,
   auth,
   client,
   google,
+  generationProvider,
+  storage,
   secureCookies: env.NODE_ENV === "production"
 });
 
 startServer(app, env.PORT);
+
+function pathFromStorage(storageDir: string, child: string): string {
+  return `${storageDir.replace(/\/$/, "")}/${child}`;
+}

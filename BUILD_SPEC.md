@@ -184,14 +184,14 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-1** — backend boots, auth round-trip works
 
 ### Phase 2 — AI Generation Pipeline
-- [ ] T-2.1 Implement `GenerationProvider` interface
-- [ ] T-2.2 Implement OpenAI provider (`gpt-image-1` image-to-image)
-- [ ] T-2.3 Implement watermark service using sharp
-- [ ] T-2.4 Implement `POST /api/generate` endpoint (Section 6.2)
-- [ ] T-2.5 Implement `GET /api/generations/:id` for polling
-- [ ] T-2.6 Add input validation: file size <8MB, MIME types whitelist, NSFW heuristic stub
-- [ ] T-2.7 Write integration test: end-to-end generation with stub provider
-- [ ] **CKPT-2** — generation endpoint returns watermarked output
+- [x] T-2.1 Implement `GenerationProvider` interface
+- [x] T-2.2 Implement OpenAI provider (`gpt-image-1` image-to-image)
+- [x] T-2.3 Implement watermark service using sharp
+- [x] T-2.4 Implement `POST /api/generate` endpoint (Section 6.2)
+- [x] T-2.5 Implement `GET /api/generations/:id` for polling
+- [x] T-2.6 Add input validation: file size <8MB, MIME types whitelist, NSFW heuristic stub
+- [x] T-2.7 Write integration test: end-to-end generation with stub provider
+- [x] **CKPT-2** — generation endpoint returns watermarked output
 
 ### Phase 3 — Auth & Payments
 - [ ] T-3.1 Implement Stripe service (test mode)
