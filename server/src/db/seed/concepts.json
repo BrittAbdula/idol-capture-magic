@@ -1,0 +1,242 @@
+[
+  {
+    "slug": "polaroid-selca",
+    "name": "Polaroid Film Selca",
+    "format": "selca",
+    "category": "polaroid",
+    "promptTemplate": "A vintage polaroid photograph showing the user and an anonymized stylized companion side-by-side at golden hour, soft film grain, warm tones, 1990s aesthetic, slightly faded edges, casual smile, square crop, stylized and clearly AI-generated.",
+    "styleTokens": ["polaroid", "film grain", "warm", "vintage"],
+    "sampleOutputUrl": "/samples/polaroid-selca.png",
+    "premium": false
+  },
+  {
+    "slug": "han-river-walk-selca",
+    "name": "Han River Walk Selca",
+    "format": "selca",
+    "category": "daily",
+    "promptTemplate": "A bright outdoor fan selca on a riverside walk, the user beside an anonymized stylized companion in casual K-pop streetwear, breezy daylight, soft skyline, gentle color grading, square crop, illustrated-real hybrid style.",
+    "styleTokens": ["riverside", "streetwear", "daylight", "soft skyline"],
+    "sampleOutputUrl": "/samples/han-river-walk-selca.png",
+    "premium": false
+  },
+  {
+    "slug": "cafe-window-selca",
+    "name": "Cafe Window Selca",
+    "format": "selca",
+    "category": "daily",
+    "promptTemplate": "A cozy cafe window selca with the user and an anonymized stylized companion, iced drinks on the table, clean pastel interior, rainy window glow, soft reflections, square crop, stylized editorial fan art.",
+    "styleTokens": ["cafe", "pastel", "rainy window", "cozy"],
+    "sampleOutputUrl": "/samples/cafe-window-selca.png",
+    "premium": false
+  },
+  {
+    "slug": "cherry-blossom-selca",
+    "name": "Cherry Blossom Selca",
+    "format": "selca",
+    "category": "birthday",
+    "promptTemplate": "A spring cherry blossom selca with the user and an anonymized stylized companion, pink petals, soft daylight, paper sticker accents, square crop, gentle illustrated style with abstract facial details.",
+    "styleTokens": ["cherry blossom", "spring", "stickers", "soft daylight"],
+    "sampleOutputUrl": "/samples/cherry-blossom-selca.png",
+    "premium": false
+  },
+  {
+    "slug": "neon-night-selca",
+    "name": "Neon Night Selca",
+    "format": "selca",
+    "category": "concert",
+    "promptTemplate": "A neon night street selca with the user and an anonymized stylized companion, glowing signs, reflective pavement, concert-night styling, high contrast cyan and magenta, square crop, stylized non-realistic fan image.",
+    "styleTokens": ["neon", "night", "concert", "cyan magenta"],
+    "sampleOutputUrl": "/samples/neon-night-selca.png",
+    "premium": true
+  },
+  {
+    "slug": "bedroom-mirror-selca",
+    "name": "Bedroom Mirror Selca",
+    "format": "selca",
+    "category": "daily",
+    "promptTemplate": "A safe cozy room mirror selca with the user and an anonymized stylized companion, clean fan room decor, posters represented as abstract shapes, soft lamp lighting, square crop, wholesome styling.",
+    "styleTokens": ["mirror", "cozy room", "fan decor", "soft lamp"],
+    "sampleOutputUrl": "/samples/bedroom-mirror-selca.png",
+    "premium": false
+  },
+  {
+    "slug": "holo-frame-photocard",
+    "name": "Holo Frame Photocard",
+    "format": "photocard",
+    "category": "polaroid",
+    "promptTemplate": "A vertical photocard design of the user with an anonymized stylized companion motif, holographic border, prismatic shine, glossy collectible card finish, abstract face details, premium K-pop fan card styling.",
+    "styleTokens": ["holographic", "photocard", "prismatic", "glossy"],
+    "sampleOutputUrl": "/samples/holo-frame-photocard.png",
+    "premium": false
+  },
+  {
+    "slug": "season-greeting-photocard",
+    "name": "Season Greeting Photocard",
+    "format": "photocard",
+    "category": "birthday",
+    "promptTemplate": "A vertical season greeting photocard with the user and an anonymized stylized companion emblem, warm studio lighting, calendar-card mood, ribbons and soft stationery textures, stylized collectible card.",
+    "styleTokens": ["season greeting", "studio", "stationery", "warm"],
+    "sampleOutputUrl": "/samples/season-greeting-photocard.png",
+    "premium": false
+  },
+  {
+    "slug": "fanmeet-ticket-photocard",
+    "name": "Fanmeet Ticket Photocard",
+    "format": "photocard",
+    "category": "concert",
+    "promptTemplate": "A vertical photocard inspired by a fanmeet ticket, the user as the main subject with an anonymized stylized companion silhouette graphic, ticket perforation details, pastel stage lighting, collectible design.",
+    "styleTokens": ["fanmeet", "ticket", "perforation", "stage lights"],
+    "sampleOutputUrl": "/samples/fanmeet-ticket-photocard.png",
+    "premium": false
+  },
+  {
+    "slug": "world-tour-pc-photocard",
+    "name": "World Tour PC",
+    "format": "photocard",
+    "category": "concert",
+    "promptTemplate": "A vertical world tour photocard with the user and anonymized stylized companion iconography, arena light beams, confetti, tour-pass graphic elements, crisp card border, stylized fan collectible.",
+    "styleTokens": ["world tour", "arena", "confetti", "tour pass"],
+    "sampleOutputUrl": "/samples/world-tour-pc-photocard.png",
+    "premium": true
+  },
+  {
+    "slug": "plain-pc-photocard",
+    "name": "Plain Photocard",
+    "format": "photocard",
+    "category": "daily",
+    "promptTemplate": "A clean vertical photocard with the user and a minimal anonymized stylized companion mark, plain pastel backdrop, soft shadow, simple border, high clarity, stylized collectible card.",
+    "styleTokens": ["plain", "pastel", "minimal", "clean"],
+    "sampleOutputUrl": "/samples/plain-pc-photocard.png",
+    "premium": false
+  },
+  {
+    "slug": "glitter-pc-photocard",
+    "name": "Glitter Photocard",
+    "format": "photocard",
+    "category": "comeback",
+    "promptTemplate": "A vertical glitter photocard with the user and an anonymized stylized companion aura, sparkling sticker textures, colorful gems, glossy fan collectible style, abstract facial detail, high-energy composition.",
+    "styleTokens": ["glitter", "stickers", "gems", "comeback"],
+    "sampleOutputUrl": "/samples/glitter-pc-photocard.png",
+    "premium": true
+  },
+  {
+    "slug": "life4cuts-classic-strip",
+    "name": "Life4Cuts Classic Strip",
+    "format": "strip",
+    "category": "polaroid",
+    "promptTemplate": "A vertical four-cut photo strip showing the user and an anonymized stylized companion in four playful safe poses, white booth frame, clean captions as abstract marks, stylized fan photobooth output.",
+    "styleTokens": ["four-cut", "photobooth", "white frame", "playful"],
+    "sampleOutputUrl": "/samples/life4cuts-classic-strip.png",
+    "premium": false
+  },
+  {
+    "slug": "pastel-frame-strip",
+    "name": "Pastel Frame Strip",
+    "format": "strip",
+    "category": "daily",
+    "promptTemplate": "A vertical four-cut photo strip with pastel frames, the user and an anonymized stylized companion motif, cute stickers, soft color blocks, wholesome fan booth composition.",
+    "styleTokens": ["pastel", "four-cut", "stickers", "soft"],
+    "sampleOutputUrl": "/samples/pastel-frame-strip.png",
+    "premium": false
+  },
+  {
+    "slug": "retro-photobooth-strip",
+    "name": "Retro Photobooth Strip",
+    "format": "strip",
+    "category": "polaroid",
+    "promptTemplate": "A retro vertical photobooth strip with the user and an anonymized stylized companion, film grain, faded colors, rounded frame corners, vintage booth charm, stylized not photorealistic.",
+    "styleTokens": ["retro", "film grain", "vintage booth", "rounded"],
+    "sampleOutputUrl": "/samples/retro-photobooth-strip.png",
+    "premium": false
+  },
+  {
+    "slug": "monochrome-strip",
+    "name": "Monochrome Strip",
+    "format": "strip",
+    "category": "comeback",
+    "promptTemplate": "A vertical monochrome four-cut strip with the user and an anonymized stylized companion silhouette, high contrast black-and-white styling, editorial poses, clean border, abstract details.",
+    "styleTokens": ["monochrome", "editorial", "contrast", "clean"],
+    "sampleOutputUrl": "/samples/monochrome-strip.png",
+    "premium": false
+  },
+  {
+    "slug": "neon-sign-strip",
+    "name": "Neon Sign Strip",
+    "format": "strip",
+    "category": "concert",
+    "promptTemplate": "A vertical neon sign four-cut strip with the user and an anonymized stylized companion, glowing booth frame, stage-night colors, abstract neon icons, stylized fan output.",
+    "styleTokens": ["neon", "four-cut", "stage night", "glow"],
+    "sampleOutputUrl": "/samples/neon-sign-strip.png",
+    "premium": true
+  },
+  {
+    "slug": "paper-tape-strip",
+    "name": "Paper Tape Strip",
+    "format": "strip",
+    "category": "birthday",
+    "promptTemplate": "A vertical four-cut strip decorated with paper tape and safe birthday fan stickers, the user and an anonymized stylized companion mark, scrapbook texture, pastel celebratory styling.",
+    "styleTokens": ["paper tape", "scrapbook", "birthday", "pastel"],
+    "sampleOutputUrl": "/samples/paper-tape-strip.png",
+    "premium": false
+  },
+  {
+    "slug": "studio-call-fancall",
+    "name": "Studio Call Fancall",
+    "format": "fancall",
+    "category": "daily",
+    "promptTemplate": "A safe split-screen video call style illustration with the user on one side and an anonymized stylized companion avatar on the other, studio lighting, clean UI frame, no real persons, abstract facial detail.",
+    "styleTokens": ["split-screen", "studio", "call UI", "avatar"],
+    "sampleOutputUrl": "/samples/studio-call-fancall.png",
+    "premium": true
+  },
+  {
+    "slug": "comeback-live-fancall",
+    "name": "Comeback Live Fancall",
+    "format": "fancall",
+    "category": "comeback",
+    "promptTemplate": "A safe comeback live split-screen illustration, the user in fan attire and an anonymized stylized companion avatar in concept styling, neon UI accents, abstract faces, no real persons.",
+    "styleTokens": ["comeback", "split-screen", "neon UI", "avatar"],
+    "sampleOutputUrl": "/samples/comeback-live-fancall.png",
+    "premium": true
+  },
+  {
+    "slug": "birthday-message-fancall",
+    "name": "Birthday Message Fancall",
+    "format": "fancall",
+    "category": "birthday",
+    "promptTemplate": "A safe birthday message split-screen illustration with the user and an anonymized stylized companion avatar, cake icons as abstract stickers, confetti, warm fan-call UI, wholesome mood.",
+    "styleTokens": ["birthday", "confetti", "call UI", "warm"],
+    "sampleOutputUrl": "/samples/birthday-message-fancall.png",
+    "premium": true
+  },
+  {
+    "slug": "concert-backstage-fancall",
+    "name": "Concert Backstage Fancall",
+    "format": "fancall",
+    "category": "concert",
+    "promptTemplate": "A safe concert backstage split-screen illustration, the user and an anonymized stylized companion avatar, light sticks as abstract shapes, backstage glow, clean call UI, no real persons.",
+    "styleTokens": ["concert", "backstage", "light sticks", "call UI"],
+    "sampleOutputUrl": "/samples/concert-backstage-fancall.png",
+    "premium": true
+  },
+  {
+    "slug": "polaroid-call-fancall",
+    "name": "Polaroid Call Fancall",
+    "format": "fancall",
+    "category": "polaroid",
+    "promptTemplate": "A safe split-screen call illustration with a polaroid film border, the user and an anonymized stylized companion avatar, warm grain, abstract face gradients, stylized fan image.",
+    "styleTokens": ["polaroid", "split-screen", "film grain", "warm"],
+    "sampleOutputUrl": "/samples/polaroid-call-fancall.png",
+    "premium": true
+  },
+  {
+    "slug": "cafe-call-fancall",
+    "name": "Cafe Call Fancall",
+    "format": "fancall",
+    "category": "daily",
+    "promptTemplate": "A safe cafe-themed split-screen call illustration, the user and an anonymized stylized companion avatar, soft cafe window light, friendly UI frame, abstract faces, no real persons.",
+    "styleTokens": ["cafe", "call UI", "window light", "friendly"],
+    "sampleOutputUrl": "/samples/cafe-call-fancall.png",
+    "premium": true
+  }
+]

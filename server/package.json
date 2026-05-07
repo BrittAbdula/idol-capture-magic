@@ -15,7 +15,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "seed": "tsx src/db/seed/seed.ts"
+    "seed": "tsx src/db/seed/seed.ts",
+    "generate-assets": "tsx scripts/generate-assets.ts"
   },
   "dependencies": {
     "@lucia-auth/adapter-sqlite": "3.0.1",

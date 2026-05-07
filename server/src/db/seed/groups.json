@@ -1,0 +1,14 @@
+[
+  { "slug": "newjeans", "name": "NewJeans", "agency": "ADOR", "debutDate": "2022-07-22", "themeColor": "#A8C8E5", "popularityRank": 1 },
+  { "slug": "ive", "name": "IVE", "agency": "Starship", "debutDate": "2021-12-01", "themeColor": "#7B68EE", "popularityRank": 2 },
+  { "slug": "aespa", "name": "aespa", "agency": "SM", "debutDate": "2020-11-17", "themeColor": "#FF1493", "popularityRank": 3 },
+  { "slug": "le-sserafim", "name": "LE SSERAFIM", "agency": "Source", "debutDate": "2022-05-02", "themeColor": "#1E1E1E", "popularityRank": 4 },
+  { "slug": "twice", "name": "TWICE", "agency": "JYP", "debutDate": "2015-10-20", "themeColor": "#FF6F61", "popularityRank": 5 },
+  { "slug": "blackpink", "name": "BLACKPINK", "agency": "YG", "debutDate": "2016-08-08", "themeColor": "#FF69B4", "popularityRank": 6 },
+  { "slug": "bts", "name": "BTS", "agency": "BIGHIT", "debutDate": "2013-06-13", "themeColor": "#7B0091", "popularityRank": 7 },
+  { "slug": "stray-kids", "name": "Stray Kids", "agency": "JYP", "debutDate": "2018-03-25", "themeColor": "#000000", "popularityRank": 8 },
+  { "slug": "seventeen", "name": "SEVENTEEN", "agency": "PLEDIS", "debutDate": "2015-05-26", "themeColor": "#FFD700", "popularityRank": 9 },
+  { "slug": "enhypen", "name": "ENHYPEN", "agency": "BELIFT", "debutDate": "2020-11-30", "themeColor": "#9B0000", "popularityRank": 10 },
+  { "slug": "txt", "name": "TXT", "agency": "BIGHIT", "debutDate": "2019-03-04", "themeColor": "#5F9EA0", "popularityRank": 11 },
+  { "slug": "itzy", "name": "ITZY", "agency": "JYP", "debutDate": "2019-02-12", "themeColor": "#FFA500", "popularityRank": 12 }
+]

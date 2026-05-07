@@ -5,7 +5,7 @@ import { getEnv } from "./config/env.js";
 import { createDatabaseClient } from "./db/client.js";
 import { startServer } from "./server.js";
 import { StripeBillingService } from "./services/billing.js";
-import { OpenAIImageProvider } from "./services/generation/openai.js";
+import { KieImageProvider } from "./services/generation/kie.js";
 import { createLocalStorageService } from "./services/storage.js";
 
 const env = getEnv();
@@ -24,10 +24,10 @@ const billing = new StripeBillingService({
   plusPriceId: env.STRIPE_PLUS_PRICE_ID,
   proPriceId: env.STRIPE_PRO_PRICE_ID
 });
-const generationProvider = new OpenAIImageProvider(
-  env.OPENAI_API_KEY,
-  pathFromStorage(env.STORAGE_DIR, "raw")
-);
+const generationProvider = new KieImageProvider({
+  apiKey: env.KIE_API_KEY,
+  outputDir: pathFromStorage(env.STORAGE_DIR, "raw")
+});
 
 const app = createApp({
   publicAppOrigin: env.PUBLIC_APP_ORIGIN,

@@ -1,0 +1,140 @@
+[
+  {
+    "groupSlug": "newjeans",
+    "members": [
+      { "slug": "minji", "name": "Minji", "position": "Leader, Vocalist", "birthday": "05-07" },
+      { "slug": "hanni", "name": "Hanni", "position": "Vocalist", "birthday": "10-06" },
+      { "slug": "danielle", "name": "Danielle", "position": "Vocalist", "birthday": "04-11" },
+      { "slug": "haerin", "name": "Haerin", "position": "Vocalist", "birthday": "05-15" },
+      { "slug": "hyein", "name": "Hyein", "position": "Vocalist, Maknae", "birthday": "04-21" }
+    ]
+  },
+  {
+    "groupSlug": "ive",
+    "members": [
+      { "slug": "yujin", "name": "Yujin", "position": "Leader, Vocalist", "birthday": "09-01" },
+      { "slug": "gaeul", "name": "Gaeul", "position": "Rapper, Dancer", "birthday": "09-24" },
+      { "slug": "rei", "name": "Rei", "position": "Rapper, Vocalist", "birthday": "02-03" },
+      { "slug": "wonyoung", "name": "Wonyoung", "position": "Vocalist", "birthday": "08-31" },
+      { "slug": "liz", "name": "Liz", "position": "Vocalist", "birthday": "11-21" },
+      { "slug": "leeseo", "name": "Leeseo", "position": "Vocalist, Maknae", "birthday": "02-21" }
+    ]
+  },
+  {
+    "groupSlug": "aespa",
+    "members": [
+      { "slug": "karina", "name": "Karina", "position": "Leader, Dancer", "birthday": "04-11" },
+      { "slug": "giselle", "name": "Giselle", "position": "Rapper", "birthday": "10-30" },
+      { "slug": "winter", "name": "Winter", "position": "Vocalist, Dancer", "birthday": "01-01" },
+      { "slug": "ningning", "name": "Ningning", "position": "Vocalist", "birthday": "10-23" }
+    ]
+  },
+  {
+    "groupSlug": "le-sserafim",
+    "members": [
+      { "slug": "sakura", "name": "Sakura", "position": "Vocalist", "birthday": "03-19" },
+      { "slug": "chaewon", "name": "Chaewon", "position": "Leader, Vocalist", "birthday": "08-01" },
+      { "slug": "yunjin", "name": "Yunjin", "position": "Vocalist", "birthday": "10-08" },
+      { "slug": "kazuha", "name": "Kazuha", "position": "Dancer, Vocalist", "birthday": "08-09" },
+      { "slug": "eunchae", "name": "Eunchae", "position": "Vocalist, Maknae", "birthday": "11-10" }
+    ]
+  },
+  {
+    "groupSlug": "twice",
+    "members": [
+      { "slug": "nayeon", "name": "Nayeon", "position": "Vocalist", "birthday": "09-22" },
+      { "slug": "jeongyeon", "name": "Jeongyeon", "position": "Vocalist", "birthday": "11-01" },
+      { "slug": "momo", "name": "Momo", "position": "Dancer", "birthday": "11-09" },
+      { "slug": "sana", "name": "Sana", "position": "Vocalist", "birthday": "12-29" },
+      { "slug": "jihyo", "name": "Jihyo", "position": "Leader, Vocalist", "birthday": "02-01" },
+      { "slug": "mina", "name": "Mina", "position": "Dancer, Vocalist", "birthday": "03-24" },
+      { "slug": "dahyun", "name": "Dahyun", "position": "Rapper, Vocalist", "birthday": "05-28" },
+      { "slug": "chaeyoung", "name": "Chaeyoung", "position": "Rapper", "birthday": "04-23" },
+      { "slug": "tzuyu", "name": "Tzuyu", "position": "Vocalist, Maknae", "birthday": "06-14" }
+    ]
+  },
+  {
+    "groupSlug": "blackpink",
+    "members": [
+      { "slug": "jisoo", "name": "Jisoo", "position": "Vocalist", "birthday": "01-03" },
+      { "slug": "jennie", "name": "Jennie", "position": "Rapper, Vocalist", "birthday": "01-16" },
+      { "slug": "rose", "name": "Rose", "position": "Vocalist", "birthday": "02-11" },
+      { "slug": "lisa", "name": "Lisa", "position": "Dancer, Rapper", "birthday": "03-27" }
+    ]
+  },
+  {
+    "groupSlug": "bts",
+    "members": [
+      { "slug": "rm", "name": "RM", "position": "Leader, Rapper", "birthday": "09-12" },
+      { "slug": "jin", "name": "Jin", "position": "Vocalist", "birthday": "12-04" },
+      { "slug": "suga", "name": "SUGA", "position": "Rapper", "birthday": "03-09" },
+      { "slug": "j-hope", "name": "j-hope", "position": "Rapper, Dancer", "birthday": "02-18" },
+      { "slug": "jimin", "name": "Jimin", "position": "Vocalist, Dancer", "birthday": "10-13" },
+      { "slug": "v", "name": "V", "position": "Vocalist", "birthday": "12-30" },
+      { "slug": "jung-kook", "name": "Jung Kook", "position": "Vocalist, Maknae", "birthday": "09-01" }
+    ]
+  },
+  {
+    "groupSlug": "stray-kids",
+    "members": [
+      { "slug": "bang-chan", "name": "Bang Chan", "position": "Leader, Producer", "birthday": "10-03" },
+      { "slug": "lee-know", "name": "Lee Know", "position": "Dancer, Vocalist", "birthday": "10-25" },
+      { "slug": "changbin", "name": "Changbin", "position": "Rapper, Producer", "birthday": "08-11" },
+      { "slug": "hyunjin", "name": "Hyunjin", "position": "Dancer, Rapper", "birthday": "03-20" },
+      { "slug": "han", "name": "Han", "position": "Rapper, Producer", "birthday": "09-14" },
+      { "slug": "felix", "name": "Felix", "position": "Dancer, Rapper", "birthday": "09-15" },
+      { "slug": "seungmin", "name": "Seungmin", "position": "Vocalist", "birthday": "09-22" },
+      { "slug": "in", "name": "I.N", "position": "Vocalist, Maknae", "birthday": "02-08" }
+    ]
+  },
+  {
+    "groupSlug": "seventeen",
+    "members": [
+      { "slug": "scoups", "name": "S.Coups", "position": "Leader, Rapper", "birthday": "08-08" },
+      { "slug": "jeonghan", "name": "Jeonghan", "position": "Vocalist", "birthday": "10-04" },
+      { "slug": "joshua", "name": "Joshua", "position": "Vocalist", "birthday": "12-30" },
+      { "slug": "jun", "name": "Jun", "position": "Dancer, Vocalist", "birthday": "06-10" },
+      { "slug": "hoshi", "name": "Hoshi", "position": "Dancer, Vocalist", "birthday": "06-15" },
+      { "slug": "wonwoo", "name": "Wonwoo", "position": "Rapper", "birthday": "07-17" },
+      { "slug": "woozi", "name": "Woozi", "position": "Producer, Vocalist", "birthday": "11-22" },
+      { "slug": "dk", "name": "DK", "position": "Vocalist", "birthday": "02-18" },
+      { "slug": "mingyu", "name": "Mingyu", "position": "Rapper", "birthday": "04-06" },
+      { "slug": "the8", "name": "The8", "position": "Dancer, Vocalist", "birthday": "11-07" },
+      { "slug": "seungkwan", "name": "Seungkwan", "position": "Vocalist", "birthday": "01-16" },
+      { "slug": "vernon", "name": "Vernon", "position": "Rapper", "birthday": "02-18" },
+      { "slug": "dino", "name": "Dino", "position": "Dancer, Maknae", "birthday": "02-11" }
+    ]
+  },
+  {
+    "groupSlug": "enhypen",
+    "members": [
+      { "slug": "jungwon", "name": "Jungwon", "position": "Leader, Vocalist", "birthday": "02-09" },
+      { "slug": "heeseung", "name": "Heeseung", "position": "Vocalist", "birthday": "10-15" },
+      { "slug": "jay", "name": "Jay", "position": "Vocalist", "birthday": "04-20" },
+      { "slug": "jake", "name": "Jake", "position": "Vocalist", "birthday": "11-15" },
+      { "slug": "sunghoon", "name": "Sunghoon", "position": "Vocalist", "birthday": "12-08" },
+      { "slug": "sunoo", "name": "Sunoo", "position": "Vocalist", "birthday": "06-24" },
+      { "slug": "ni-ki", "name": "Ni-ki", "position": "Dancer, Maknae", "birthday": "12-09" }
+    ]
+  },
+  {
+    "groupSlug": "txt",
+    "members": [
+      { "slug": "soobin", "name": "Soobin", "position": "Leader, Vocalist", "birthday": "12-05" },
+      { "slug": "yeonjun", "name": "Yeonjun", "position": "Rapper, Dancer", "birthday": "09-13" },
+      { "slug": "beomgyu", "name": "Beomgyu", "position": "Vocalist", "birthday": "03-13" },
+      { "slug": "taehyun", "name": "Taehyun", "position": "Vocalist", "birthday": "02-05" },
+      { "slug": "hueningkai", "name": "Hueningkai", "position": "Vocalist, Maknae", "birthday": "08-14" }
+    ]
+  },
+  {
+    "groupSlug": "itzy",
+    "members": [
+      { "slug": "yeji", "name": "Yeji", "position": "Leader, Dancer", "birthday": "05-26" },
+      { "slug": "lia", "name": "Lia", "position": "Vocalist", "birthday": "07-21" },
+      { "slug": "ryujin", "name": "Ryujin", "position": "Rapper, Dancer", "birthday": "04-17" },
+      { "slug": "chaeryeong", "name": "Chaeryeong", "position": "Dancer, Vocalist", "birthday": "06-05" },
+      { "slug": "yuna", "name": "Yuna", "position": "Vocalist, Maknae", "birthday": "12-09" }
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "newjeans-supernatural",
+    "groupSlug": "newjeans",
+    "title": "Supernatural Concept",
+    "releaseDate": "2026-06-15",
+    "status": "active",
+    "conceptKeywords": ["Y2K", "metallic", "futuristic", "soft-focus"],
+    "conceptPalette": ["#A8C8E5", "#FFFFFF", "#C0C0C0", "#000033"],
+    "description": "Try the Supernatural concept aesthetic - Y2K metallic with soft-focus."
+  },
+  {
+    "slug": "ive-i-am",
+    "groupSlug": "ive",
+    "title": "I AM Concept",
+    "releaseDate": "2026-04-10",
+    "status": "archived",
+    "conceptKeywords": ["regal", "powerful", "white", "classical"],
+    "conceptPalette": ["#FFFFFF", "#7B68EE", "#FFD700"],
+    "description": "Royal aesthetic - white regalia and classical lighting."
+  },
+  {
+    "slug": "aespa-whiplash",
+    "groupSlug": "aespa",
+    "title": "Whiplash Concept",
+    "releaseDate": "2026-10-21",
+    "status": "upcoming",
+    "conceptKeywords": ["cyberpunk", "neon", "metallic", "edgy"],
+    "conceptPalette": ["#FF1493", "#00FFFF", "#1A1A2E"],
+    "description": "Cyberpunk concept with neon edges."
+  }
+]

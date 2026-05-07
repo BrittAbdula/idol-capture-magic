@@ -14,7 +14,7 @@ const EnvSchema = z
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GOOGLE_REDIRECT_URI: z.string().url(),
-    OPENAI_API_KEY: z.string().min(1),
+    KIE_API_KEY: z.string().min(1),
     STRIPE_SECRET_KEY: z.string().min(1),
     STRIPE_WEBHOOK_SECRET: z.string().min(1),
     STRIPE_PLUS_PRICE_ID: z.string().min(1),

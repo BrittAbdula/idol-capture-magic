@@ -12,7 +12,7 @@ const validEnv = {
   GOOGLE_CLIENT_ID: "google-client",
   GOOGLE_CLIENT_SECRET: "google-secret",
   GOOGLE_REDIRECT_URI: "http://localhost:8787/auth/google/callback",
-  OPENAI_API_KEY: "openai-key",
+  KIE_API_KEY: "kie-key",
   STRIPE_SECRET_KEY: "stripe-secret",
   STRIPE_WEBHOOK_SECRET: "stripe-webhook",
   STRIPE_PLUS_PRICE_ID: "price_plus",
@@ -29,9 +29,9 @@ describe("parseEnv", () => {
   });
 
   test("fails loudly when required credentials are missing", () => {
-    const { OPENAI_API_KEY: _openAiApiKey, ...envWithoutOpenAi } = validEnv;
+    const { KIE_API_KEY: _kieApiKey, ...envWithoutKie } = validEnv;
 
-    expect(() => parseEnv(envWithoutOpenAi)).toThrow(/OPENAI_API_KEY/);
+    expect(() => parseEnv(envWithoutKie)).toThrow(/KIE_API_KEY/);
   });
 
   test("requires R2 credentials when R2 storage is selected", () => {

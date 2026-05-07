@@ -212,16 +212,16 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-4** — all domain APIs documented, all return zod-validated JSON
 
 ### Phase 5 — Seed Data + Asset Generation
-- [ ] T-5.1 Author `seed/groups.json` with 12 groups (Section 11)
-- [ ] T-5.2 Author `seed/members.json` with members for each group (Section 11)
-- [ ] T-5.3 Author `seed/concepts.json` with 24 concept presets (Section 11)
-- [ ] T-5.4 Author `seed/campaigns.json` with 3 sample campaigns
-- [ ] T-5.5 Implement `seed.ts` script
-- [ ] T-5.6 Generate placeholder member silhouettes (Section 13.1)
-- [ ] T-5.7 Generate concept sample outputs (Section 13.2)
-- [ ] T-5.8 Generate group cover art (Section 13.3)
-- [ ] T-5.9 Generate UI illustrations (logo, empty states) (Section 13.4)
-- [ ] **CKPT-5** — `npm run seed` populates DB; `/public/placeholders/` and `/public/samples/` populated
+- [x] T-5.1 Author `seed/groups.json` with 12 groups (Section 11)
+- [x] T-5.2 Author `seed/members.json` with members for each group (Section 11)
+- [x] T-5.3 Author `seed/concepts.json` with 24 concept presets (Section 11)
+- [x] T-5.4 Author `seed/campaigns.json` with 3 sample campaigns
+- [x] T-5.5 Implement `seed.ts` script
+- [x] T-5.6 Generate placeholder member silhouettes (Section 13.1)
+- [x] T-5.7 Generate concept sample outputs (Section 13.2)
+- [x] T-5.8 Generate group cover art (Section 13.3)
+- [x] T-5.9 Generate UI illustrations (logo, empty states) (Section 13.4)
+- [x] **CKPT-5** — `npm run seed` populates DB; `/public/placeholders/` and `/public/samples/` populated
 
 ### Phase 6 — Frontend: Foundation
 - [ ] T-6.1 Set up `src/api/client.ts` with typed fetch wrappers
