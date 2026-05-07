@@ -46,6 +46,18 @@ interface PhotoPosition {
   id: string;
 }
 
+interface TemplateDecoration {
+  type: string;
+  url: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  width?: number;
+  height?: number;
+  scale: number;
+}
+
 const TemplateCreator: React.FC = () => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -73,7 +85,7 @@ const TemplateCreator: React.FC = () => {
   
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
   
-  const [decorations, setDecorations] = useState<any[]>([]);
+  const [decorations, setDecorations] = useState<TemplateDecoration[]>([]);
   
   useEffect(() => {
     const generateSampleImages = () => {

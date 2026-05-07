@@ -164,12 +164,12 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 > **Codex: Edit this section in place to track progress. Replace `[ ]` with `[x]` after each task is verified done. Commit after every checkpoint.**
 
 ### Phase 0 — Bootstrap
-- [ ] T-0.1 Create `server/` directory with package.json
-- [ ] T-0.2 Pin all dependencies per Section 2
-- [ ] T-0.3 Set up TypeScript, ESLint, Prettier in `server/`
-- [ ] T-0.4 Configure `.env.example` files (frontend + backend) per Section 3
-- [ ] T-0.5 Add `.gitignore` entries for `data/`, `storage/`, `.env`
-- [ ] **CKPT-0** — `git add . && git commit -m "feat: bootstrap server scaffold"`
+- [x] T-0.1 Create `server/` directory with package.json
+- [x] T-0.2 Pin all dependencies per Section 2
+- [x] T-0.3 Set up TypeScript, ESLint, Prettier in `server/`
+- [x] T-0.4 Configure `.env.example` files (frontend + backend) per Section 3
+- [x] T-0.5 Add `.gitignore` entries for `data/`, `storage/`, `.env`
+- [x] **CKPT-0** — `git add . && git commit -m "feat: bootstrap server scaffold"`
 
 ### Phase 1 — Backend Foundation
 - [ ] T-1.1 Implement `server/src/config/env.ts` with zod validation
