@@ -7,7 +7,9 @@ import type { DatabaseClient } from "./db/client.js";
 import type { BillingService } from "./services/billing.js";
 import type { GenerationProvider } from "./services/generation/provider.js";
 import { createAuthRoutes } from "./routes/auth.js";
+import { createBinderRoutes } from "./routes/binder.js";
 import { createBillingRoutes, createStripeWebhookRoutes } from "./routes/billing.js";
+import { createDomainRoutes } from "./routes/domain.js";
 import { createGenerateRoutes } from "./routes/generate.js";
 import type { StorageService } from "./services/storage.js";
 
@@ -36,6 +38,16 @@ export function createApp(options: CreateAppOptions): Hono {
   );
 
   app.get("/health", (c) => c.json({ ok: true }));
+  if (options.client) {
+    app.route("/api", createDomainRoutes({ client: options.client }));
+    app.route(
+      "/api/binder",
+      createBinderRoutes({
+        auth: options.auth,
+        client: options.client
+      })
+    );
+  }
   if (options.client && options.generationProvider && options.storage) {
     app.route(
       "/api",

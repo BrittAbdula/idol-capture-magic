@@ -202,14 +202,14 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-3** — Stripe test purchase upgrades plan
 
 ### Phase 4 — Domain APIs
-- [ ] T-4.1 `GET /api/groups`, `GET /api/groups/:slug`
-- [ ] T-4.2 `GET /api/members/:groupSlug/:memberSlug`
-- [ ] T-4.3 `GET /api/concepts?memberId=&format=`
-- [ ] T-4.4 `GET /api/campaigns/:slug`
-- [ ] T-4.5 Binder CRUD: `GET/POST/DELETE /api/binder/items`
-- [ ] T-4.6 `GET /api/binder/public/:handle`
-- [ ] T-4.7 `GET /api/share/:generationId` (no auth)
-- [ ] **CKPT-4** — all domain APIs documented, all return zod-validated JSON
+- [x] T-4.1 `GET /api/groups`, `GET /api/groups/:slug`
+- [x] T-4.2 `GET /api/members/:groupSlug/:memberSlug`
+- [x] T-4.3 `GET /api/concepts?memberId=&format=`
+- [x] T-4.4 `GET /api/campaigns/:slug`
+- [x] T-4.5 Binder CRUD: `GET/POST/DELETE /api/binder/items`
+- [x] T-4.6 `GET /api/binder/public/:handle`
+- [x] T-4.7 `GET /api/share/:generationId` (no auth)
+- [x] **CKPT-4** — all domain APIs documented, all return zod-validated JSON
 
 ### Phase 5 — Seed Data + Asset Generation
 - [ ] T-5.1 Author `seed/groups.json` with 12 groups (Section 11)
