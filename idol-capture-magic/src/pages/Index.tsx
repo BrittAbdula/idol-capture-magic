@@ -1,283 +1,217 @@
-import React, { useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Camera, Star, Image, Sparkles, ArrowRight, Upload, Download } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import SEO from '../components/SEO'; 
-import { Button } from '../components/ui/button';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, CalendarDays, Languages } from "lucide-react";
 
-const Index = () => {
-  const animatedElementsRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  
+import { api, type ApiMember } from "@/api/client";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
+
+const heroSamples = [
+  "/samples/polaroid-selca.png",
+  "/samples/holo-frame-photocard.png",
+  "/samples/life4cuts-classic-strip.png"
+];
+
+const recentSamples = [
+  "/samples/cafe-window-selca.png",
+  "/samples/cherry-blossom-selca.png",
+  "/samples/fanmeet-ticket-photocard.png",
+  "/samples/glitter-pc-photocard.png",
+  "/samples/pastel-frame-strip.png",
+  "/samples/neon-sign-strip.png",
+  "/samples/season-greeting-photocard.png",
+  "/samples/han-river-walk-selca.png",
+  "/samples/retro-photobooth-strip.png",
+  "/samples/plain-pc-photocard.png",
+  "/samples/monochrome-strip.png",
+  "/samples/neon-night-selca.png"
+];
+
+function birthdayScore(member: ApiMember): number {
+  if (!member.birthday) {
+    return Number.POSITIVE_INFINITY;
+  }
+  const [month, day] = member.birthday.split("-").map(Number);
+  const today = new Date();
+  const next = new Date(today.getFullYear(), month - 1, day);
+  if (next < today) {
+    next.setFullYear(today.getFullYear() + 1);
+  }
+  return Math.ceil((next.getTime() - today.getTime()) / 86_400_000);
+}
+
+export default function Index() {
+  const [selectedGroupSlug, setSelectedGroupSlug] = useState("newjeans");
+  const [activeSample, setActiveSample] = useState(0);
+  const groups = useQuery({ queryKey: ["groups"], queryFn: api.groups });
+  const selectedGroup = useQuery({
+    queryKey: ["group", selectedGroupSlug],
+    queryFn: () => api.group(selectedGroupSlug),
+    enabled: Boolean(selectedGroupSlug)
+  });
+  const campaigns = useQuery({
+    queryKey: ["campaigns", "week"],
+    queryFn: () => api.campaigns({ status: "upcoming,active", limit: 6 })
+  });
+  const birthdays = useMemo(
+    () => [...(selectedGroup.data?.members ?? [])].sort((a, b) => birthdayScore(a) - birthdayScore(b)).slice(0, 3),
+    [selectedGroup.data?.members]
+  );
+
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('show');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    
-    const animatedElements = document.querySelectorAll('.animate-on-scroll');
-    animatedElements.forEach((el) => observer.observe(el));
-    
-    return () => {
-      animatedElements.forEach((el) => observer.unobserve(el));
-    };
+    const timer = window.setInterval(() => {
+      setActiveSample((value) => (value + 1) % heroSamples.length);
+    }, 3000);
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
-    <div className="min-h-screen bg-white" ref={animatedElementsRef}>
-      <SEO 
-        title="Take a Virtual Photo with Your Favorite Idol Free| IdolBooth.com"
-        description="Use our free Idol Photo Booth online to take stunning virtual photos with your favorite Kpop idols, anime characters, and celebrities. Capture your special moments and print them instantly. Try IdolBooth now!"
+    <div className="min-h-screen bg-white text-gray-950">
+      <SEO
+        title="Free K-pop AI Selca, Photocard & Photobooth | IdolBooth"
+        description="Make a selca with your bias in 30 seconds. No download. Free forever."
       />
       <Navbar />
-      
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/30 z-10" />
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover  m-2"
-            poster="/images/hero.svg"
-          >
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-people-taking-pictures-in-a-concert-4839-large.mp4" type="video/mp4" />
-          </video>
-          {/* <img src="/images/hero.png" className="w-full h-full object-cover" /> */}
-        </div>
-        
-        <div className="container mx-auto px-4 md:px-6 relative z-10 pt-16">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-full py-1 px-4 mb-8 animate-fade-in">
-              <Sparkles className="w-4 h-4 text-idol-gold mr-2" />
-              <span className="text-sm text-white/90">AI-Powered Idol Photo Booth</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-up font-montserrat">
-              Take Photos with Your 
-              <span className="text-idol-gold ml-2">Favorite Idols</span>
+
+      <main>
+        <section className="grid min-h-[calc(100svh-72px)] items-center gap-10 px-4 pt-28 md:grid-cols-2 md:px-8 lg:px-14">
+          <div className="max-w-2xl">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-idol-gold">
+              IdolBooth
+            </p>
+            <h1 className="text-5xl font-bold tracking-normal md:text-7xl">
+              Free K-pop AI Selca, Photocard & Photobooth
             </h1>
-            
-            <p className="text-xl text-white/80 mb-8 leading-relaxed animate-fade-up delay-100 font-open-sans">
-              Create stunning K-pop & J-pop style photo strips with AI-generated idol photos.
-              No photos needed - just describe your dream idol moment!
+            <p className="mt-6 max-w-xl text-lg text-gray-600">
+              Make a selca with your bias in 30 seconds. No download. Free forever.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-200">
-              <Link to="/photo-with-idol" className="idol-button">
-                <span className="flex items-center">
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  <span>Photo with Idol</span>
-                </span>
-              </Link>
-              
-              <Link to="/photo-booth" className="idol-button-outline">
-                <span className="flex items-center">
-                  <Image className="w-5 h-5 mr-2" />
-                  <span>Capture Your Photo</span>
-                </span>
-              </Link>
+            <a href="#bias-picker" className="idol-button-square mt-8 inline-flex items-center gap-2">
+              Pick your bias <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+          <div className="relative min-h-[58vh] overflow-hidden border border-black/10 bg-gray-50">
+            {heroSamples.map((sample, index) => (
+              <img
+                key={sample}
+                src={sample}
+                alt=""
+                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                  index === activeSample ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ))}
+            <div className="absolute bottom-4 left-4 flex gap-2">
+              {heroSamples.map((sample, index) => (
+                <button
+                  key={sample}
+                  aria-label={`Show sample ${index + 1}`}
+                  onClick={() => setActiveSample(index)}
+                  className={`h-2 w-8 border border-white ${activeSample === index ? "bg-white" : "bg-white/30"}`}
+                />
+              ))}
             </div>
           </div>
-        </div>
-        
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </section>
-      
-      {/* Features Section */}
-      <section className="py-24 bg-idol-gray">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-16">
-            <h2 className="inline-block text-3xl md:text-4xl font-bold mb-4 animate-on-scroll font-montserrat">
-              <span className="relative">
-                Premium Features
-                <span className="absolute bottom-0 left-0 w-full h-1 bg-idol-gold opacity-70" />
-              </span>
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto animate-on-scroll">
-              Our cutting-edge technology makes it easy to create stunning photo booth moments with your favorite idols.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <div className="neo-panel hover-scale animate-on-scroll">
-              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">AI-Generated Idol Photos</h3>
-              <p className="text-gray-600">
-                Create realistic photos with any idol using our advanced AI technology.
-              </p>
-            </div>
-            
-            <div className="neo-panel hover-scale animate-on-scroll">
-              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
-                <Camera className="w-6 h-6 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Professional Photo Editing</h3>
-              <p className="text-gray-600">
-                Apply premium filters and effects to create authentic idol-style photos.
-              </p>
-            </div>
-            
-            <div className="neo-panel hover-scale animate-on-scroll">
-              <div className="w-14 h-14 bg-idol-gold/10 rounded-full flex items-center justify-center mb-4">
-                <Download className="w-6 h-6 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Instant Download & Share</h3>
-              <p className="text-gray-600">
-                Download high-quality photo strips or share directly to social media.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* How It Works Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-16">
-            <h2 className="inline-block text-3xl md:text-4xl font-bold mb-4 animate-on-scroll font-montserrat">
-              <span className="relative">
-                How It Works
-                <span className="absolute bottom-0 left-0 w-full h-1 bg-idol-gold opacity-70" />
-              </span>
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto animate-on-scroll">
-              Create stunning photo combinations with your favorite idols in just a few simple steps.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
-            <div className="text-center animate-on-scroll">
-              <div className="w-20 h-20 bg-idol-gold/10 rounded-full flex items-center justify-center mb-6 mx-auto relative">
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-idol-gold rounded-full flex items-center justify-center text-black font-bold">1</span>
-                <Sparkles className="w-8 h-8 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Describe Your Idol</h3>
-              <p className="text-gray-600">
-                Enter the name of your favorite idol or describe the scene you want.
-              </p>
-            </div>
-            
-            <div className="text-center animate-on-scroll">
-              <div className="w-20 h-20 bg-idol-gold/10 rounded-full flex items-center justify-center mb-6 mx-auto relative">
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-idol-gold rounded-full flex items-center justify-center text-black font-bold">2</span>
-                <Camera className="w-8 h-8 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">AI Generates Your Photo</h3>
-              <p className="text-gray-600">
-                Our AI creates a realistic photo of you with your idol in seconds.
-              </p>
-            </div>
-            
-            <div className="text-center animate-on-scroll">
-              <div className="w-20 h-20 bg-idol-gold/10 rounded-full flex items-center justify-center mb-6 mx-auto relative">
-                <span className="absolute -top-2 -right-2 w-8 h-8 bg-idol-gold rounded-full flex items-center justify-center text-black font-bold">3</span>
-                <Download className="w-8 h-8 text-idol-gold" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 font-montserrat">Download & Share</h3>
-              <p className="text-gray-600">
-                Download your perfect photo strip and share it with friends.
-              </p>
-            </div>
-          </div>
-          
-          <div className="text-center mt-12 animate-on-scroll">
-            <Link to="/photo-strip" className="idol-button inline-flex items-center">
-              Try Now <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-      
-      {/* Call to Action Section */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/sample/sample-4.jpg"
-            alt="AI-generated idol photo"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/70 z-10" />
-        </div>
-        
-        <div className="container mx-auto px-4 md:px-6 relative z-20">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-on-scroll font-montserrat">
-              Your Dream Idol Moment Awaits
-            </h2>
-            <p className="text-xl text-white/80 mb-8 animate-on-scroll">
-              Create memories with your favorite idols - no camera needed!
-            </p>
-            <Link to="/photo-with-idol" className="idol-button animate-on-scroll inline-block">
-              <span className="flex items-center justify-center">
-                <Sparkles className="w-5 h-5 mr-2" />
-                <span>Photo with Idol Now</span>
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
-      
-      {/* AI Generated Idol Moments Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-12">
-            <h2 className="inline-block text-3xl md:text-4xl font-bold mb-4 animate-on-scroll font-montserrat">
-              <span className="relative">
-                AI-Generated Idol Moments
-                <span className="absolute bottom-0 left-0 w-full h-1 bg-idol-gold opacity-70" />
-              </span>
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto animate-on-scroll">
-              See how our AI creates realistic photos with your favorite idols
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        </section>
+
+        <section className="border-y border-black/10 px-4 py-16 md:px-8 lg:px-14">
+          <div className="grid gap-6 md:grid-cols-3">
             {[
-              { idol: "BTS", desc: "Concert moment with BTS", image: "/images/bts.png" },
-              { idol: "BLACKPINK", desc: "Backstage with BLACKPINK", image: "/images/blackpink.png" },
-              { idol: "Anime Character", desc: "Meet your favorite anime character", image: "/images/anime.png" }
-            ].map((item, index) => (
-              <div key={index} className="bg-gray-50 rounded-xl overflow-hidden shadow-lg animate-on-scroll">
-                <img src={item.image} alt={item.idol} className="w-full h-48 object-cover" />
-                <div className="p-6">
-                  <h3 className="font-semibold text-lg mb-2">{item.desc}</h3>
-                  <p className="text-gray-600 text-sm mb-4">
-                    Our AI creates realistic photos that look like you were really there
-                  </p>
-                  <Button 
-                    asChild 
-                    className="w-full bg-purple-600 hover:bg-purple-700"
-                    onClick={() => navigate('/photo-strip')}
-                  >
-                    <Link to="/photo-strip">Try with {item.idol}</Link>
-                  </Button>
+              ["Selca with idol", "/selca", "/samples/polaroid-selca.png", "Square companion-style selcas for profile drops."],
+              ["AI Photocard", "/photocard", "/samples/holo-frame-photocard.png", "Collectible vertical cards with fan-safe concepts."],
+              ["4-cut Photo Strip", "/strip", "/samples/life4cuts-classic-strip.png", "Use the classic webcam strip builder and download."]
+            ].map(([title, href, image, description]) => (
+              <Link key={href} to={href} className="group block">
+                <img src={image} alt="" className="aspect-[4/5] w-full object-cover" />
+                <div className="mt-4 flex items-start justify-between gap-4 border-t border-black/10 pt-4">
+                  <div>
+                    <h2 className="text-xl font-semibold">{title}</h2>
+                    <p className="mt-1 text-sm text-gray-600">{description}</p>
+                    <p className="mt-3 text-sm font-semibold text-idol-gold">Try free</p>
+                  </div>
+                  <ArrowRight className="mt-1 h-5 w-5 transition group-hover:translate-x-1" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section id="bias-picker" className="px-4 py-16 md:px-8 lg:px-14">
+          <h2 className="text-3xl font-semibold">Pick your bias</h2>
+          <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
+            {groups.data?.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => setSelectedGroupSlug(group.slug)}
+                className={`shrink-0 border px-4 py-2 text-sm ${
+                  selectedGroupSlug === group.slug ? "border-idol-gold text-idol-gold" : "border-black/10"
+                }`}
+              >
+                {group.name}
+              </button>
+            ))}
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-6">
+            {selectedGroup.data?.members.map((member) => (
+              <Link
+                key={member.id}
+                to={`/g/${selectedGroupSlug}/${member.slug}`}
+                className="group overflow-hidden border border-black/10"
+              >
+                <img src={member.silhouetteImage} alt="" className="aspect-square w-full object-cover" />
+                <div className="p-3 text-sm font-semibold">{member.name}</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t border-black/10 px-4 py-16 md:px-8 lg:px-14">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-3xl font-semibold">This week in K-pop</h2>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Languages className="h-4 w-4" />
+              English
+            </div>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {campaigns.data?.map((campaign) => (
+              <Link key={campaign.id} to={`/c/${campaign.slug}`} className="border border-black/10 p-5">
+                <p className="text-sm uppercase tracking-wide text-idol-gold">{campaign.status}</p>
+                <h3 className="mt-2 text-xl font-semibold">{campaign.title}</h3>
+                <p className="mt-2 text-sm text-gray-600">{campaign.description}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-8 grid gap-3 md:grid-cols-3">
+            {birthdays.map((member) => (
+              <div key={member.id} className="flex items-center gap-3 border border-black/10 p-4">
+                <CalendarDays className="h-5 w-5 text-idol-gold" />
+                <div>
+                  <p className="font-semibold">{member.name} birthday</p>
+                  <p className="text-sm text-gray-600">{birthdayScore(member)} days away</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-      
+        </section>
+
+        <section className="border-t border-black/10 px-4 py-16 md:px-8 lg:px-14">
+          <h2 className="text-3xl font-semibold">Recent fan creations</h2>
+          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-6">
+            {recentSamples.map((sample) => (
+              <Link key={sample} to="/selca" className="group relative overflow-hidden border border-black/10">
+                <img src={sample} alt="" className="aspect-[4/5] w-full object-cover" />
+                <span className="absolute inset-x-0 bottom-0 translate-y-full bg-black/75 p-3 text-sm font-semibold text-white transition group-hover:translate-y-0">
+                  Make yours
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </main>
+
       <Footer />
     </div>
   );
-};
-
-export default Index;
+}

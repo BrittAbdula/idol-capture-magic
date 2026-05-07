@@ -28,6 +28,7 @@ import Dashboard from "./pages/me/Dashboard";
 import MyBinder from "./pages/me/MyBinder";
 import Settings from "./pages/me/Settings";
 import PublicBinder from "./pages/share/PublicBinder";
+import ShareById from "./pages/share/ShareById";
 import Pricing from "./pages/pricing/Pricing";
 import SafetyPage from "./pages/legal/SafetyPage";
 import TakedownPage from "./pages/legal/TakedownPage";
@@ -135,7 +136,7 @@ const App = () => {
                 <Route path="/me/binder" element={<MyBinder />} />
                 <Route path="/me/settings" element={<Settings />} />
                 <Route path="/binder/:handle" element={<PublicBinder />} />
-                <Route path="/share/:id" element={<SharePage />} />
+                <Route path="/share/:id" element={<ShareById />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/legal/safety" element={<SafetyPage />} />
                 <Route path="/legal/takedown" element={<TakedownPage />} />

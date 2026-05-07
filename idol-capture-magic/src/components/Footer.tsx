@@ -35,18 +35,18 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/photo-booth" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
-                  Photo Booth
+                <Link to="/strip" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                  Photo Strip
                 </Link>
               </li>
               <li>
-                <Link to="/" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
-                  About
+                <Link to="/pricing" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                  Pricing
                 </Link>
               </li>
               <li>
-                <Link to="/" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
-                  Contact
+                <Link to="/calendar" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                  Calendar
                 </Link>
               </li>
             </ul>
@@ -77,10 +77,10 @@ const Footer = () => {
           <div>
             <h4 className="font-montserrat font-semibold text-lg mb-4">Connect</h4>
             <div className="flex gap-4">
-              <a href="#" className="text-gray-400 hover:text-idol-gold transition-colors">
+              <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-idol-gold transition-colors">
+              <a href="https://x.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
               <a href="https://github.com/BrittAbdula/idol-capture-magic" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
@@ -100,6 +100,12 @@ const Footer = () => {
             </Link>
             <Link to="/terms" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
               Terms of Service
+            </Link>
+            <Link to="/legal/safety" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+              Safety
+            </Link>
+            <Link to="/legal/takedown" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+              Takedown
             </Link>
           </div>
         </div>

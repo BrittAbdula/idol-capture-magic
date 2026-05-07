@@ -235,22 +235,22 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-6** — all routes resolve, auth state visible
 
 ### Phase 7 — Frontend: Pages
-- [ ] T-7.1 New homepage `/` per Section 7.2
-- [ ] T-7.2 Group hub `/g/:groupSlug` per Section 7.3
-- [ ] T-7.3 Member hub `/g/:groupSlug/:memberSlug` per Section 7.4
-- [ ] T-7.4 Generation flow shared component (3-screen wizard) per Section 7.5
-- [ ] T-7.5 `/selca` page (uses generation flow, format=selca)
-- [ ] T-7.6 `/photocard` page (format=photocard, plus card-back editor)
-- [ ] T-7.7 `/strip` page (format=strip, port webcam capture from existing code)
-- [ ] T-7.8 Campaign page `/c/:slug` per Section 7.6
-- [ ] T-7.9 `/calendar` page (simple list view of upcoming events)
-- [ ] T-7.10 `/me` dashboard per Section 7.7
-- [ ] T-7.11 `/me/binder` per Section 7.8
-- [ ] T-7.12 `/binder/:handle` public binder
-- [ ] T-7.13 `/share/:id` public share
-- [ ] T-7.14 `/pricing` page per Section 7.9
-- [ ] T-7.15 `/legal/safety` and `/legal/takedown` (placeholder copy)
-- [ ] **CKPT-7** — all pages render, no broken links
+- [x] T-7.1 New homepage `/` per Section 7.2
+- [x] T-7.2 Group hub `/g/:groupSlug` per Section 7.3
+- [x] T-7.3 Member hub `/g/:groupSlug/:memberSlug` per Section 7.4
+- [x] T-7.4 Generation flow shared component (3-screen wizard) per Section 7.5
+- [x] T-7.5 `/selca` page (uses generation flow, format=selca)
+- [x] T-7.6 `/photocard` page (format=photocard, plus card-back editor)
+- [x] T-7.7 `/strip` page (format=strip, port webcam capture from existing code)
+- [x] T-7.8 Campaign page `/c/:slug` per Section 7.6
+- [x] T-7.9 `/calendar` page (simple list view of upcoming events)
+- [x] T-7.10 `/me` dashboard per Section 7.7
+- [x] T-7.11 `/me/binder` per Section 7.8
+- [x] T-7.12 `/binder/:handle` public binder
+- [x] T-7.13 `/share/:id` public share
+- [x] T-7.14 `/pricing` page per Section 7.9
+- [x] T-7.15 `/legal/safety` and `/legal/takedown` (placeholder copy)
+- [x] **CKPT-7** — all pages render, no broken links
 
 ### Phase 8 — Integration & Polish
 - [ ] T-8.1 SEO: per-route `<title>` and meta description (extend existing `TitleUpdater`)

@@ -129,8 +129,8 @@ const Navbar = () => {
             <Link to="/templates" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes('/template') && !location.pathname.includes('/template-creator') ? 'text-idol-gold' : 'text-white'}`}>
               Templates
             </Link>
-            <Link to="/template-creator" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/template-creator' ? 'text-idol-gold' : 'text-white'}`}>
-              Create Template
+            <Link to="/pricing" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/pricing' ? 'text-idol-gold' : 'text-white'}`}>
+              Pricing
             </Link>
             <Link to="/strip" className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === '/strip' ? 'text-idol-gold' : 'text-white'}`}>
               Strip

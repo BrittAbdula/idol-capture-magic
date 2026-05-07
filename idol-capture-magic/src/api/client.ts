@@ -4,6 +4,8 @@ export interface ApiGroup {
   id: string;
   slug: string;
   name: string;
+  nameKo: string | null;
+  nameJa: string | null;
   agency: string | null;
   debutDate: string | null;
   themeColor: string;
@@ -29,6 +31,7 @@ export interface ApiConcept {
   name: string;
   format: "selca" | "photocard" | "strip" | "fancall";
   category: string | null;
+  campaignId?: string | null;
   sampleOutputUrl: string;
   premium: boolean;
 }
@@ -91,6 +94,54 @@ export const api = {
   },
   campaign: (slug: string) =>
     requestJson<{ campaign: ApiCampaign }>(`/api/campaigns/${slug}`),
+  campaigns: (params?: { status?: string; limit?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    return requestJson<ApiCampaign[]>(`/api/campaigns${query.size ? `?${query}` : ""}`);
+  },
+  publicShare: (generationId: string) =>
+    requestJson<{
+      generation: {
+        id: string;
+        status: string;
+        format: string;
+        outputUrl: string | null;
+        watermarkLevel: string;
+        createdAt: number;
+      };
+    }>(`/api/share/${generationId}`),
+  publicBinder: (handle: string) =>
+    requestJson<{
+      handle: string;
+      items: Array<{
+        id: string;
+        generationId: string;
+        customCaption: string | null;
+        outputUrl: string | null;
+      }>;
+    }>(`/api/binder/public/${handle}`),
+  binderItems: () =>
+    requestJson<{
+      items: Array<{
+        id: string;
+        generationId: string;
+        customCaption: string | null;
+        outputUrl: string | null;
+      }>;
+    }>("/api/binder/items"),
+  saveBinderItem: (generationId: string, customCaption?: string) =>
+    requestJson<{ item: { id: string } }>("/api/binder/items", {
+      method: "POST",
+      body: JSON.stringify({ generationId, customCaption })
+    }),
+  deleteBinderItem: (id: string) =>
+    requestJson<{ ok: true }>(`/api/binder/items/${id}`, { method: "DELETE" }),
+  billingCheckout: (plan: "plus" | "pro") =>
+    requestJson<{ id: string; url: string }>("/api/billing/checkout", {
+      method: "POST",
+      body: JSON.stringify({ plan })
+    }),
   generate: (form: FormData) =>
     requestJson<{
       id: string;
