@@ -194,12 +194,12 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-2** — generation endpoint returns watermarked output
 
 ### Phase 3 — Auth & Payments
-- [ ] T-3.1 Implement Stripe service (test mode)
-- [ ] T-3.2 `POST /api/billing/checkout` creates Stripe Checkout session
-- [ ] T-3.3 `POST /api/billing/portal` creates Stripe Customer Portal session
-- [ ] T-3.4 Implement Stripe webhook handler (`/webhooks/stripe`)
-- [ ] T-3.5 Sync subscription status to `users.plan`
-- [ ] **CKPT-3** — Stripe test purchase upgrades plan
+- [x] T-3.1 Implement Stripe service (test mode)
+- [x] T-3.2 `POST /api/billing/checkout` creates Stripe Checkout session
+- [x] T-3.3 `POST /api/billing/portal` creates Stripe Customer Portal session
+- [x] T-3.4 Implement Stripe webhook handler (`/webhooks/stripe`)
+- [x] T-3.5 Sync subscription status to `users.plan`
+- [x] **CKPT-3** — Stripe test purchase upgrades plan
 
 ### Phase 4 — Domain APIs
 - [ ] T-4.1 `GET /api/groups`, `GET /api/groups/:slug`
