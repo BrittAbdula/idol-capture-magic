@@ -18,7 +18,10 @@ interface BillingRouteDeps {
   client: DatabaseClient;
 }
 
-async function currentUser(deps: BillingRouteDeps, cookieHeader: string | undefined): Promise<User | null> {
+async function currentUser(
+  deps: BillingRouteDeps,
+  cookieHeader: string | undefined
+): Promise<User | null> {
   if (!deps.auth || !cookieHeader) {
     return null;
   }
@@ -33,10 +36,13 @@ async function currentUser(deps: BillingRouteDeps, cookieHeader: string | undefi
     return null;
   }
 
-  return deps.client.db.select().from(users).where(eq(users.id, user.id)).get() ?? null;
+  return (await deps.client.db.select().from(users).where(eq(users.id, user.id)).get()) ?? null;
 }
 
-function syncSubscriptionEvent(client: DatabaseClient, event: BillingWebhookEvent): void {
+async function syncSubscriptionEvent(
+  client: DatabaseClient,
+  event: BillingWebhookEvent
+): Promise<void> {
   if (event.type === "ignored") {
     return;
   }
@@ -50,12 +56,12 @@ function syncSubscriptionEvent(client: DatabaseClient, event: BillingWebhookEven
   };
 
   if (event.userId) {
-    client.db.update(users).set(updates).where(eq(users.id, event.userId)).run();
+    await client.db.update(users).set(updates).where(eq(users.id, event.userId)).run();
     return;
   }
 
   if (event.stripeCustomerId) {
-    client.db
+    await client.db
       .update(users)
       .set(updates)
       .where(eq(users.stripeCustomerId, event.stripeCustomerId))
@@ -85,7 +91,7 @@ export function createBillingRoutes(deps: BillingRouteDeps): Hono {
     });
 
     if (session.customerId && session.customerId !== user.stripeCustomerId) {
-      deps.client.db
+      await deps.client.db
         .update(users)
         .set({ stripeCustomerId: session.customerId })
         .where(eq(users.id, user.id))
@@ -114,7 +120,9 @@ export function createBillingRoutes(deps: BillingRouteDeps): Hono {
   return app;
 }
 
-export function createStripeWebhookRoutes(deps: Pick<BillingRouteDeps, "billing" | "client">): Hono {
+export function createStripeWebhookRoutes(
+  deps: Pick<BillingRouteDeps, "billing" | "client">
+): Hono {
   const app = new Hono();
 
   app.post("/stripe", async (c) => {
@@ -124,7 +132,7 @@ export function createStripeWebhookRoutes(deps: Pick<BillingRouteDeps, "billing"
     }
 
     const event = await deps.billing.parseWebhook(await c.req.text(), signature);
-    syncSubscriptionEvent(deps.client, event);
+    await syncSubscriptionEvent(deps.client, event);
 
     return c.json({ ok: true });
   });

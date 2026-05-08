@@ -1,0 +1,8 @@
+name = "idolbooth-server"
+compatibility_date = "2026-05-08"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "batchloom-db"
+database_id = "5f0346ed-b51b-44f9-9133-b0ab0cd4be62"
+migrations_dir = "src/db/migrations"

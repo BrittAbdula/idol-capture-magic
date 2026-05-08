@@ -37,4 +37,8 @@ describe("parseEnv", () => {
   test("requires R2 credentials when R2 storage is selected", () => {
     expect(() => parseEnv({ ...validEnv, STORAGE_BACKEND: "r2" })).toThrow(/R2_BUCKET/);
   });
+
+  test("requires Cloudflare credentials when D1 is selected", () => {
+    expect(() => parseEnv({ ...validEnv, DATABASE_BACKEND: "d1" })).toThrow(/CLOUDFLARE_API_TOKEN/);
+  });
 });

@@ -2,8 +2,9 @@ import { readFile } from "node:fs/promises";
 
 import { generateIdFromEntropySize } from "lucia";
 
-import { createDatabaseClient } from "../client.js";
-import { campaigns, concepts, groups, members } from "../schema.js";
+import { loadDotEnv } from "../../config/env.js";
+import { createD1DatabaseClient, createDatabaseClient, type DatabaseClient } from "../client.js";
+import { binderItems, campaigns, concepts, generations, groups, members } from "../schema.js";
 
 interface GroupSeed {
   slug: string;
@@ -55,28 +56,26 @@ function id(prefix: string): string {
 }
 
 async function main() {
-  const databaseUrl = process.env.DATABASE_URL ?? "file:./data/idolbooth.sqlite";
-  const client = createDatabaseClient(databaseUrl);
+  loadDotEnv();
+  const client = createSeedDatabaseClient();
 
   const groupSeeds = await readJson<GroupSeed[]>("./groups.json");
   const memberSeeds = await readJson<MemberSeedGroup[]>("./members.json");
   const conceptSeeds = await readJson<ConceptSeed[]>("./concepts.json");
   const campaignSeeds = await readJson<CampaignSeed[]>("./campaigns.json");
 
-  client.sqlite.exec(`
-    DELETE FROM binder_items;
-    DELETE FROM generations;
-    DELETE FROM campaigns;
-    DELETE FROM concepts;
-    DELETE FROM members;
-    DELETE FROM groups;
-  `);
+  await client.db.delete(binderItems).run();
+  await client.db.delete(generations).run();
+  await client.db.delete(campaigns).run();
+  await client.db.delete(concepts).run();
+  await client.db.delete(members).run();
+  await client.db.delete(groups).run();
 
   const groupIds = new Map<string, string>();
   for (const group of groupSeeds) {
     const groupId = id("group");
     groupIds.set(group.slug, groupId);
-    client.db
+    await client.db
       .insert(groups)
       .values({
         id: groupId,
@@ -101,7 +100,7 @@ async function main() {
     for (const member of memberGroup.members) {
       silhouetteIndex += 1;
       const silhouetteNumber = ((silhouetteIndex - 1) % 6) + 1;
-      client.db
+      await client.db
         .insert(members)
         .values({
           id: id("member"),
@@ -122,7 +121,7 @@ async function main() {
   }
 
   for (const concept of conceptSeeds) {
-    client.db
+    await client.db
       .insert(concepts)
       .values({
         id: id("concept"),
@@ -144,7 +143,7 @@ async function main() {
       throw new Error(`Unknown group slug in campaigns seed: ${campaign.groupSlug}`);
     }
 
-    client.db
+    await client.db
       .insert(campaigns)
       .values({
         id: id("campaign"),
@@ -171,3 +170,23 @@ main().catch((error: unknown) => {
   console.error(error);
   process.exitCode = 1;
 });
+
+function createSeedDatabaseClient(): DatabaseClient {
+  if ((process.env.DATABASE_BACKEND ?? "sqlite") === "d1") {
+    return createD1DatabaseClient({
+      accountId: requiredEnv("CLOUDFLARE_ACCOUNT_ID"),
+      databaseId: requiredEnv("D1_DATABASE_ID"),
+      apiToken: requiredEnv("CLOUDFLARE_API_TOKEN")
+    });
+  }
+
+  return createDatabaseClient(process.env.DATABASE_URL ?? "file:./data/idolbooth.sqlite");
+}
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required for DATABASE_BACKEND=d1`);
+  }
+  return value;
+}

@@ -36,7 +36,10 @@ function storageUrl(ref: string | null): string | null {
   return ref.startsWith("/") ? ref : `/storage/${ref}`;
 }
 
-async function currentUser(deps: BinderRouteDeps, cookieHeader: string | undefined): Promise<User | null> {
+async function currentUser(
+  deps: BinderRouteDeps,
+  cookieHeader: string | undefined
+): Promise<User | null> {
   if (!deps.auth || !cookieHeader) {
     return null;
   }
@@ -51,11 +54,11 @@ async function currentUser(deps: BinderRouteDeps, cookieHeader: string | undefin
     return null;
   }
 
-  return deps.client.db.select().from(users).where(eq(users.id, user.id)).get() ?? null;
+  return (await deps.client.db.select().from(users).where(eq(users.id, user.id)).get()) ?? null;
 }
 
-function binderRows(deps: BinderRouteDeps, userId: string) {
-  return deps.client.db
+async function binderRows(deps: BinderRouteDeps, userId: string) {
+  const rows = await deps.client.db
     .select({
       id: binderItems.id,
       userId: binderItems.userId,
@@ -68,11 +71,12 @@ function binderRows(deps: BinderRouteDeps, userId: string) {
     .from(binderItems)
     .leftJoin(generations, eq(binderItems.generationId, generations.id))
     .where(eq(binderItems.userId, userId))
-    .all()
-    .map((row) => ({
-      ...row,
-      outputUrl: storageUrl(row.outputImageRef)
-    }));
+    .all();
+
+  return rows.map((row: { outputImageRef: string | null }) => ({
+    ...row,
+    outputUrl: storageUrl(row.outputImageRef)
+  }));
 }
 
 export function createBinderRoutes(deps: BinderRouteDeps): Hono {
@@ -84,7 +88,7 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
       return jsonError(c, 401, "auth_required");
     }
 
-    return c.json({ items: z.array(BinderItemSchema).parse(binderRows(deps, user.id)) });
+    return c.json({ items: z.array(BinderItemSchema).parse(await binderRows(deps, user.id)) });
   });
 
   app.post("/items", async (c) => {
@@ -98,7 +102,7 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
       return jsonError(c, 400, "invalid_binder_item");
     }
 
-    const generation = deps.client.db
+    const generation = await deps.client.db
       .select()
       .from(generations)
       .where(eq(generations.id, parsed.data.generationId))
@@ -107,17 +111,24 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
       return jsonError(c, 404, "generation_not_found");
     }
 
+    const existingItems = await deps.client.db
+      .select()
+      .from(binderItems)
+      .where(eq(binderItems.userId, user.id))
+      .all();
     const item = {
       id: randomUUID(),
       userId: user.id,
       generationId: parsed.data.generationId,
       customCaption: parsed.data.customCaption ?? null,
-      position: deps.client.db.select().from(binderItems).where(eq(binderItems.userId, user.id)).all().length,
+      position: existingItems.length,
       addedAt: Math.floor(Date.now() / 1000)
     };
-    deps.client.db.insert(binderItems).values(item).run();
+    await deps.client.db.insert(binderItems).values(item).run();
 
-    return c.json({ item: BinderItemSchema.parse({ ...item, outputUrl: storageUrl(generation.outputImageRef) }) });
+    return c.json({
+      item: BinderItemSchema.parse({ ...item, outputUrl: storageUrl(generation.outputImageRef) })
+    });
   });
 
   app.delete("/items/:id", async (c) => {
@@ -126,7 +137,7 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
       return jsonError(c, 401, "auth_required");
     }
 
-    deps.client.db
+    await deps.client.db
       .delete(binderItems)
       .where(and(eq(binderItems.id, c.req.param("id")), eq(binderItems.userId, user.id)))
       .run();
@@ -145,7 +156,7 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
       return jsonError(c, 400, "missing_binder_item_id");
     }
 
-    deps.client.db
+    await deps.client.db
       .delete(binderItems)
       .where(and(eq(binderItems.id, id), eq(binderItems.userId, user.id)))
       .run();
@@ -153,8 +164,8 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
     return c.json({ ok: true });
   });
 
-  app.get("/public/:handle", (c) => {
-    const user = deps.client.db
+  app.get("/public/:handle", async (c) => {
+    const user = await deps.client.db
       .select()
       .from(users)
       .where(eq(users.handle, c.req.param("handle")))
@@ -165,7 +176,7 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
 
     return c.json({
       handle: user.handle,
-      items: z.array(BinderItemSchema).parse(binderRows(deps, user.id))
+      items: z.array(BinderItemSchema).parse(await binderRows(deps, user.id))
     });
   });
 

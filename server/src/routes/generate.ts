@@ -105,7 +105,9 @@ function outputSize(format: Concept["format"]): GenerationRequest["size"] {
 function safeStyleTokens(concept: Concept): string[] {
   try {
     const parsed = JSON.parse(concept.styleTokens) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [];
   } catch {
     return [];
   }
@@ -149,7 +151,8 @@ function memberSilhouettePath(member: Member, publicDir: string): string {
 export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
   const app = new Hono();
   const tempDir = deps.tempDir ?? path.resolve(process.cwd(), "storage", "tmp");
-  const publicDir = deps.publicDir ?? path.resolve(process.cwd(), "..", "idol-capture-magic", "public");
+  const publicDir =
+    deps.publicDir ?? path.resolve(process.cwd(), "..", "idol-capture-magic", "public");
 
   app.post("/generate", async (c) => {
     const body = await c.req.parseBody();
@@ -174,12 +177,12 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       return jsonError(c, 400, error instanceof Error ? error.message : "invalid_photo");
     }
 
-    const concept = deps.client.db
+    const concept = await deps.client.db
       .select()
       .from(concepts)
       .where(eq(concepts.id, parsed.data.conceptId))
       .get();
-    const member = deps.client.db
+    const member = await deps.client.db
       .select()
       .from(members)
       .where(eq(members.id, parsed.data.memberId))
@@ -216,11 +219,11 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
 
     const generationId = randomUUID();
     const dbUser = user
-      ? deps.client.db.select().from(users).where(eq(users.id, user.id)).get()
+      ? await deps.client.db.select().from(users).where(eq(users.id, user.id)).get()
       : null;
     const watermarkLevel = watermarkLevelForPlan(dbUser?.plan);
     const createdAt = Math.floor(Date.now() / 1000);
-    deps.client.db
+    await deps.client.db
       .insert(generations)
       .values({
         id: generationId,
@@ -236,7 +239,11 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       })
       .run();
 
-    deps.client.db.update(generations).set({ status: "running" }).where(eq(generations.id, generationId)).run();
+    await deps.client.db
+      .update(generations)
+      .set({ status: "running" })
+      .where(eq(generations.id, generationId))
+      .run();
 
     try {
       const result = await deps.provider.generate({
@@ -253,12 +260,15 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
         outputPath: watermarkedPath,
         level: watermarkLevel
       });
-      const outputObject = await deps.storage.putBuffer(await import("node:fs/promises").then(({ readFile }) => readFile(watermarkedPath)), {
-        extension: "png",
-        contentType: "image/png"
-      });
+      const outputObject = await deps.storage.putBuffer(
+        await import("node:fs/promises").then(({ readFile }) => readFile(watermarkedPath)),
+        {
+          extension: "png",
+          contentType: "image/png"
+        }
+      );
 
-      deps.client.db
+      await deps.client.db
         .update(generations)
         .set({
           status: "succeeded",
@@ -276,7 +286,7 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
         quotaRemaining
       });
     } catch (error) {
-      deps.client.db
+      await deps.client.db
         .update(generations)
         .set({
           status: "failed",
@@ -288,9 +298,13 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
     }
   });
 
-  app.get("/generations/:id", (c) => {
+  app.get("/generations/:id", async (c) => {
     const id = c.req.param("id");
-    const generation = deps.client.db.select().from(generations).where(eq(generations.id, id)).get();
+    const generation = await deps.client.db
+      .select()
+      .from(generations)
+      .where(eq(generations.id, id))
+      .get();
     if (!generation) {
       return jsonError(c, 404, "generation_not_found");
     }
@@ -298,7 +312,9 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
     return c.json({
       id: generation.id,
       status: generation.status,
-      outputUrl: generation.outputImageRef ? deps.storage.publicUrlFor(generation.outputImageRef) : null,
+      outputUrl: generation.outputImageRef
+        ? deps.storage.publicUrlFor(generation.outputImageRef)
+        : null,
       watermarkLevel: generation.watermarkLevel,
       errorMessage: generation.errorMessage
     });

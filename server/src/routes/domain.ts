@@ -72,9 +72,9 @@ function storageUrl(ref: string | null): string | null {
 export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
   const app = new Hono();
 
-  app.get("/groups", (c) => {
+  app.get("/groups", async (c) => {
     const limit = Number(c.req.query("limit") ?? 100);
-    const rows = deps.client.db
+    const rows = await deps.client.db
       .select()
       .from(groups)
       .orderBy(groups.popularityRank)
@@ -83,18 +83,22 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
     return c.json(z.array(GroupSchema).parse(rows));
   });
 
-  app.get("/groups/:slug", (c) => {
-    const group = deps.client.db.select().from(groups).where(eq(groups.slug, c.req.param("slug"))).get();
+  app.get("/groups/:slug", async (c) => {
+    const group = await deps.client.db
+      .select()
+      .from(groups)
+      .where(eq(groups.slug, c.req.param("slug")))
+      .get();
     if (!group) {
       return jsonError(c, 404, "group_not_found");
     }
 
-    const groupMembers = deps.client.db
+    const groupMembers = await deps.client.db
       .select()
       .from(members)
       .where(eq(members.groupId, group.id))
       .all();
-    const groupCampaigns = deps.client.db
+    const groupCampaigns = await deps.client.db
       .select()
       .from(campaigns)
       .where(eq(campaigns.groupId, group.id))
@@ -107,8 +111,8 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
     });
   });
 
-  app.get("/members/:groupSlug/:memberSlug", (c) => {
-    const group = deps.client.db
+  app.get("/members/:groupSlug/:memberSlug", async (c) => {
+    const group = await deps.client.db
       .select()
       .from(groups)
       .where(eq(groups.slug, c.req.param("groupSlug")))
@@ -117,7 +121,7 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
       return jsonError(c, 404, "member_not_found");
     }
 
-    const member = deps.client.db
+    const member = await deps.client.db
       .select()
       .from(members)
       .where(and(eq(members.groupId, group.id), eq(members.slug, c.req.param("memberSlug"))))
@@ -132,7 +136,7 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
     });
   });
 
-  app.get("/concepts", (c) => {
+  app.get("/concepts", async (c) => {
     const formatQuery = c.req.query("format");
     const format = formatQuery ? ConceptFormatSchema.safeParse(formatQuery) : null;
     if (formatQuery && !format?.success) {
@@ -148,30 +152,30 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
           : campaignId
             ? eq(concepts.campaignId, campaignId)
             : undefined;
-    const rows = deps.client.db
-      .select()
-      .from(concepts)
-      .where(where)
-      .all();
+    const rows = await deps.client.db.select().from(concepts).where(where).all();
 
     return c.json(z.array(ConceptSchema).parse(rows));
   });
 
-  app.get("/campaigns", (c) => {
+  app.get("/campaigns", async (c) => {
     const statuses = c.req.query("status")?.split(",").filter(Boolean);
     const limit = Number(c.req.query("limit") ?? 100);
-    const rows = deps.client.db
+    const rows = await deps.client.db
       .select()
       .from(campaigns)
-      .where(statuses?.length ? inArray(campaigns.status, statuses as Array<"upcoming" | "active" | "archived">) : undefined)
+      .where(
+        statuses?.length
+          ? inArray(campaigns.status, statuses as Array<"upcoming" | "active" | "archived">)
+          : undefined
+      )
       .limit(Number.isFinite(limit) ? Math.max(1, Math.min(limit, 100)) : 100)
       .all();
 
     return c.json(z.array(CampaignSchema).parse(rows));
   });
 
-  app.get("/campaigns/:slug", (c) => {
-    const campaign = deps.client.db
+  app.get("/campaigns/:slug", async (c) => {
+    const campaign = await deps.client.db
       .select()
       .from(campaigns)
       .where(eq(campaigns.slug, c.req.param("slug")))
@@ -183,8 +187,8 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
     return c.json({ campaign: CampaignSchema.parse(campaign) });
   });
 
-  app.get("/share/:generationId", (c) => {
-    const generation = deps.client.db
+  app.get("/share/:generationId", async (c) => {
+    const generation = await deps.client.db
       .select()
       .from(generations)
       .where(eq(generations.id, c.req.param("generationId")))

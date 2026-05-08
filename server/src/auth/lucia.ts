@@ -2,6 +2,7 @@ import { BetterSqlite3Adapter } from "@lucia-auth/adapter-sqlite";
 import { Lucia } from "lucia";
 
 import type { DatabaseClient } from "../db/client.js";
+import { RemoteSQLiteAdapter } from "./remote-sqlite-adapter.js";
 
 export interface UserAttributes {
   email: string;
@@ -11,10 +12,14 @@ export interface UserAttributes {
 }
 
 export function createLucia(client: DatabaseClient, secureCookies: boolean): Lucia {
-  const adapter = new BetterSqlite3Adapter(client.sqlite, {
+  const tableNames = {
     user: "users",
     session: "sessions"
-  });
+  };
+  const adapter =
+    client.kind === "d1"
+      ? new RemoteSQLiteAdapter(assertD1Client(client), tableNames)
+      : new BetterSqlite3Adapter(assertSqliteClient(client), tableNames);
 
   return new Lucia(adapter, {
     sessionCookie: {
@@ -36,3 +41,17 @@ export function createLucia(client: DatabaseClient, secureCookies: boolean): Luc
 }
 
 export type Auth = ReturnType<typeof createLucia>;
+
+function assertSqliteClient(client: DatabaseClient) {
+  if (!client.sqlite) {
+    throw new Error("SQLite client is not configured");
+  }
+  return client.sqlite;
+}
+
+function assertD1Client(client: DatabaseClient) {
+  if (!client.d1) {
+    throw new Error("D1 client is not configured");
+  }
+  return client.d1;
+}

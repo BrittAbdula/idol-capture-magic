@@ -46,14 +46,14 @@ export async function getUserQuota(
   userId: string,
   now = new Date()
 ): Promise<{ limit: number; used: number; remaining: number; resetAt: number }> {
-  const user = client.db.select().from(users).where(eq(users.id, userId)).get();
+  const user = await client.db.select().from(users).where(eq(users.id, userId)).get();
   if (!user) {
     throw new Error("User not found");
   }
 
   const normalized = normalizeQuota(user, now);
   if (normalized !== user) {
-    client.db
+    await client.db
       .update(users)
       .set({
         dailyQuotaUsed: normalized.dailyQuotaUsed,
@@ -85,7 +85,7 @@ export async function consumeUserQuota(
   }
 
   const used = quota.used + 1;
-  client.db.update(users).set({ dailyQuotaUsed: used }).where(eq(users.id, userId)).run();
+  await client.db.update(users).set({ dailyQuotaUsed: used }).where(eq(users.id, userId)).run();
 
   return {
     ...quota,

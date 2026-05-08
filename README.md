@@ -1,6 +1,6 @@
 # IdolBooth V3 Local Setup
 
-IdolBooth is a Vite/React frontend with a Hono/SQLite backend. The frontend lives in `idol-capture-magic/`; the backend lives in `server/`.
+IdolBooth is a Vite/React frontend with a Hono backend. Production database access is configured for Cloudflare D1; SQLite remains available for local-only fallback and tests. The frontend lives in `idol-capture-magic/`; the backend lives in `server/`.
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ cp /Users/tm/idolbooth/server/.env.example /Users/tm/idolbooth/server/.env
 cp /Users/tm/idolbooth/idol-capture-magic/.env.example /Users/tm/idolbooth/idol-capture-magic/.env
 ```
 
-The image provider uses `KIE_API_KEY`. Do not commit `.env` files.
+The image provider uses `KIE_API_KEY`. For D1, set `DATABASE_BACKEND=d1`, `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_API_TOKEN`. Do not commit `.env` files.
 
 ## Database
 
@@ -35,6 +35,15 @@ cd /Users/tm/idolbooth/server
 npm run db:migrate
 npm run seed
 ```
+
+For Cloudflare-managed D1 migrations, use:
+
+```sh
+cd /Users/tm/idolbooth/server
+npm run d1:migrate
+```
+
+The seed script writes to the selected `DATABASE_BACKEND`; set it to `sqlite` only when you want to seed the local `DATABASE_URL`.
 
 ## Run
 

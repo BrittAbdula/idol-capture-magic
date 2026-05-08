@@ -35,15 +35,23 @@ function createHandle(email: string): string {
   return `${prefix || "fan"}-${generateIdFromEntropySize(6)}`;
 }
 
-function upsertGoogleUser(client: DatabaseClient, profile: GoogleProfile): User {
-  const byGoogleId = client.db.select().from(users).where(eq(users.googleId, profile.sub)).get();
+async function upsertGoogleUser(client: DatabaseClient, profile: GoogleProfile): Promise<User> {
+  const byGoogleId = await client.db
+    .select()
+    .from(users)
+    .where(eq(users.googleId, profile.sub))
+    .get();
   if (byGoogleId) {
     return byGoogleId;
   }
 
-  const byEmail = client.db.select().from(users).where(eq(users.email, profile.email)).get();
+  const byEmail = await client.db.select().from(users).where(eq(users.email, profile.email)).get();
   if (byEmail) {
-    client.db.update(users).set({ googleId: profile.sub }).where(eq(users.id, byEmail.id)).run();
+    await client.db
+      .update(users)
+      .set({ googleId: profile.sub })
+      .where(eq(users.id, byEmail.id))
+      .run();
     return { ...byEmail, googleId: profile.sub };
   }
 
@@ -65,7 +73,7 @@ function upsertGoogleUser(client: DatabaseClient, profile: GoogleProfile): User 
     createdAt: nowUnix
   };
 
-  client.db.insert(users).values(user).run();
+  await client.db.insert(users).values(user).run();
   return user;
 }
 
@@ -112,7 +120,7 @@ export function createAuthRoutes(deps: AuthRouteDeps): Hono {
     }
 
     const profile = await deps.google.exchangeCode(code, codeVerifier);
-    const user = upsertGoogleUser(deps.client, profile);
+    const user = await upsertGoogleUser(deps.client, profile);
     const session = await deps.auth.createSession(user.id, {});
     setSerializedCookie(c, deps.auth.createSessionCookie(session.id));
 
