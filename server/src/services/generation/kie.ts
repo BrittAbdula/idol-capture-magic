@@ -31,10 +31,6 @@ interface KieTaskResponse {
   };
 }
 
-interface KieResultJson {
-  resultUrls?: string[];
-}
-
 export interface KieImageProviderOptions {
   apiKey: string;
   pollIntervalMs?: number;
@@ -171,10 +167,9 @@ export class KieImageProvider implements GenerationProvider {
       }
 
       if (json.data?.state === "success") {
-        const parsed = JSON.parse(json.data.resultJson ?? "{}") as KieResultJson;
-        const resultUrl = parsed.resultUrls?.[0];
+        const resultUrl = parseKieResultUrl(json.data.resultJson);
         if (!resultUrl) {
-          throw new Error("Kie task result did not include resultUrls");
+          throw new Error("Kie task result did not include a result URL");
         }
         return resultUrl;
       }
@@ -182,6 +177,45 @@ export class KieImageProvider implements GenerationProvider {
 
     throw new Error(`Kie task timed out: ${taskId}`);
   }
+}
+
+export function parseKieResultUrl(resultJson: string | undefined): string | null {
+  if (!resultJson) {
+    return null;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(resultJson);
+  } catch {
+    return null;
+  }
+
+  if (Array.isArray(parsed)) {
+    return firstString(parsed);
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  const result = parsed as Record<string, unknown>;
+  return (
+    firstString(result.resultUrls) ??
+    firstString(result.result_urls) ??
+    firstString(result.urls) ??
+    null
+  );
+}
+
+function firstString(value: unknown): string | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  return (
+    value.find((item): item is string => typeof item === "string" && item.trim().length > 0) ?? null
+  );
 }
 
 function mimeExtension(mimeType: string): "png" | "jpg" | "webp" {

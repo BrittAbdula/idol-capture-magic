@@ -36,33 +36,40 @@ export async function applyWatermark(options: {
     return options.input;
   }
 
-  const png = PNG.sync.read(options.input);
-  const width = png.width;
-  const height = png.height;
-  const textPixelWidth = bitmapTextWidth(WATERMARK_TEXT);
-  const targetWidth = Math.max(96, Math.round(width * (options.level === "visible" ? 0.24 : 0.14)));
-  const scale = Math.max(1, Math.floor(targetWidth / textPixelWidth));
-  const textWidth = textPixelWidth * scale;
-  const textHeight = 7 * scale;
-  const paddingX = Math.max(8, Math.round(scale * 3));
-  const paddingY = Math.max(5, Math.round(scale * 2));
-  const boxWidth = textWidth + paddingX * 2;
-  const boxHeight = textHeight + paddingY * 2;
-  const margin = Math.max(8, Math.round(width * 0.025));
-  const left = Math.max(0, width - boxWidth - margin);
-  const top = Math.max(0, height - boxHeight - margin);
-  const backgroundAlpha = options.level === "visible" ? 0.42 : 0.3;
-  const textAlpha = options.level === "visible" ? 0.86 : 0.62;
+  try {
+    const png = PNG.sync.read(options.input);
+    const width = png.width;
+    const height = png.height;
+    const textPixelWidth = bitmapTextWidth(WATERMARK_TEXT);
+    const targetWidth = Math.max(
+      96,
+      Math.round(width * (options.level === "visible" ? 0.24 : 0.14))
+    );
+    const scale = Math.max(1, Math.floor(targetWidth / textPixelWidth));
+    const textWidth = textPixelWidth * scale;
+    const textHeight = 7 * scale;
+    const paddingX = Math.max(8, Math.round(scale * 3));
+    const paddingY = Math.max(5, Math.round(scale * 2));
+    const boxWidth = textWidth + paddingX * 2;
+    const boxHeight = textHeight + paddingY * 2;
+    const margin = Math.max(8, Math.round(width * 0.025));
+    const left = Math.max(0, width - boxWidth - margin);
+    const top = Math.max(0, height - boxHeight - margin);
+    const backgroundAlpha = options.level === "visible" ? 0.42 : 0.3;
+    const textAlpha = options.level === "visible" ? 0.86 : 0.62;
 
-  fillRect(png, left, top, boxWidth, boxHeight, [0, 0, 0, Math.round(backgroundAlpha * 255)]);
-  drawText(png, WATERMARK_TEXT, left + paddingX, top + paddingY, scale, [
-    255,
-    255,
-    255,
-    Math.round(textAlpha * 255)
-  ]);
+    fillRect(png, left, top, boxWidth, boxHeight, [0, 0, 0, Math.round(backgroundAlpha * 255)]);
+    drawText(png, WATERMARK_TEXT, left + paddingX, top + paddingY, scale, [
+      255,
+      255,
+      255,
+      Math.round(textAlpha * 255)
+    ]);
 
-  return PNG.sync.write(png);
+    return PNG.sync.write(png);
+  } catch {
+    return options.input;
+  }
 }
 
 function bitmapTextWidth(text: string): number {
@@ -72,7 +79,14 @@ function bitmapTextWidth(text: string): number {
   }, 0);
 }
 
-function drawText(png: PNG, text: string, x: number, y: number, scale: number, color: number[]): void {
+function drawText(
+  png: PNG,
+  text: string,
+  x: number,
+  y: number,
+  scale: number,
+  color: number[]
+): void {
   let cursorX = x;
   for (const char of text) {
     const glyph = FONT[char];
