@@ -83,12 +83,17 @@ export function createBillingRoutes(deps: BillingRouteDeps): Hono {
       return jsonError(c, 400, "invalid_checkout_request");
     }
 
-    const session = await deps.billing.createCheckoutSession({
-      userId: user.id,
-      email: user.email,
-      plan: parsed.data.plan,
-      stripeCustomerId: user.stripeCustomerId
-    });
+    let session;
+    try {
+      session = await deps.billing.createCheckoutSession({
+        userId: user.id,
+        email: user.email,
+        plan: parsed.data.plan,
+        stripeCustomerId: user.stripeCustomerId
+      });
+    } catch {
+      return jsonError(c, 502, "checkout_unavailable");
+    }
 
     if (session.customerId && session.customerId !== user.stripeCustomerId) {
       await deps.client.db

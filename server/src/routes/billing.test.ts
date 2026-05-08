@@ -38,6 +38,12 @@ class FakeBillingService implements BillingService {
   }
 }
 
+class FailingBillingService extends FakeBillingService {
+  async createCheckoutSession(_input: CheckoutInput): Promise<never> {
+    throw new Error("Stripe checkout failed");
+  }
+}
+
 describe("billing routes", () => {
   let client: TestDatabaseClient;
 
@@ -87,6 +93,30 @@ describe("billing routes", () => {
     expect(json.url).toBe("https://checkout.stripe.test/plus");
     const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
     expect(user?.stripeCustomerId).toBe("cus_test_123");
+  });
+
+  test("returns a checkout error instead of an internal server error", async () => {
+    const auth = createLucia(client, false);
+    const session = await auth.createSession("user_123", {});
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      auth,
+      billing: new FailingBillingService()
+    });
+
+    const response = await app.request("/api/billing/checkout", {
+      method: "POST",
+      headers: {
+        Cookie: auth.createSessionCookie(session.id).serialize(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ plan: "plus" })
+    });
+    const json = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(502);
+    expect(json.error).toBe("checkout_unavailable");
   });
 
   test("syncs subscription status from Stripe webhooks", async () => {

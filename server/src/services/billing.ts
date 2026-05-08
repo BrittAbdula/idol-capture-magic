@@ -53,7 +53,10 @@ export class StripeBillingService implements BillingService {
   private readonly planByPrice: Map<string, PaidPlan>;
 
   constructor(private readonly config: StripeBillingConfig) {
-    this.stripe = new Stripe(config.secretKey, { apiVersion: "2024-09-30.acacia" });
+    this.stripe = new Stripe(config.secretKey, {
+      apiVersion: "2024-09-30.acacia",
+      httpClient: Stripe.createFetchHttpClient()
+    });
     this.priceByPlan = {
       plus: config.plusPriceId,
       pro: config.proPriceId
@@ -107,7 +110,13 @@ export class StripeBillingService implements BillingService {
   }
 
   async parseWebhook(payload: string, signature: string): Promise<BillingWebhookEvent> {
-    const event = this.stripe.webhooks.constructEvent(payload, signature, this.config.webhookSecret);
+    const event = await this.stripe.webhooks.constructEventAsync(
+      payload,
+      signature,
+      this.config.webhookSecret,
+      undefined,
+      Stripe.createSubtleCryptoProvider()
+    );
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -116,7 +125,8 @@ export class StripeBillingService implements BillingService {
         type: plan ? "subscription_updated" : "ignored",
         userId: session.client_reference_id ?? session.metadata?.userId ?? null,
         stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
-        stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : null,
+        stripeSubscriptionId:
+          typeof session.subscription === "string" ? session.subscription : null,
         plan: plan ?? undefined
       };
     }
@@ -127,7 +137,9 @@ export class StripeBillingService implements BillingService {
       return {
         type: plan ? "subscription_updated" : "ignored",
         stripeCustomerId:
-          typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id,
         stripeSubscriptionId: subscription.id,
         plan,
         planRenewsAt: subscription.current_period_end ?? null
@@ -139,7 +151,9 @@ export class StripeBillingService implements BillingService {
       return {
         type: "subscription_deleted",
         stripeCustomerId:
-          typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id,
         stripeSubscriptionId: subscription.id,
         plan: "free",
         planRenewsAt: null

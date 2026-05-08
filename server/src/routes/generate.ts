@@ -10,7 +10,7 @@ import { concepts, generations, members, users, type Concept } from "../db/schem
 import { jsonError } from "../lib/http.js";
 import type { GenerationProvider, GenerationRequest } from "../services/generation/provider.js";
 import { applyWatermark, watermarkLevelForPlan } from "../services/generation/watermark.js";
-import { consumeUserQuota } from "../services/quota.js";
+import { consumeUserQuota, refundUserQuota } from "../services/quota.js";
 import { checkConcept } from "../services/safety.js";
 import type { StorageService } from "../services/storage.js";
 
@@ -59,6 +59,18 @@ function consumeAnonQuota(ip: string): number {
   current.used += 1;
   anonQuota.set(ip, current);
   return ANON_DAILY_LIMIT - current.used;
+}
+
+function refundAnonQuota(ip: string): void {
+  const quota = anonQuota.get(ip);
+  if (!quota) {
+    return;
+  }
+
+  anonQuota.set(ip, {
+    ...quota,
+    used: Math.max(0, quota.used - 1)
+  });
 }
 
 function singleString(value: BodyEntry | BodyEntry[] | undefined): string | undefined {
@@ -193,11 +205,16 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
 
     const user = await getCurrentUser(deps, c.req.header("Cookie"));
     let quotaRemaining = 0;
+    let consumedQuota: { type: "user"; userId: string } | { type: "anon"; ip: string } | null =
+      null;
     try {
       if (user) {
         quotaRemaining = (await consumeUserQuota(deps.client, user.id)).remaining;
+        consumedQuota = { type: "user", userId: user.id };
       } else {
-        quotaRemaining = consumeAnonQuota(getClientIp(c.req.raw));
+        const ip = getClientIp(c.req.raw);
+        quotaRemaining = consumeAnonQuota(ip);
+        consumedQuota = { type: "anon", ip };
       }
     } catch {
       return jsonError(c, 402, "quota_exhausted");
@@ -276,14 +293,17 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
         quotaRemaining
       });
     } catch (error) {
-      await deps.client.db
-        .update(generations)
-        .set({
-          status: "failed",
-          errorMessage: error instanceof Error ? error.message : "Generation failed"
-        })
-        .where(eq(generations.id, generationId))
-        .run();
+      await Promise.allSettled([
+        deps.client.db
+          .update(generations)
+          .set({
+            status: "failed",
+            errorMessage: error instanceof Error ? error.message : "Generation failed"
+          })
+          .where(eq(generations.id, generationId))
+          .run(),
+        refundConsumedQuota(deps, consumedQuota)
+      ]);
       return jsonError(c, 422, "provider_rejected");
     }
   });
@@ -356,4 +376,20 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
   });
 
   return app;
+}
+
+async function refundConsumedQuota(
+  deps: GenerateRouteDeps,
+  consumedQuota: { type: "user"; userId: string } | { type: "anon"; ip: string } | null
+): Promise<void> {
+  if (!consumedQuota) {
+    return;
+  }
+
+  if (consumedQuota.type === "user") {
+    await refundUserQuota(deps.client, consumedQuota.userId);
+    return;
+  }
+
+  refundAnonQuota(consumedQuota.ip);
 }

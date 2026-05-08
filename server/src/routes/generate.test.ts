@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { eq } from "drizzle-orm";
 import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
@@ -39,6 +40,18 @@ class StubGenerationProvider implements GenerationProvider {
       costUsd: 0,
       providerJobId: "stub-job"
     };
+  }
+
+  estimateCost(_request: GenerationRequest): number {
+    return 0;
+  }
+}
+
+class FailingGenerationProvider implements GenerationProvider {
+  name = "failing";
+
+  async generate(_request: GenerationRequest): Promise<GenerationResult> {
+    throw new Error("provider failed");
   }
 
   estimateCost(_request: GenerationRequest): number {
@@ -234,6 +247,58 @@ describe("generation routes", () => {
 
     expect(response.status).toBe(400);
     expect(json.error).toBe("too_many_photos");
+  });
+
+  test("refunds the user's daily credit when generation fails", async () => {
+    await client.db
+      .insert(users)
+      .values({
+        id: "user_123",
+        email: "fan@example.com",
+        handle: "fan",
+        locale: "en",
+        plan: "free",
+        dailyQuotaUsed: 0,
+        dailyQuotaResetAt: 1_800_000_000,
+        createdAt: 1_700_000_000
+      })
+      .run();
+    const storageDir = path.join(tempDir, "storage");
+    const auth = createLucia(client, false);
+    const session = await auth.createSession("user_123", {});
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      auth,
+      generationProvider: new FailingGenerationProvider(),
+      storage: createLocalStorageService({ rootDir: storageDir })
+    });
+    const inputImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#ffffff"
+      }
+    })
+      .png()
+      .toBuffer();
+    const form = new FormData();
+    form.set("conceptId", "concept_polaroid");
+    form.set("memberId", "member_haerin");
+    form.set("photo", new File([inputImage], "fan.png", { type: "image/png" }));
+
+    const response = await app.request("/api/generate", {
+      method: "POST",
+      headers: {
+        Cookie: auth.createSessionCookie(session.id).serialize()
+      },
+      body: form
+    });
+
+    expect(response.status).toBe(422);
+    const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
+    expect(user?.dailyQuotaUsed).toBe(0);
   });
 
   test("lists the authenticated user's generation history with credit details", async () => {

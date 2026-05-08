@@ -93,3 +93,19 @@ export async function consumeUserQuota(
     remaining: quota.limit - used
   };
 }
+
+export async function refundUserQuota(
+  client: DatabaseClient,
+  userId: string,
+  now = new Date()
+): Promise<{ limit: number; used: number; remaining: number; resetAt: number }> {
+  const quota = await getUserQuota(client, userId, now);
+  const used = Math.max(0, quota.used - 1);
+  await client.db.update(users).set({ dailyQuotaUsed: used }).where(eq(users.id, userId)).run();
+
+  return {
+    ...quota,
+    used,
+    remaining: quota.limit - used
+  };
+}

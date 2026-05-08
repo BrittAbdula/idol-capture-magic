@@ -17,7 +17,8 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
-import { api, getGoogleAuthUrl, type ApiConcept } from "@/api/client";
+import { api, getGoogleAuthUrl, isApiError, type ApiConcept } from "@/api/client";
+import { UpgradeDialog } from "@/components/billing/UpgradeDialog";
 import { Button } from "@/components/ui/button";
 import { ImageFrame } from "@/components/media/ImageFrame";
 import {
@@ -56,6 +57,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
   const [manualConceptId, setManualConceptId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [isWaitingForSignIn, setIsWaitingForSignIn] = useState(false);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -79,7 +81,10 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
     conceptId: storedConceptId
   } = useGenerationFlowStore();
   const selectedConceptId = manualConceptId ?? conceptId ?? storedConceptId;
-  const selectedPhotos = useMemo(() => (photos.length ? photos : photo ? [photo] : []), [photo, photos]);
+  const selectedPhotos = useMemo(
+    () => (photos.length ? photos : photo ? [photo] : []),
+    [photo, photos]
+  );
 
   const concepts = useQuery({
     queryKey: ["concepts", format],
@@ -200,7 +205,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
       return;
     }
     if (quotaExhausted) {
-      toast.info("Daily quota reached. Upgrade to continue generating today.");
+      setShowUpgradeDialog(true);
       return;
     }
     if (isAuthLoading) {
@@ -229,7 +234,10 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
       setGenerationId(result.id);
       toast.success(mode === "variation" ? "Variation complete." : "Generation complete.");
     } catch (error) {
-      if (shouldPromptForGoogleSignIn(error, isAuthenticated)) {
+      if (isApiError(error) && error.code === "quota_exhausted") {
+        setShowUpgradeDialog(true);
+        toast.info("Daily credits reached. Upgrade to continue generating today.");
+      } else if (shouldPromptForGoogleSignIn(error, isAuthenticated)) {
         setShowSignInDialog(true);
         setIsWaitingForSignIn(false);
         toast.info("Sign in with Google to continue generating.");
@@ -264,6 +272,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
 
   return (
     <>
+      <UpgradeDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog} />
       <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -331,7 +340,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
             </button>
           ))}
           <p className="mt-6 text-sm text-gray-600">
-            {quota.remaining}/{quota.total} generations left today on {quota.plan}.
+            {quota.remaining}/{quota.total} credits left today on {quota.plan}.
           </p>
         </aside>
 
@@ -456,11 +465,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                 <Button
                   onClick={() => generate()}
                   disabled={
-                    !selectedPhotos.length ||
-                    !selectedConceptId ||
-                    isGenerating ||
-                    isAuthLoading ||
-                    quotaExhausted
+                    !selectedPhotos.length || !selectedConceptId || isGenerating || isAuthLoading
                   }
                 >
                   {isGenerating ? (
@@ -468,15 +473,12 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                   ) : (
                     <Sparkles className="mr-2 h-4 w-4" />
                   )}
-                  Generate ({quota.remaining}/{quota.total} left today)
+                  Generate ({quota.remaining}/{quota.total} credits left today)
                 </Button>
                 {quotaExhausted && (
-                  <Link
-                    to="/pricing"
-                    className="idol-button-outline-square inline-flex items-center"
-                  >
+                  <Button variant="outline" onClick={() => setShowUpgradeDialog(true)}>
                     Upgrade
-                  </Link>
+                  </Button>
                 )}
               </div>
             </div>
@@ -522,11 +524,14 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                 <div className="mt-5 border border-black/10 p-5">
                   <div className="flex items-center gap-2 font-semibold">
                     <Lock className="h-4 w-4" />
-                    Daily quota reached
+                    Daily credits reached
                   </div>
                   <p className="mt-2 text-sm text-gray-600">
                     Plus unlocks 30 daily generations and smaller watermarks.
                   </p>
+                  <Button className="mt-4" onClick={() => setShowUpgradeDialog(true)}>
+                    View plans
+                  </Button>
                 </div>
               )}
             </div>
