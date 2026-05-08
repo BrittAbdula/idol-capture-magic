@@ -1,3 +1,6 @@
+import type { D1QueryClient, D1QueryResult } from "./client.js";
+import type { D1DatabaseBinding, D1PreparedStatement } from "./d1-binding.js";
+
 export type RemoteD1Method = "run" | "all" | "values" | "get";
 
 export interface RemoteD1Query {
@@ -29,19 +32,15 @@ interface CloudflareD1Response {
   result?: CloudflareD1Result[] | CloudflareD1Result;
 }
 
-export interface RemoteD1QueryResult {
-  rows: unknown;
-}
-
-export class RemoteD1HttpClient {
+export class RemoteD1HttpClient implements D1QueryClient, D1DatabaseBinding {
   constructor(private readonly options: RemoteD1Options) {}
 
-  async query(
-    sql: string,
-    params: unknown[],
-    method: RemoteD1Method
-  ): Promise<RemoteD1QueryResult> {
-    const rows = await this.requestRows(sql, params, method === "values");
+  prepare(sql: string): D1PreparedStatement {
+    return new RemoteD1PreparedStatement(this, sql);
+  }
+
+  async query(sql: string, params: unknown[], method: RemoteD1Method): Promise<D1QueryResult> {
+    const rows = await this.requestRows(sql, params, method !== "run");
     if (method === "get") {
       return { rows: rows[0] ?? undefined };
     }
@@ -51,8 +50,8 @@ export class RemoteD1HttpClient {
     return { rows };
   }
 
-  async batch(queries: RemoteD1Query[]): Promise<RemoteD1QueryResult[]> {
-    const results: RemoteD1QueryResult[] = [];
+  async batch(queries: RemoteD1Query[]): Promise<D1QueryResult[]> {
+    const results: D1QueryResult[] = [];
     for (const query of queries) {
       results.push(await this.query(query.sql, query.params, query.method));
     }
@@ -60,13 +59,12 @@ export class RemoteD1HttpClient {
   }
 
   async get<T>(sql: string, params: unknown[]): Promise<T | null> {
-    const result = await this.query(sql, params, "get");
-    return (result.rows ?? null) as T | null;
+    const rows = await this.requestRows(sql, params, false);
+    return (rows[0] ?? null) as T | null;
   }
 
   async getAll<T>(sql: string, params: unknown[]): Promise<T[]> {
-    const result = await this.query(sql, params, "all");
-    return result.rows as T[];
+    return (await this.requestRows(sql, params, false)) as T[];
   }
 
   async execute(sql: string, params: unknown[]): Promise<void> {
@@ -110,6 +108,32 @@ export class RemoteD1HttpClient {
   }
 }
 
+class RemoteD1PreparedStatement implements D1PreparedStatement {
+  constructor(
+    private readonly client: RemoteD1HttpClient,
+    private readonly sql: string,
+    private readonly params: unknown[] = []
+  ) {}
+
+  bind(...values: unknown[]): D1PreparedStatement {
+    return new RemoteD1PreparedStatement(this.client, this.sql, values);
+  }
+
+  async all<T = Record<string, unknown>>(): Promise<{ results?: T[] }> {
+    return { results: await this.client.getAll<T>(this.sql, this.params) };
+  }
+
+  async raw<T = unknown[]>(): Promise<T[]> {
+    const result = await this.client.query(this.sql, this.params, "values");
+    return result.rows as T[];
+  }
+
+  async run(): Promise<unknown> {
+    await this.client.execute(this.sql, this.params);
+    return { success: true };
+  }
+}
+
 function normalizeRows(
   results: CloudflareD1Result["results"] | undefined,
   arrayMode: boolean
@@ -133,6 +157,9 @@ function normalizeRows(
 }
 
 function serializeParam(value: unknown): unknown {
+  if (value === undefined) {
+    return null;
+  }
   if (value instanceof Date) {
     return value.toISOString();
   }

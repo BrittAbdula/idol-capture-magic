@@ -1,56 +1,45 @@
-import { mkdirSync } from "node:fs";
-import path from "node:path";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 
-import Database from "better-sqlite3";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { drizzle as drizzleProxy } from "drizzle-orm/sqlite-proxy";
-
+import { D1BindingClient, type D1DatabaseBinding } from "./d1-binding.js";
 import { RemoteD1HttpClient, type RemoteD1Options } from "./d1-http.js";
 import * as schema from "./schema.js";
 
 export interface DatabaseClient {
-  kind: "sqlite" | "d1";
-  sqlite: Database.Database;
-  d1?: RemoteD1HttpClient;
-  db: BetterSQLite3Database<typeof schema>;
+  d1: D1QueryClient;
+  db: DrizzleD1Database<typeof schema>;
   close: () => void;
 }
 
-export function resolveSqlitePath(databaseUrl: string): string {
-  return databaseUrl.startsWith("file:") ? databaseUrl.slice("file:".length) : databaseUrl;
+export interface D1QueryResult {
+  rows: unknown;
 }
 
-export function createDatabaseClient(databaseUrl: string): DatabaseClient {
-  const sqlitePath = resolveSqlitePath(databaseUrl);
-  if (sqlitePath !== ":memory:") {
-    mkdirSync(path.dirname(sqlitePath), { recursive: true });
-  }
-
-  const sqlite = new Database(sqlitePath);
-  sqlite.pragma("foreign_keys = ON");
-
-  return {
-    kind: "sqlite",
-    sqlite,
-    db: drizzle(sqlite, { schema }),
-    close: () => sqlite.close()
-  };
+export interface D1QueryClient {
+  query: (
+    sql: string,
+    params: unknown[],
+    method: "run" | "all" | "values" | "get"
+  ) => Promise<D1QueryResult>;
+  batch: (
+    queries: Array<{ sql: string; params: unknown[]; method: "run" | "all" | "values" | "get" }>
+  ) => Promise<D1QueryResult[]>;
+  get: <T>(sql: string, params: unknown[]) => Promise<T | null>;
+  getAll: <T>(sql: string, params: unknown[]) => Promise<T[]>;
+  execute: (sql: string, params: unknown[]) => Promise<void>;
 }
 
 export function createD1DatabaseClient(options: RemoteD1Options): DatabaseClient {
-  const d1 = new RemoteD1HttpClient(options);
+  const binding = new RemoteD1HttpClient(options);
+  return createDatabaseClientFromD1Binding(binding, binding);
+}
 
+export function createDatabaseClientFromD1Binding(
+  binding: D1DatabaseBinding,
+  d1: D1QueryClient = new D1BindingClient(binding)
+): DatabaseClient {
   return {
-    kind: "d1",
-    sqlite: undefined as unknown as Database.Database,
     d1,
-    db: drizzleProxy(
-      (sql, params, method) => d1.query(sql, params, method) as Promise<{ rows: never[] }>,
-      (queries) => d1.batch(queries) as Promise<Array<{ rows: never[] }>>,
-      {
-        schema
-      }
-    ) as unknown as BetterSQLite3Database<typeof schema>,
+    db: drizzle(binding as never, { schema }),
     close: () => undefined
   };
 }

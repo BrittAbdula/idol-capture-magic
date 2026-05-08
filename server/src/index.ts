@@ -2,21 +2,18 @@ import { createApp } from "./app.js";
 import { GoogleOAuthService } from "./auth/google.js";
 import { createLucia } from "./auth/lucia.js";
 import { getEnv } from "./config/env.js";
-import { createD1DatabaseClient, createDatabaseClient } from "./db/client.js";
+import { createD1DatabaseClient } from "./db/client.js";
 import { startServer } from "./server.js";
 import { StripeBillingService } from "./services/billing.js";
 import { KieImageProvider } from "./services/generation/kie.js";
 import { createLocalStorageService } from "./services/storage.js";
 
 const env = getEnv();
-const client =
-  env.DATABASE_BACKEND === "d1"
-    ? createD1DatabaseClient({
-        accountId: env.CLOUDFLARE_ACCOUNT_ID!,
-        databaseId: env.D1_DATABASE_ID!,
-        apiToken: env.CLOUDFLARE_API_TOKEN!
-      })
-    : createDatabaseClient(env.DATABASE_URL);
+const client = createD1DatabaseClient({
+  accountId: env.CLOUDFLARE_ACCOUNT_ID,
+  databaseId: env.D1_DATABASE_ID,
+  apiToken: env.CLOUDFLARE_API_TOKEN
+});
 const auth = createLucia(client, env.NODE_ENV === "production");
 const google = new GoogleOAuthService({
   clientId: env.GOOGLE_CLIENT_ID,

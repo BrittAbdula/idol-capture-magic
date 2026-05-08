@@ -6,7 +6,10 @@ const validEnv = {
   NODE_ENV: "development",
   PORT: "8787",
   PUBLIC_APP_ORIGIN: "http://localhost:8080",
-  DATABASE_URL: "file:./data/idolbooth.sqlite",
+  D1_DATABASE_NAME: "batchloom-db",
+  D1_DATABASE_ID: "d1-test-id",
+  CLOUDFLARE_ACCOUNT_ID: "cloudflare-account",
+  CLOUDFLARE_API_TOKEN: "cloudflare-token",
   STORAGE_BACKEND: "local",
   STORAGE_DIR: "./storage",
   GOOGLE_CLIENT_ID: "google-client",
@@ -36,9 +39,5 @@ describe("parseEnv", () => {
 
   test("requires R2 credentials when R2 storage is selected", () => {
     expect(() => parseEnv({ ...validEnv, STORAGE_BACKEND: "r2" })).toThrow(/R2_BUCKET/);
-  });
-
-  test("requires Cloudflare credentials when D1 is selected", () => {
-    expect(() => parseEnv({ ...validEnv, DATABASE_BACKEND: "d1" })).toThrow(/CLOUDFLARE_API_TOKEN/);
   });
 });

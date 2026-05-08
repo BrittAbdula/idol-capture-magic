@@ -5,6 +5,7 @@ import {
   type OutgoingHttpHeaders
 } from "node:http";
 import { Readable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 
 import type { Hono } from "hono";
 
@@ -39,7 +40,9 @@ function responseHeaders(headers: Headers): OutgoingHttpHeaders {
     }
   });
 
-  const setCookieHeaders = (headers as Headers & { getSetCookie?: () => string[] }).getSetCookie?.();
+  const setCookieHeaders = (
+    headers as Headers & { getSetCookie?: () => string[] }
+  ).getSetCookie?.();
   if (setCookieHeaders?.length) {
     result["set-cookie"] = setCookieHeaders;
   } else {
@@ -66,7 +69,7 @@ export function startServer(app: Hono, port: number) {
 
       res.writeHead(response.status, responseHeaders(response.headers));
       if (response.body) {
-        Readable.fromWeb(response.body).pipe(res);
+        Readable.fromWeb(response.body as unknown as NodeReadableStream).pipe(res);
       } else {
         res.end();
       }

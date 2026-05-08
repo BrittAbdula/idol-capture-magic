@@ -13,6 +13,7 @@ Transform the existing IdolBooth website from a client-only PNG-overlay photoboo
 **New code that needs a backend** lives in a sibling directory: `/Users/tm/idolbooth/server` (create it).
 
 **Target deliverable:** A locally runnable app where:
+
 1. User picks a member from a bias-centric IA (group → member).
 2. Uploads a photo.
 3. Picks a concept preset.
@@ -42,6 +43,7 @@ These constraints exist for legal, ethical, and safety reasons. Violating any of
 Use **exactly these versions**. Do not "upgrade to latest."
 
 ### Frontend (`idol-capture-magic`)
+
 - Existing: React 18.3, Vite 5.4, TypeScript 5.5, TailwindCSS 3.4, shadcn/ui, react-router 6.26
 - Add:
   - `@tanstack/react-query` (already installed — start using)
@@ -51,10 +53,11 @@ Use **exactly these versions**. Do not "upgrade to latest."
   - `react-i18next@15.0.2` + `i18next@23.15.1` (English only for now, scaffold structure)
 
 ### Backend (`server/` — new)
+
 - Runtime: **Node.js ≥ 20.10** (use `engines.node` in package.json)
 - Framework: **Hono 4.6.3** (`hono`)
-- DB: **better-sqlite3 11.3.0** + **drizzle-orm 0.34.0** (drizzle-kit 0.25.0 dev)
-- Auth: **lucia 3.2.0** + **@lucia-auth/adapter-sqlite 3.0.1**
+- DB: **Cloudflare D1** + **drizzle-orm 0.34.0** (drizzle-kit 0.25.0 dev)
+- Auth: **lucia 3.2.0** + custom D1-backed Lucia adapter
 - Validation: **zod 3.23.8** (already in frontend, install in backend too)
 - AI: **openai 4.67.3**
 - Image processing: **sharp 0.33.5**
@@ -62,6 +65,7 @@ Use **exactly these versions**. Do not "upgrade to latest."
 - Dev runner: **tsx 4.19.1**
 
 ### Tooling
+
 - Lint: ESLint flat config (existing for frontend; mirror for backend)
 - Format: Prettier 3.3.3 (add to both)
 - Tests: **vitest 2.1.2** (both projects)
@@ -73,14 +77,15 @@ Use **exactly these versions**. Do not "upgrade to latest."
 The user will populate these. Reference them by name. **At startup, validate presence with zod and throw if missing.**
 
 ### Backend `server/.env.example`
-### Frontend `idol-capture-magic/.env.example`
 
+### Frontend `idol-capture-magic/.env.example`
 
 Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/env.ts`) that parse `process.env` / `import.meta.env` and **fail at startup if required vars are missing**.
 
 ---
 
 ## 4. Repository Target Layout
+
 /Users/tm/idolbooth/
 ├── BUILD_SPEC.md # this file
 ├── idol-capture-magic/ # frontend (existing, extended)
@@ -147,7 +152,6 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 │ │ └── billing.ts
 │ └── lib/
 │ └── http.ts
-├── data/ # SQLite file lives here (gitignored)
 ├── storage/ # local image storage (gitignored)
 ├── config/
 │ └── blocklist.json
@@ -156,7 +160,6 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 ├── tsconfig.json
 └── .env.example
 
-
 ---
 
 ## 5. Master Checklist
@@ -164,6 +167,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 > **Codex: Edit this section in place to track progress. Replace `[ ]` with `[x]` after each task is verified done. Commit after every checkpoint.**
 
 ### Phase 0 — Bootstrap
+
 - [x] T-0.1 Create `server/` directory with package.json
 - [x] T-0.2 Pin all dependencies per Section 2
 - [x] T-0.3 Set up TypeScript, ESLint, Prettier in `server/`
@@ -172,6 +176,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-0** — `git add . && git commit -m "feat: bootstrap server scaffold"`
 
 ### Phase 1 — Backend Foundation
+
 - [x] T-1.1 Implement `server/src/config/env.ts` with zod validation
 - [x] T-1.2 Set up Hono app with CORS for `PUBLIC_APP_ORIGIN`
 - [x] T-1.3 Define drizzle schema (Section 6.1)
@@ -184,6 +189,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-1** — backend boots, auth round-trip works
 
 ### Phase 2 — AI Generation Pipeline
+
 - [x] T-2.1 Implement `GenerationProvider` interface
 - [x] T-2.2 Implement OpenAI provider (`gpt-image-1` image-to-image)
 - [x] T-2.3 Implement watermark service using sharp
@@ -194,6 +200,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-2** — generation endpoint returns watermarked output
 
 ### Phase 3 — Auth & Payments
+
 - [x] T-3.1 Implement Stripe service (test mode)
 - [x] T-3.2 `POST /api/billing/checkout` creates Stripe Checkout session
 - [x] T-3.3 `POST /api/billing/portal` creates Stripe Customer Portal session
@@ -202,6 +209,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-3** — Stripe test purchase upgrades plan
 
 ### Phase 4 — Domain APIs
+
 - [x] T-4.1 `GET /api/groups`, `GET /api/groups/:slug`
 - [x] T-4.2 `GET /api/members/:groupSlug/:memberSlug`
 - [x] T-4.3 `GET /api/concepts?memberId=&format=`
@@ -212,6 +220,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-4** — all domain APIs documented, all return zod-validated JSON
 
 ### Phase 5 — Seed Data + Asset Generation
+
 - [x] T-5.1 Author `seed/groups.json` with 12 groups (Section 11)
 - [x] T-5.2 Author `seed/members.json` with members for each group (Section 11)
 - [x] T-5.3 Author `seed/concepts.json` with 24 concept presets (Section 11)
@@ -224,6 +233,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-5** — `npm run seed` populates DB; `/public/placeholders/` and `/public/samples/` populated
 
 ### Phase 6 — Frontend: Foundation
+
 - [x] T-6.1 Set up `src/api/client.ts` with typed fetch wrappers
 - [x] T-6.2 Set up react-query providers (already mounted, configure)
 - [x] T-6.3 Set up react-i18next with English locale stub
@@ -235,6 +245,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-6** — all routes resolve, auth state visible
 
 ### Phase 7 — Frontend: Pages
+
 - [x] T-7.1 New homepage `/` per Section 7.2
 - [x] T-7.2 Group hub `/g/:groupSlug` per Section 7.3
 - [x] T-7.3 Member hub `/g/:groupSlug/:memberSlug` per Section 7.4
@@ -253,6 +264,7 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 - [x] **CKPT-7** — all pages render, no broken links
 
 ### Phase 8 — Integration & Polish
+
 - [x] T-8.1 SEO: per-route `<title>` and meta description (extend existing `TitleUpdater`)
 - [x] T-8.2 Generate `sitemap.xml` including all `/g/*/*` and `/c/*` URLs (extend existing script)
 - [x] T-8.3 Add OpenGraph / Twitter card meta to `/share/:id`
@@ -270,6 +282,8 @@ Write `zod` validators (`server/src/config/env.ts`, `idol-capture-magic/src/lib/
 ## 6. Backend Specifications
 
 ### 6.1 Drizzle Schema (`server/src/db/schema.ts`)
+
+Cloudflare D1 uses SQLite SQL semantics, so Drizzle models the D1 schema with `sqlite-core`.
 
 ```ts
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
@@ -585,7 +599,7 @@ Existing	Action	Destination
 src/components/WebcamCapture.tsx	Reuse as-is in Screen 2 of generation flow	src/components/generate/PhotoCapture.tsx (wrap)
 src/components/PhotoStrip.tsx	Port the generatePhotoStrip canvas logic	src/components/generate/StripCompositor.tsx
 src/lib/imageProcessing.ts	Keep	unchanged
-src/contexts/PhotoStripContext.tsx	Deprecate gradually — types stay, but provider role moves to backend + zustand. For V2.0, keep the provider mounted to avoid breaking PhotoStrip page.	
+src/contexts/PhotoStripContext.tsx	Deprecate gradually — types stay, but provider role moves to backend + zustand. For V2.0, keep the provider mounted to avoid breaking PhotoStrip page.
 src/data/templates.ts	Migrate template data → concepts table seed data	n/a
 src/pages/PhotoStrip.tsx	Keep functional, but refactor to use new /strip route	rename to pages/generate/StripPage.tsx
 src/pages/PhotoBooth.tsx	Keep functional during transition; route /photo-booth redirects to /strip once StripPage is verified	eventually delete
@@ -832,7 +846,7 @@ Replace placeholder member silhouettes with licensed assets. Search codebase for
 Review safety blocklist for completeness in target launch markets.
 Set up real Stripe products and rotate price IDs.
 Configure Google OAuth consent screen in production.
-Migrate from local SQLite to managed Postgres / D1 for production.
+Cloudflare D1 is now the production database; apply D1 migrations before seeding.
 Migrate from local filesystem storage to R2 / S3 for production.
 Replace placeholder marketing copy (search for [HUMAN_REVIEW] markers).
 Run a legal review on safety policy, terms, and privacy pages.

@@ -1,6 +1,6 @@
 # IdolBooth V3 Local Setup
 
-IdolBooth is a Vite/React frontend with a Hono backend. Production database access is configured for Cloudflare D1; SQLite remains available for local-only fallback and tests. The frontend lives in `idol-capture-magic/`; the backend lives in `server/`.
+IdolBooth is a Vite/React frontend with a Hono backend backed by Cloudflare D1. The frontend lives in `idol-capture-magic/`; the backend lives in `server/`.
 
 ## Prerequisites
 
@@ -26,24 +26,24 @@ cp /Users/tm/idolbooth/server/.env.example /Users/tm/idolbooth/server/.env
 cp /Users/tm/idolbooth/idol-capture-magic/.env.example /Users/tm/idolbooth/idol-capture-magic/.env
 ```
 
-The image provider uses `KIE_API_KEY`. For D1, set `DATABASE_BACKEND=d1`, `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_API_TOKEN`. Do not commit `.env` files.
+The image provider uses `KIE_API_KEY`. D1 operations require `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_API_TOKEN`. Do not commit `.env` files.
 
 ## Database
 
-```sh
-cd /Users/tm/idolbooth/server
-npm run db:migrate
-npm run seed
-```
-
-For Cloudflare-managed D1 migrations, use:
+The backend is D1-only. Drizzle still uses the `sqlite` dialect internally because that is the SQL dialect exposed by D1; there is no local database fallback.
 
 ```sh
 cd /Users/tm/idolbooth/server
 npm run d1:migrate
+npm run seed
 ```
 
-The seed script writes to the selected `DATABASE_BACKEND`; set it to `sqlite` only when you want to seed the local `DATABASE_URL`.
+D1 local migrations are available for Miniflare/Wrangler development:
+
+```sh
+cd /Users/tm/idolbooth/server
+npm run d1:migrate:local
+```
 
 ## Run
 
@@ -62,6 +62,21 @@ npm run dev
 ```
 
 Open `http://localhost:8080`.
+
+## Frontend Deploy
+
+Frontend deploys are done from the local command line with pnpm and Wrangler direct upload to the existing Cloudflare Pages project `idolbooth`.
+
+```sh
+cd /Users/tm/idolbooth/idol-capture-magic
+pnpm install
+pnpm exec wrangler login
+pnpm cf:deploy
+```
+
+`pnpm cf:deploy` runs `generate-sitemap`, builds the Vite app into `dist/`, then uploads `dist/` to Cloudflare Pages as the `main` production branch. Set production Vite variables locally before deploying, for example in `.env.production`.
+
+If Cloudflare Git automatic deployments are still enabled in the dashboard, disable them so production publishes only happen through `pnpm cf:deploy`.
 
 ## Checks
 

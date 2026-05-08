@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -6,8 +6,8 @@ import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { createApp } from "../app.js";
-import { createDatabaseClient, type DatabaseClient } from "../db/client.js";
 import { concepts, groups, members } from "../db/schema.js";
+import { createTestD1DatabaseClient, type TestDatabaseClient } from "../db/test-d1.js";
 import type {
   GenerationProvider,
   GenerationRequest,
@@ -47,47 +47,56 @@ class StubGenerationProvider implements GenerationProvider {
 
 describe("generation routes", () => {
   let tempDir: string;
-  let client: DatabaseClient;
+  let client: TestDatabaseClient;
 
   beforeEach(async () => {
     tempDir = await mkdtemp(path.join(os.tmpdir(), "idolbooth-generation-"));
-    client = createDatabaseClient(":memory:");
-    client.sqlite.exec(await readFile(new URL("../db/migrations/0000_dizzy_karnak.sql", import.meta.url), "utf8"));
+    client = await createTestD1DatabaseClient();
 
-    client.db.insert(groups).values({
-      id: "group_newjeans",
-      slug: "newjeans",
-      name: "NewJeans",
-      themeColor: "#A8C8E5",
-      popularityRank: 1
-    }).run();
+    await client.db
+      .insert(groups)
+      .values({
+        id: "group_newjeans",
+        slug: "newjeans",
+        name: "NewJeans",
+        themeColor: "#A8C8E5",
+        popularityRank: 1
+      })
+      .run();
 
-    client.db.insert(members).values({
-      id: "member_haerin",
-      groupId: "group_newjeans",
-      slug: "haerin",
-      name: "Haerin",
-      birthday: "05-15",
-      silhouetteImage: "/placeholders/silhouette_1.png",
-      todoLicensedAsset: true
-    }).run();
+    await client.db
+      .insert(members)
+      .values({
+        id: "member_haerin",
+        groupId: "group_newjeans",
+        slug: "haerin",
+        name: "Haerin",
+        birthday: "05-15",
+        silhouetteImage: "/placeholders/silhouette_1.png",
+        todoLicensedAsset: true
+      })
+      .run();
 
-    client.db.insert(concepts).values({
-      id: "concept_polaroid",
-      slug: "polaroid-selca",
-      name: "Polaroid Selca",
-      format: "selca",
-      category: "polaroid",
-      promptTemplate:
-        "A polaroid with the user and an anonymized stylized companion, soft film grain.",
-      styleTokens: JSON.stringify(["polaroid", "film grain"]),
-      sampleOutputUrl: "/samples/polaroid-selca.png",
-      premium: false
-    }).run();
+    await client.db
+      .insert(concepts)
+      .values({
+        id: "concept_polaroid",
+        slug: "polaroid-selca",
+        name: "Polaroid Selca",
+        format: "selca",
+        category: "polaroid",
+        promptTemplate:
+          "A polaroid with the user and an anonymized stylized companion, soft film grain.",
+        styleTokens: JSON.stringify(["polaroid", "film grain"]),
+        sampleOutputUrl: "/samples/polaroid-selca.png",
+        premium: false
+      })
+      .run();
   });
 
   afterEach(async () => {
     client.close();
+    await client.dispose();
     await rm(tempDir, { recursive: true, force: true });
   });
 

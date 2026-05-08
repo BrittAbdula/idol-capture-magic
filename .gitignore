@@ -6,5 +6,4 @@ dist
 dist-ssr
 .cursor/
 
-server/data/
 server/storage/

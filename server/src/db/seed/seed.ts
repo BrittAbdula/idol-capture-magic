@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { generateIdFromEntropySize } from "lucia";
 
 import { loadDotEnv } from "../../config/env.js";
-import { createD1DatabaseClient, createDatabaseClient, type DatabaseClient } from "../client.js";
+import { createD1DatabaseClient, type DatabaseClient } from "../client.js";
 import { binderItems, campaigns, concepts, generations, groups, members } from "../schema.js";
 
 interface GroupSeed {
@@ -172,21 +172,17 @@ main().catch((error: unknown) => {
 });
 
 function createSeedDatabaseClient(): DatabaseClient {
-  if ((process.env.DATABASE_BACKEND ?? "sqlite") === "d1") {
-    return createD1DatabaseClient({
-      accountId: requiredEnv("CLOUDFLARE_ACCOUNT_ID"),
-      databaseId: requiredEnv("D1_DATABASE_ID"),
-      apiToken: requiredEnv("CLOUDFLARE_API_TOKEN")
-    });
-  }
-
-  return createDatabaseClient(process.env.DATABASE_URL ?? "file:./data/idolbooth.sqlite");
+  return createD1DatabaseClient({
+    accountId: requiredEnv("CLOUDFLARE_ACCOUNT_ID"),
+    databaseId: requiredEnv("D1_DATABASE_ID"),
+    apiToken: requiredEnv("CLOUDFLARE_API_TOKEN")
+  });
 }
 
 function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`${name} is required for DATABASE_BACKEND=d1`);
+    throw new Error(`${name} is required for D1 seed operations`);
   }
   return value;
 }

@@ -8,12 +8,10 @@ const EnvSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(8787),
     PUBLIC_APP_ORIGIN: z.string().url(),
-    DATABASE_BACKEND: z.enum(["sqlite", "d1"]).default("sqlite"),
-    DATABASE_URL: z.string().min(1).default("file:./data/idolbooth.sqlite"),
-    D1_DATABASE_NAME: z.string().optional(),
-    D1_DATABASE_ID: z.string().optional(),
-    CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
-    CLOUDFLARE_API_TOKEN: z.string().optional(),
+    D1_DATABASE_NAME: z.string().min(1),
+    D1_DATABASE_ID: z.string().min(1),
+    CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
+    CLOUDFLARE_API_TOKEN: z.string().min(1),
     STORAGE_BACKEND: z.enum(["local", "r2"]).default("local"),
     STORAGE_DIR: z.string().min(1).default("./storage"),
     GOOGLE_CLIENT_ID: z.string().min(1),
@@ -30,23 +28,6 @@ const EnvSchema = z
     R2_BUCKET: z.string().optional()
   })
   .superRefine((value, ctx) => {
-    if (value.DATABASE_BACKEND === "d1") {
-      for (const key of [
-        "D1_DATABASE_NAME",
-        "D1_DATABASE_ID",
-        "CLOUDFLARE_ACCOUNT_ID",
-        "CLOUDFLARE_API_TOKEN"
-      ] as const) {
-        if (!value[key]) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: [key],
-            message: `${key} is required when DATABASE_BACKEND=d1`
-          });
-        }
-      }
-    }
-
     if (value.STORAGE_BACKEND !== "r2") {
       return;
     }

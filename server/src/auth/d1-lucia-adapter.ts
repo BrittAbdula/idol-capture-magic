@@ -1,6 +1,6 @@
 import type { Adapter, DatabaseSession, DatabaseUser, UserId } from "lucia";
 
-import type { RemoteD1HttpClient } from "../db/d1-http.js";
+import type { D1QueryClient } from "../db/client.js";
 
 interface TableNames {
   user: string;
@@ -9,12 +9,12 @@ interface TableNames {
 
 type Row = Record<string, unknown>;
 
-export class RemoteSQLiteAdapter implements Adapter {
+export class D1LuciaAdapter implements Adapter {
   private readonly userTable: string;
   private readonly sessionTable: string;
 
   constructor(
-    private readonly client: RemoteD1HttpClient,
+    private readonly client: D1QueryClient,
     tableNames: TableNames
   ) {
     this.userTable = escapeName(tableNames.user);

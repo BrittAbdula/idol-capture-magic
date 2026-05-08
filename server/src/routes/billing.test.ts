@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
-
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { createApp } from "../app.js";
 import { createLucia } from "../auth/lucia.js";
-import { createDatabaseClient, type DatabaseClient } from "../db/client.js";
 import { users } from "../db/schema.js";
+import { createTestD1DatabaseClient, type TestDatabaseClient } from "../db/test-d1.js";
 import type {
   BillingService,
   CheckoutInput,
@@ -41,22 +39,28 @@ class FakeBillingService implements BillingService {
 }
 
 describe("billing routes", () => {
-  let client: DatabaseClient;
+  let client: TestDatabaseClient;
 
   beforeEach(async () => {
-    client = createDatabaseClient(":memory:");
-    client.sqlite.exec(await readFile(new URL("../db/migrations/0000_dizzy_karnak.sql", import.meta.url), "utf8"));
-    client.db.insert(users).values({
-      id: "user_123",
-      email: "fan@example.com",
-      handle: "fan-123",
-      googleId: "google_123",
-      locale: "en",
-      plan: "free",
-      dailyQuotaUsed: 0,
-      dailyQuotaResetAt: 1_800_000_000,
-      createdAt: 1_700_000_000
-    }).run();
+    client = await createTestD1DatabaseClient();
+    await client.db
+      .insert(users)
+      .values({
+        id: "user_123",
+        email: "fan@example.com",
+        handle: "fan-123",
+        googleId: "google_123",
+        locale: "en",
+        plan: "free",
+        dailyQuotaUsed: 0,
+        dailyQuotaResetAt: 1_800_000_000,
+        createdAt: 1_700_000_000
+      })
+      .run();
+  });
+
+  afterEach(async () => {
+    await client.dispose();
   });
 
   test("creates a checkout session for the authenticated user", async () => {
@@ -81,7 +85,7 @@ describe("billing routes", () => {
 
     expect(response.status).toBe(200);
     expect(json.url).toBe("https://checkout.stripe.test/plus");
-    const user = client.db.select().from(users).where(eq(users.id, "user_123")).get();
+    const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
     expect(user?.stripeCustomerId).toBe("cus_test_123");
   });
 
@@ -91,7 +95,7 @@ describe("billing routes", () => {
       client,
       billing: new FakeBillingService()
     });
-    client.db
+    await client.db
       .update(users)
       .set({ stripeCustomerId: "cus_test_123" })
       .where(eq(users.id, "user_123"))
@@ -104,7 +108,7 @@ describe("billing routes", () => {
     });
 
     expect(response.status).toBe(200);
-    const user = client.db.select().from(users).where(eq(users.id, "user_123")).get();
+    const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
     expect(user?.plan).toBe("plus");
     expect(user?.stripeSubscriptionId).toBe("sub_test_123");
   });

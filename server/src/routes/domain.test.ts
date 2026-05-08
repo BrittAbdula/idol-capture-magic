@@ -1,72 +1,88 @@
-import { readFile } from "node:fs/promises";
-
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { createApp } from "../app.js";
 import { createLucia } from "../auth/lucia.js";
-import { createDatabaseClient, type DatabaseClient } from "../db/client.js";
 import { binderItems, concepts, generations, groups, members, users } from "../db/schema.js";
+import { createTestD1DatabaseClient, type TestDatabaseClient } from "../db/test-d1.js";
 
 describe("domain APIs", () => {
-  let client: DatabaseClient;
+  let client: TestDatabaseClient;
 
   beforeEach(async () => {
-    client = createDatabaseClient(":memory:");
-    client.sqlite.exec(await readFile(new URL("../db/migrations/0000_dizzy_karnak.sql", import.meta.url), "utf8"));
-    client.db.insert(groups).values({
-      id: "group_newjeans",
-      slug: "newjeans",
-      name: "NewJeans",
-      agency: "ADOR",
-      debutDate: "2022-07-22",
-      themeColor: "#A8C8E5",
-      coverImage: "/placeholders/group_newjeans.png",
-      popularityRank: 1
-    }).run();
-    client.db.insert(members).values({
-      id: "member_haerin",
-      groupId: "group_newjeans",
-      slug: "haerin",
-      name: "Haerin",
-      position: "Vocalist",
-      birthday: "05-15",
-      silhouetteImage: "/placeholders/silhouette_1.png",
-      todoLicensedAsset: true,
-      facts: JSON.stringify({ position: "Vocalist" })
-    }).run();
-    client.db.insert(concepts).values({
-      id: "concept_polaroid",
-      slug: "polaroid-selca",
-      name: "Polaroid Selca",
-      format: "selca",
-      category: "polaroid",
-      promptTemplate: "A safe anonymized stylized companion prompt.",
-      styleTokens: JSON.stringify(["polaroid"]),
-      sampleOutputUrl: "/samples/polaroid-selca.png",
-      premium: false
-    }).run();
-    client.db.insert(users).values({
-      id: "user_123",
-      email: "fan@example.com",
-      handle: "fan",
-      locale: "en",
-      plan: "free",
-      dailyQuotaUsed: 0,
-      dailyQuotaResetAt: 1_800_000_000,
-      createdAt: 1_700_000_000
-    }).run();
-    client.db.insert(generations).values({
-      id: "generation_123",
-      userId: "user_123",
-      conceptId: "concept_polaroid",
-      memberId: "member_haerin",
-      format: "selca",
-      status: "succeeded",
-      outputImageRef: "outputs/generation_123.png",
-      watermarkLevel: "visible",
-      isPublic: true,
-      createdAt: 1_700_000_001
-    }).run();
+    client = await createTestD1DatabaseClient();
+    await client.db
+      .insert(groups)
+      .values({
+        id: "group_newjeans",
+        slug: "newjeans",
+        name: "NewJeans",
+        agency: "ADOR",
+        debutDate: "2022-07-22",
+        themeColor: "#A8C8E5",
+        coverImage: "/placeholders/group_newjeans.png",
+        popularityRank: 1
+      })
+      .run();
+    await client.db
+      .insert(members)
+      .values({
+        id: "member_haerin",
+        groupId: "group_newjeans",
+        slug: "haerin",
+        name: "Haerin",
+        position: "Vocalist",
+        birthday: "05-15",
+        silhouetteImage: "/placeholders/silhouette_1.png",
+        todoLicensedAsset: true,
+        facts: JSON.stringify({ position: "Vocalist" })
+      })
+      .run();
+    await client.db
+      .insert(concepts)
+      .values({
+        id: "concept_polaroid",
+        slug: "polaroid-selca",
+        name: "Polaroid Selca",
+        format: "selca",
+        category: "polaroid",
+        promptTemplate: "A safe anonymized stylized companion prompt.",
+        styleTokens: JSON.stringify(["polaroid"]),
+        sampleOutputUrl: "/samples/polaroid-selca.png",
+        premium: false
+      })
+      .run();
+    await client.db
+      .insert(users)
+      .values({
+        id: "user_123",
+        email: "fan@example.com",
+        handle: "fan",
+        locale: "en",
+        plan: "free",
+        dailyQuotaUsed: 0,
+        dailyQuotaResetAt: 1_800_000_000,
+        createdAt: 1_700_000_000
+      })
+      .run();
+    await client.db
+      .insert(generations)
+      .values({
+        id: "generation_123",
+        userId: "user_123",
+        conceptId: "concept_polaroid",
+        memberId: "member_haerin",
+        format: "selca",
+        status: "succeeded",
+        outputImageRef: "outputs/generation_123.png",
+        watermarkLevel: "visible",
+        isPublic: true,
+        createdAt: 1_700_000_001
+      })
+      .run();
+  });
+
+  afterEach(async () => {
+    await client.dispose();
   });
 
   test("returns public group, member, concept, and share JSON", async () => {
@@ -110,7 +126,9 @@ describe("domain APIs", () => {
     expect(list.items[0]?.customCaption).toBe("My bias card");
 
     const publicResponse = await app.request("/api/binder/public/fan");
-    const publicBinder = (await publicResponse.json()) as { items: Array<{ generationId: string }> };
+    const publicBinder = (await publicResponse.json()) as {
+      items: Array<{ generationId: string }>;
+    };
     expect(publicBinder.items[0]?.generationId).toBe("generation_123");
 
     const deleteResponse = await app.request(`/api/binder/items/${created.item.id}`, {
@@ -119,6 +137,6 @@ describe("domain APIs", () => {
     });
     expect(deleteResponse.status).toBe(200);
 
-    expect(client.db.select().from(binderItems).all()).toHaveLength(0);
+    await expect(client.db.select().from(binderItems).all()).resolves.toHaveLength(0);
   });
 });
