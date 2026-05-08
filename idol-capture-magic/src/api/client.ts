@@ -1,5 +1,39 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
+interface ApiErrorOptions {
+  status: number;
+  code: string;
+  message?: string;
+  details?: Record<string, unknown>;
+}
+
+export class ApiError extends Error {
+  status: number;
+  code: string;
+  details: Record<string, unknown>;
+
+  constructor({ status, code, message, details }: ApiErrorOptions) {
+    super(message || code || `Request failed: ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.details = details ?? {};
+  }
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}
+
+export function apiUrl(path: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL.replace(/\/$/, "")}${normalizedPath}`;
+}
+
+export function getGoogleAuthUrl(): string {
+  return apiUrl("/auth/google");
+}
+
 export interface ApiGroup {
   id: string;
   slug: string;
@@ -56,8 +90,12 @@ export interface AuthUser {
   plan: "free" | "plus" | "pro";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     credentials: "include",
     ...init,
     headers: {
@@ -68,7 +106,20 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${response.status}`);
+    const details = isRecord(body) ? body : {};
+    const code = typeof details.error === "string" ? details.error : `http_${response.status}`;
+    const message =
+      typeof details.message === "string"
+        ? details.message
+        : typeof details.error === "string"
+          ? details.error
+          : `Request failed: ${response.status}`;
+    throw new ApiError({
+      status: response.status,
+      code,
+      message,
+      details
+    });
   }
 
   return response.json() as Promise<T>;
@@ -82,18 +133,19 @@ export const api = {
       `/api/groups/${slug}`
     ),
   member: (groupSlug: string, memberSlug: string) =>
-    requestJson<{ group: ApiGroup; member: ApiMember }>(
-      `/api/members/${groupSlug}/${memberSlug}`
-    ),
-  concepts: (params?: { format?: ApiConcept["format"]; memberId?: string; campaignId?: string }) => {
+    requestJson<{ group: ApiGroup; member: ApiMember }>(`/api/members/${groupSlug}/${memberSlug}`),
+  concepts: (params?: {
+    format?: ApiConcept["format"];
+    memberId?: string;
+    campaignId?: string;
+  }) => {
     const query = new URLSearchParams();
     if (params?.format) query.set("format", params.format);
     if (params?.memberId) query.set("memberId", params.memberId);
     if (params?.campaignId) query.set("campaignId", params.campaignId);
     return requestJson<ApiConcept[]>(`/api/concepts${query.size ? `?${query}` : ""}`);
   },
-  campaign: (slug: string) =>
-    requestJson<{ campaign: ApiCampaign }>(`/api/campaigns/${slug}`),
+  campaign: (slug: string) => requestJson<{ campaign: ApiCampaign }>(`/api/campaigns/${slug}`),
   campaigns: (params?: { status?: string; limit?: number }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);

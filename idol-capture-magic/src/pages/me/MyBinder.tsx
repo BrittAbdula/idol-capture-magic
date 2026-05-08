@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Download, Grid3X3, Image, LayoutGrid, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { api } from "@/api/client";
+import { api, getGoogleAuthUrl } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
+import { ImageFrame } from "@/components/media/ImageFrame";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -62,8 +63,15 @@ export default function MyBinder() {
       {!auth.isAuthenticated && (
         <div className="border border-idol-gold p-5">
           <h2 className="text-2xl font-semibold">Sign in to save cards</h2>
-          <p className="mt-2 text-sm text-gray-600">Guest generations can be shared, but Binder storage requires a session.</p>
-          <a href="/auth/google" className="idol-button-square mt-4 inline-flex">
+          <p className="mt-2 text-sm text-gray-600">
+            Guest generations can be shared, but Binder storage requires a session.
+          </p>
+          <a
+            href={getGoogleAuthUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="idol-button-square mt-4 inline-flex"
+          >
             Sign in with Google
           </a>
         </div>
@@ -81,7 +89,9 @@ export default function MyBinder() {
               <SelectItem value="member">By member</SelectItem>
             </SelectContent>
           </Select>
-          <button className="border border-black/10 px-4 py-2 text-sm text-idol-gold">All formats</button>
+          <button className="border border-black/10 px-4 py-2 text-sm text-idol-gold">
+            All formats
+          </button>
           <button className="border border-black/10 px-4 py-2 text-sm">All members</button>
         </div>
         <div className="flex items-center gap-3">
@@ -104,24 +114,47 @@ export default function MyBinder() {
         <Switch checked={publicBinder} onCheckedChange={setPublicBinder} />
       </div>
 
-      <div className={`mt-8 grid gap-3 ${dense ? "grid-cols-3 md:grid-cols-6" : "grid-cols-2 md:grid-cols-4"}`}>
-        {binder.isLoading && <div className="col-span-full"><LoadingSkeleton rows={4} /></div>}
+      <div
+        className={`mt-8 grid gap-3 ${dense ? "grid-cols-3 md:grid-cols-6" : "grid-cols-2 md:grid-cols-4"}`}
+      >
+        {binder.isLoading && (
+          <div className="col-span-full">
+            <LoadingSkeleton rows={4} />
+          </div>
+        )}
         {items.length ? (
           items.map((item) => (
-            <button key={item.id} onClick={() => setSelected(item)} className="border border-black/10 text-left">
+            <button
+              key={item.id}
+              onClick={() => setSelected(item)}
+              className="border border-black/10 text-left"
+            >
               {item.outputUrl ? (
-                <img src={item.outputUrl} alt="" className="aspect-[54/86] w-full object-cover" />
+                <ImageFrame
+                  src={item.outputUrl}
+                  alt=""
+                  ratio="portrait"
+                  interactive
+                  className="rounded-none border-0 shadow-none"
+                />
               ) : (
-                <div className="flex aspect-[54/86] items-center justify-center bg-gray-100">
+                <div className="flex aspect-[2/3] items-center justify-center bg-gray-100">
                   <Image className="h-6 w-6 text-gray-400" />
                 </div>
               )}
-              <p className="truncate p-3 text-sm font-semibold">{item.customCaption ?? "Untitled card"}</p>
+              <p className="truncate p-3 text-sm font-semibold">
+                {item.customCaption ?? "Untitled card"}
+              </p>
             </button>
           ))
         ) : !binder.isLoading ? (
           <Link to="/selca" className="col-span-full border border-black/10 p-8 text-center">
-            <img src="/illustrations/empty-binder.png" alt="" className="mx-auto h-40 w-40 object-cover" />
+            <ImageFrame
+              src="/illustrations/empty-binder.png"
+              alt=""
+              ratio="square"
+              className="mx-auto h-40 w-40 shadow-none"
+            />
             <p className="mt-4 font-semibold">Create your first Binder item</p>
           </Link>
         ) : null}
@@ -131,9 +164,13 @@ export default function MyBinder() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{selected?.customCaption ?? "Binder item"}</DialogTitle>
-            <DialogDescription>Re-share, regenerate, edit caption, or remove this saved item.</DialogDescription>
+            <DialogDescription>
+              Re-share, regenerate, edit caption, or remove this saved item.
+            </DialogDescription>
           </DialogHeader>
-          {selected?.outputUrl && <img src={selected.outputUrl} alt="" className="max-h-[70vh] w-full object-contain" />}
+          {selected?.outputUrl && (
+            <img src={selected.outputUrl} alt="" className="max-h-[70vh] w-full object-contain" />
+          )}
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" onClick={() => toast.info("Caption editing is coming next.")}>
               Edit caption

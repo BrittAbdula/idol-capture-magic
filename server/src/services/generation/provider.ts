@@ -1,14 +1,21 @@
+export interface GenerationInputImage {
+  image: Buffer;
+  mimeType: string;
+}
+
 export interface GenerationRequest {
   conceptPrompt: string;
   styleTokens: string[];
-  inputImagePath: string;
-  memberSilhouettePath: string;
+  inputImage: Buffer;
+  inputMimeType: string;
+  inputImages: GenerationInputImage[];
   outputFormat: "png" | "webp";
   size: "1024x1024" | "1024x1536" | "1536x1024";
 }
 
 export interface GenerationResult {
-  imagePath: string;
+  image: Buffer;
+  contentType: string;
   costUsd: number;
   providerJobId: string;
 }

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SEO from '@/components/SEO';
+import { ImageFrame } from '@/components/media/ImageFrame';
 
 // 撒花效果组件
 const ConfettiEffect = ({ isActive }: { isActive: boolean }) => {
@@ -633,67 +634,35 @@ const PhotoWithIdol = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="group cursor-pointer">
-                  <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <img
-                      src="/sample/samplej-1.jpg"
-                      alt="Sample idol photo combination 1"
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
+                  <ImageFrame src="/sample/samplej-1.jpg" alt="Sample idol photo combination 1" ratio="landscape" interactive fallbackSrc="/placeholder.svg">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <p className="text-white text-sm font-medium">BTS Concert Photo</p>
                     </div>
-                  </div>
+                  </ImageFrame>
                 </div>
 
                 <div className="group cursor-pointer">
-                  <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <img
-                      src="/sample/sample-2.jpg"
-                      alt="Sample idol photo combination 2"
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
+                  <ImageFrame src="/sample/sample-2.jpg" alt="Sample idol photo combination 2" ratio="landscape" interactive fallbackSrc="/placeholder.svg">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <p className="text-white text-sm font-medium">BLACKPINK Selfie</p>
                     </div>
-                  </div>
+                  </ImageFrame>
                 </div>
 
                 <div className="group cursor-pointer">
-                  <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <img
-                      src="/sample/sample-3.jpg"
-                      alt="Sample idol photo combination 3"
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
+                  <ImageFrame src="/sample/sample-3.jpg" alt="Sample idol photo combination 3" ratio="landscape" interactive fallbackSrc="/placeholder.svg">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <p className="text-white text-sm font-medium">TWICE Group Photo</p>
                     </div>
-                  </div>
+                  </ImageFrame>
                 </div>
 
                 <div className="group cursor-pointer">
-                  <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <img
-                      src="/sample/sample-4.jpg"
-                      alt="Sample idol photo combination 4"
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
+                  <ImageFrame src="/sample/sample-4.jpg" alt="Sample idol photo combination 4" ratio="landscape" interactive fallbackSrc="/placeholder.svg">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <p className="text-white text-sm font-medium">EXO Studio Session</p>
                     </div>
-                  </div>
+                  </ImageFrame>
                 </div>
               </div>
             </div>

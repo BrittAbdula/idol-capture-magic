@@ -62,7 +62,18 @@ This project is built with .
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/f771bb7f-2d7b-49c1-bd8d-f9b44658bd7b) and click on Share -> Publish.
+Deploy the frontend from your local machine to the new Cloudflare Pages project `idolbooth-web`:
+
+```sh
+pnpm install
+pnpm exec wrangler login
+pnpm cf:create
+pnpm cf:deploy
+```
+
+`pnpm cf:deploy` generates the sitemap, runs the production Vite build, and uploads `dist/` to Cloudflare Pages project `idolbooth-web` on branch `main`.
+
+Set production Vite variables locally before deploying, for example in `.env.production`. Point `idolbooth.com` to this new Pages project after the old project is deleted or disconnected.
 
 ## I want to use a custom domain - is that possible?
 

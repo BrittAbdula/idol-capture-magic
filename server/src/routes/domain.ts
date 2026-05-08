@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { DatabaseClient } from "../db/client.js";
 import { campaigns, concepts, generations, groups, members } from "../db/schema.js";
 import { jsonError } from "../lib/http.js";
+import type { StorageService } from "../services/storage.js";
 
 const NullableString = z.string().nullable();
 
@@ -62,14 +63,17 @@ const CampaignSchema = z.object({
   description: NullableString
 });
 
-function storageUrl(ref: string | null): string | null {
+function storageUrl(ref: string | null, storage?: StorageService): string | null {
   if (!ref) {
     return null;
   }
-  return ref.startsWith("/") ? ref : `/storage/${ref}`;
+  if (ref.startsWith("/") || /^https?:\/\//i.test(ref)) {
+    return ref;
+  }
+  return storage?.publicUrlFor(ref) ?? `/storage/${ref}`;
 }
 
-export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
+export function createDomainRoutes(deps: { client: DatabaseClient; storage?: StorageService }): Hono {
   const app = new Hono();
 
   app.get("/groups", async (c) => {
@@ -202,7 +206,7 @@ export function createDomainRoutes(deps: { client: DatabaseClient }): Hono {
         id: generation.id,
         status: generation.status,
         format: generation.format,
-        outputUrl: storageUrl(generation.outputImageRef),
+        outputUrl: storageUrl(generation.outputImageRef, deps.storage),
         watermarkLevel: generation.watermarkLevel,
         createdAt: generation.createdAt
       }

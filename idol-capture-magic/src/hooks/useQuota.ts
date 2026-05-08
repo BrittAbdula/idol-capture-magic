@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 
 const PLAN_LIMITS = {
+  guest: 1,
   free: 3,
   plus: 30,
   pro: 200
@@ -8,7 +9,7 @@ const PLAN_LIMITS = {
 
 export function useQuota() {
   const { user, isLoading } = useAuth();
-  const plan = user?.plan ?? "free";
+  const plan = user?.plan ?? "guest";
   const total = PLAN_LIMITS[plan];
 
   return {

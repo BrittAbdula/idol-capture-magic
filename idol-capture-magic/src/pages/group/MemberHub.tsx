@@ -6,6 +6,8 @@ import { ArrowRight, CalendarDays, Lock, Sparkles } from "lucide-react";
 import { api, type ApiConcept, type ApiMember } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
+import { ImageFrame } from "@/components/media/ImageFrame";
+import { ratioFromFormat } from "@/lib/imageRatios";
 
 const FILTERS = ["All", "Comeback", "Daily", "Birthday", "Concert", "Polaroid"];
 
@@ -149,7 +151,13 @@ export default function MemberHub() {
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           {filteredConcepts.slice(0, 4).map((concept) => (
             <Link key={concept.id} to={`/selca?memberId=${member?.id ?? ""}&conceptId=${concept.id}`} className="border border-black/10">
-              <img src={concept.sampleOutputUrl} alt="" className="aspect-[4/5] w-full object-cover" />
+              <ImageFrame
+                src={concept.sampleOutputUrl}
+                alt=""
+                ratio={ratioFromFormat(concept.format)}
+                interactive
+                className="rounded-none border-0 shadow-none"
+              />
               <div className="flex items-center justify-between p-3 text-sm font-semibold">
                 Make yours <ArrowRight className="h-4 w-4" />
               </div>
@@ -171,7 +179,13 @@ function ConceptCard({ concept, memberId }: { concept: ApiConcept; memberId: str
   const href = `/${concept.format}?memberId=${memberId ?? ""}&conceptId=${concept.id}`;
   return (
     <Link to={href} className="group border border-black/10">
-      <img src={concept.sampleOutputUrl} alt="" className="aspect-square w-full object-cover" />
+      <ImageFrame
+        src={concept.sampleOutputUrl}
+        alt=""
+        ratio={ratioFromFormat(concept.format)}
+        interactive
+        className="rounded-none border-0 shadow-none"
+      />
       <div className="p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-semibold">{concept.name}</h3>

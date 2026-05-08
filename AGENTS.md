@@ -19,6 +19,18 @@ npm run build:dev         # build with development mode (keeps lovable-tagger)
 npm run lint              # eslint (flat config, eslint.config.js)
 npm run preview           # preview the production build
 npm run generate-sitemap  # write public/sitemap.xml from scripts/generate-sitemap.js
+pnpm cf:create            # create Cloudflare Pages project idolbooth-web
+pnpm cf:deploy            # deploy frontend to Cloudflare Pages project idolbooth-web
+```
+
+Backend commands run from `server/`:
+
+```sh
+npm run dev               # Wrangler local Worker dev server on port 8787
+npm run build             # TypeScript check
+npm test                  # Vitest
+npm run cf:r2:create      # create R2 bucket idolbooth-storage
+npm run cf:deploy:full    # build + D1 remote migrations + Worker deploy
 ```
 
 There is no test runner configured.

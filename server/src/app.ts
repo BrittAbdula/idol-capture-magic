@@ -58,12 +58,13 @@ export function createApp(options: CreateAppOptions): Hono {
     });
   }
   if (options.client) {
-    app.route("/api", createDomainRoutes({ client: options.client }));
+    app.route("/api", createDomainRoutes({ client: options.client, storage: options.storage }));
     app.route(
       "/api/binder",
       createBinderRoutes({
         auth: options.auth,
-        client: options.client
+        client: options.client,
+        storage: options.storage
       })
     );
   }
@@ -74,9 +75,7 @@ export function createApp(options: CreateAppOptions): Hono {
         client: options.client,
         provider: options.generationProvider,
         storage: options.storage,
-        auth: options.auth,
-        tempDir: options.tempDir,
-        publicDir: options.publicDir
+        auth: options.auth
       })
     );
   }

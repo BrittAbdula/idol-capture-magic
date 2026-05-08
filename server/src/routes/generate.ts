@@ -1,5 +1,3 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
@@ -8,7 +6,7 @@ import { z } from "zod";
 
 import type { Auth } from "../auth/lucia.js";
 import type { DatabaseClient } from "../db/client.js";
-import { concepts, generations, members, users, type Concept, type Member } from "../db/schema.js";
+import { concepts, generations, members, users, type Concept } from "../db/schema.js";
 import { jsonError } from "../lib/http.js";
 import type { GenerationProvider, GenerationRequest } from "../services/generation/provider.js";
 import { applyWatermark, watermarkLevelForPlan } from "../services/generation/watermark.js";
@@ -32,8 +30,6 @@ interface GenerateRouteDeps {
   provider: GenerationProvider;
   storage: StorageService;
   auth?: Auth;
-  tempDir?: string;
-  publicDir?: string;
 }
 
 const anonQuota = new Map<string, { used: number; resetAt: number }>();
@@ -77,9 +73,9 @@ function boolField(value: BodyEntry | BodyEntry[] | undefined): boolean {
   return text === "true" || text === "1" || text === "yes";
 }
 
-function extractPhoto(value: BodyEntry | BodyEntry[] | undefined): File | null {
-  const entry = Array.isArray(value) ? value[0] : value;
-  return entry instanceof File ? entry : null;
+function extractPhotos(value: BodyEntry | BodyEntry[] | undefined): File[] {
+  const entries = Array.isArray(value) ? value : value ? [value] : [];
+  return entries.filter((entry): entry is File => entry instanceof File);
 }
 
 function mimeExtension(mimeType: string): "png" | "jpg" | "webp" {
@@ -144,21 +140,17 @@ async function validatePhoto(photo: File): Promise<Buffer> {
   return buffer;
 }
 
-function memberSilhouettePath(member: Member, publicDir: string): string {
-  return path.join(publicDir, member.silhouetteImage.replace(/^\//, ""));
-}
-
 export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
   const app = new Hono();
-  const tempDir = deps.tempDir ?? path.resolve(process.cwd(), "storage", "tmp");
-  const publicDir =
-    deps.publicDir ?? path.resolve(process.cwd(), "..", "idol-capture-magic", "public");
 
   app.post("/generate", async (c) => {
-    const body = await c.req.parseBody();
-    const photo = extractPhoto(body.photo as BodyEntry | BodyEntry[] | undefined);
-    if (!photo) {
+    const body = await c.req.parseBody({ all: true });
+    const photos = extractPhotos(body.photo as BodyEntry | BodyEntry[] | undefined);
+    if (!photos.length) {
       return jsonError(c, 400, "missing_photo");
+    }
+    if (photos.length > 2) {
+      return jsonError(c, 400, "too_many_photos");
     }
 
     const parsed = GenerateFieldsSchema.safeParse({
@@ -170,12 +162,14 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       return jsonError(c, 400, "invalid_generation_request");
     }
 
-    let photoBuffer: Buffer;
+    let photoBuffers: Buffer[];
     try {
-      photoBuffer = await validatePhoto(photo);
+      photoBuffers = await Promise.all(photos.map(validatePhoto));
     } catch (error) {
       return jsonError(c, 400, error instanceof Error ? error.message : "invalid_photo");
     }
+    const primaryPhoto = photos[0];
+    const primaryPhotoBuffer = photoBuffers[0];
 
     const concept = await deps.client.db
       .select()
@@ -209,12 +203,9 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       return jsonError(c, 402, "quota_exhausted");
     }
 
-    await mkdir(tempDir, { recursive: true });
-    const inputPath = path.join(tempDir, `${randomUUID()}.${mimeExtension(photo.type)}`);
-    await writeFile(inputPath, photoBuffer);
-    const inputObject = await deps.storage.putBuffer(photoBuffer, {
-      extension: mimeExtension(photo.type),
-      contentType: photo.type
+    const inputObject = await deps.storage.putBuffer(primaryPhotoBuffer, {
+      extension: mimeExtension(primaryPhoto.type),
+      contentType: primaryPhoto.type
     });
 
     const generationId = randomUUID();
@@ -249,24 +240,23 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       const result = await deps.provider.generate({
         conceptPrompt: concept.promptTemplate,
         styleTokens: safeStyleTokens(concept),
-        inputImagePath: inputPath,
-        memberSilhouettePath: memberSilhouettePath(member, publicDir),
+        inputImage: primaryPhotoBuffer,
+        inputMimeType: primaryPhoto.type,
+        inputImages: photoBuffers.map((buffer, index) => ({
+          image: buffer,
+          mimeType: photos[index].type
+        })),
         outputFormat: "png",
         size: outputSize(concept.format)
       });
-      const watermarkedPath = path.join(tempDir, `${generationId}-watermarked.png`);
-      await applyWatermark({
-        inputPath: result.imagePath,
-        outputPath: watermarkedPath,
+      const watermarkedImage = await applyWatermark({
+        input: result.image,
         level: watermarkLevel
       });
-      const outputObject = await deps.storage.putBuffer(
-        await import("node:fs/promises").then(({ readFile }) => readFile(watermarkedPath)),
-        {
-          extension: "png",
-          contentType: "image/png"
-        }
-      );
+      const outputObject = await deps.storage.putBuffer(watermarkedImage, {
+        extension: "png",
+        contentType: "image/png"
+      });
 
       await deps.client.db
         .update(generations)

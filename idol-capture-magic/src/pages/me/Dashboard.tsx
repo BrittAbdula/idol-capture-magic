@@ -6,9 +6,11 @@ import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { AuthStatus } from "@/components/app/AuthStatus";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
+import { ImageFrame } from "@/components/media/ImageFrame";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuota } from "@/hooks/useQuota";
+import { ratioFromImagePath } from "@/lib/imageRatios";
 
 export default function Dashboard() {
   const quota = useQuota();
@@ -55,7 +57,7 @@ export default function Dashboard() {
         <div>
           <h2 className="text-2xl font-semibold">Today's bias card</h2>
           <Link to="/selca" className="mt-5 block border border-black/10 p-5">
-            <img src="/samples/polaroid-selca.png" alt="" className="aspect-[4/5] w-full object-cover" />
+            <ImageFrame src="/samples/polaroid-selca.png" alt="" ratio="square" tone="warm" interactive />
             <div className="mt-4 flex items-center justify-between font-semibold">
               Make a selca <Sparkles className="h-4 w-4 text-idol-gold" />
             </div>
@@ -89,9 +91,15 @@ export default function Dashboard() {
             ? binder.data.items.slice(0, 6).map((item) => (
                 <Link key={item.id} to="/me/binder" className="border border-black/10">
                   {item.outputUrl ? (
-                    <img src={item.outputUrl} alt="" className="aspect-[4/5] w-full object-cover" />
+                    <ImageFrame
+                      src={item.outputUrl}
+                      alt=""
+                      ratio="portrait"
+                      interactive
+                      className="rounded-none border-0 shadow-none"
+                    />
                   ) : (
-                    <div className="flex aspect-[4/5] items-center justify-center bg-gray-100">
+                    <div className="flex aspect-[2/3] items-center justify-center bg-gray-100">
                       <Image className="h-6 w-6 text-gray-400" />
                     </div>
                   )}
@@ -99,7 +107,13 @@ export default function Dashboard() {
               ))
             : ["/samples/holo-frame-photocard.png", "/samples/cafe-window-selca.png", "/samples/life4cuts-classic-strip.png"].map((sample) => (
                 <Link key={sample} to="/selca" className="border border-black/10">
-                  <img src={sample} alt="" className="aspect-[4/5] w-full object-cover" />
+                  <ImageFrame
+                    src={sample}
+                    alt=""
+                    ratio={ratioFromImagePath(sample)}
+                    interactive
+                    className="rounded-none border-0 shadow-none"
+                  />
                 </Link>
               ))}
         </div>

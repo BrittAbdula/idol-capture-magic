@@ -6,6 +6,22 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getTemplatesByCategory, getTemplatesByIdol, getAllIdolsByCategory } from '../data/templates';
 import SEO from '../components/SEO'; 
+import { ImageFrame } from '@/components/media/ImageFrame';
+import type { ImageFrameRatio } from '@/lib/imageRatios';
+import type { Template } from '@/contexts/PhotoStripContext';
+
+function templateRatio(template: Template): ImageFrameRatio {
+  const { width, height } = template.canvasSize;
+  const aspect = width / height;
+
+  if (aspect > 1.25) {
+    return 'landscape';
+  }
+  if (aspect < 0.85) {
+    return 'portrait';
+  }
+  return 'square';
+}
 
 const TemplateCategoryPage: React.FC = () => {
   const { category, idol } = useParams<{ category: string; idol?: string }>();
@@ -69,13 +85,14 @@ const TemplateCategoryPage: React.FC = () => {
                     to={`/template/${category}/${idolName}`}
                     className="glass-panel p-4 transition-all hover:shadow-lg hover:-translate-y-1 text-center"
                   >
-                    <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full overflow-hidden mb-4">
-                      <img 
-                        src="/images/elsa.png" 
-                        alt={idolName}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    <ImageFrame
+                      src="/images/elsa.png"
+                      alt={idolName}
+                      ratio="portrait"
+                      tone="warm"
+                      interactive
+                      className="mx-auto mb-4 w-32"
+                    />
                     
                     <h3 className="text-lg font-semibold mb-2 capitalize font-montserrat">
                       {idolName}
@@ -99,13 +116,14 @@ const TemplateCategoryPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {templates.map((template, index) => (
                   <div key={index} className="glass-panel p-6 transition-all hover:shadow-lg">
-                    <div className="aspect-video bg-gray-100 mb-4 rounded overflow-hidden">
-                      <img 
-                        src={template.previewUrl} 
-                        alt={`Template ${template.templateId}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    <ImageFrame
+                      src={template.previewUrl}
+                      alt={`Template ${template.templateId}`}
+                      ratio={templateRatio(template)}
+                      tone="paper"
+                      interactive
+                      className="mb-4"
+                    />
                     
                     <h2 className="text-xl font-semibold mb-2 capitalize font-montserrat">
                       {template.templateId.replace(/-/g, ' ')}

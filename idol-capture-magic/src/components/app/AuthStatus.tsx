@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import { getGoogleAuthUrl } from "@/api/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export function AuthStatus() {
@@ -11,7 +12,12 @@ export function AuthStatus() {
 
   if (!user) {
     return (
-      <a href="/auth/google" className="text-xs font-medium text-idol-gold">
+      <a
+        href={getGoogleAuthUrl()}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs font-medium text-idol-gold"
+      >
         Guest mode
       </a>
     );

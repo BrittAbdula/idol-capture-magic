@@ -13,6 +13,8 @@ export function useAuth() {
     user: query.data?.user ?? null,
     isAuthenticated: Boolean(query.data?.user),
     isLoading: query.isLoading,
-    error: query.error
+    isFetching: query.isFetching,
+    error: query.error,
+    refetch: query.refetch
   };
 }

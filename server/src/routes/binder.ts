@@ -8,6 +8,7 @@ import type { Auth } from "../auth/lucia.js";
 import type { DatabaseClient } from "../db/client.js";
 import { binderItems, generations, users, type User } from "../db/schema.js";
 import { jsonError } from "../lib/http.js";
+import type { StorageService } from "../services/storage.js";
 
 const CreateBinderItemSchema = z.object({
   generationId: z.string().min(1),
@@ -27,13 +28,17 @@ const BinderItemSchema = z.object({
 interface BinderRouteDeps {
   auth?: Auth;
   client: DatabaseClient;
+  storage?: StorageService;
 }
 
-function storageUrl(ref: string | null): string | null {
+function storageUrl(ref: string | null, storage?: StorageService): string | null {
   if (!ref) {
     return null;
   }
-  return ref.startsWith("/") ? ref : `/storage/${ref}`;
+  if (ref.startsWith("/") || /^https?:\/\//i.test(ref)) {
+    return ref;
+  }
+  return storage?.publicUrlFor(ref) ?? `/storage/${ref}`;
 }
 
 async function currentUser(
@@ -75,7 +80,7 @@ async function binderRows(deps: BinderRouteDeps, userId: string) {
 
   return rows.map((row: { outputImageRef: string | null }) => ({
     ...row,
-    outputUrl: storageUrl(row.outputImageRef)
+    outputUrl: storageUrl(row.outputImageRef, deps.storage)
   }));
 }
 
@@ -127,7 +132,10 @@ export function createBinderRoutes(deps: BinderRouteDeps): Hono {
     await deps.client.db.insert(binderItems).values(item).run();
 
     return c.json({
-      item: BinderItemSchema.parse({ ...item, outputUrl: storageUrl(generation.outputImageRef) })
+      item: BinderItemSchema.parse({
+        ...item,
+        outputUrl: storageUrl(generation.outputImageRef, deps.storage)
+      })
     });
   });
 

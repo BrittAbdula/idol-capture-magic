@@ -6,6 +6,18 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getAllCategories } from '../data/templates';
 import SEO from '@/components/SEO'; 
+import { ImageFrame } from '@/components/media/ImageFrame';
+import type { ImageFrameRatio } from '@/lib/imageRatios';
+
+function categoryRatio(category: string): ImageFrameRatio {
+  if (category === 'anime') {
+    return 'portrait';
+  }
+  if (category === 'blackpink' || category === 'general') {
+    return 'landscape';
+  }
+  return 'square';
+}
 
 const TemplateGallery: React.FC = () => {
   const categories = getAllCategories();
@@ -36,13 +48,14 @@ const TemplateGallery: React.FC = () => {
                 to={`/template/${category}`}
                 className="glass-panel p-6 transition-all hover:shadow-lg hover:-translate-y-1"
               >
-                <div className="aspect-video bg-gray-100 mb-4 rounded overflow-hidden">
-                  <img 
-                    src={`/images/${category}.png`} 
-                    alt={`${category} templates`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <ImageFrame
+                  src={`/images/${category}.png`}
+                  alt={`${category} templates`}
+                  ratio={categoryRatio(category)}
+                  tone="warm"
+                  interactive
+                  className="mb-4"
+                />
                 
                 <h2 className="text-xl font-semibold mb-2 capitalize font-montserrat">
                   {category}

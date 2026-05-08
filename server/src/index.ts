@@ -29,8 +29,7 @@ const billing = new StripeBillingService({
   proPriceId: env.STRIPE_PRO_PRICE_ID
 });
 const generationProvider = new KieImageProvider({
-  apiKey: env.KIE_API_KEY,
-  outputDir: pathFromStorage(env.STORAGE_DIR, "raw")
+  apiKey: env.KIE_API_KEY
 });
 
 const app = createApp({
@@ -45,7 +44,3 @@ const app = createApp({
 });
 
 startServer(app, env.PORT);
-
-function pathFromStorage(storageDir: string, child: string): string {
-  return `${storageDir.replace(/\/$/, "")}/${child}`;
-}

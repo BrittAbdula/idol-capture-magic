@@ -17,12 +17,11 @@ import { createLocalStorageService } from "../services/storage.js";
 
 class StubGenerationProvider implements GenerationProvider {
   name = "stub";
+  lastRequest: GenerationRequest | null = null;
 
-  constructor(private readonly outputDir: string) {}
-
-  async generate(_request: GenerationRequest): Promise<GenerationResult> {
-    const imagePath = path.join(this.outputDir, "raw-output.png");
-    await sharp({
+  async generate(request: GenerationRequest): Promise<GenerationResult> {
+    this.lastRequest = request;
+    const image = await sharp({
       create: {
         width: 256,
         height: 256,
@@ -31,10 +30,11 @@ class StubGenerationProvider implements GenerationProvider {
       }
     })
       .png()
-      .toFile(imagePath);
+      .toBuffer();
 
     return {
-      imagePath,
+      image,
+      contentType: "image/png",
       costUsd: 0,
       providerJobId: "stub-job"
     };
@@ -105,7 +105,7 @@ describe("generation routes", () => {
     const app = createApp({
       publicAppOrigin: "http://localhost:8080",
       client,
-      generationProvider: new StubGenerationProvider(tempDir),
+      generationProvider: new StubGenerationProvider(),
       storage: createLocalStorageService({ rootDir: storageDir })
     });
     const inputImage = await sharp({
@@ -125,6 +125,9 @@ describe("generation routes", () => {
 
     const response = await app.request("/api/generate", {
       method: "POST",
+      headers: {
+        "x-forwarded-for": "203.0.113.10"
+      },
       body: form
     });
     const json = (await response.json()) as {
@@ -146,5 +149,89 @@ describe("generation routes", () => {
     const metadata = await sharp(outputPath).metadata();
     expect(metadata.width).toBe(256);
     expect(metadata.height).toBe(256);
+  });
+
+  test("passes up to two uploaded photos to the generation provider", async () => {
+    const storageDir = path.join(tempDir, "storage");
+    const provider = new StubGenerationProvider();
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      generationProvider: provider,
+      storage: createLocalStorageService({ rootDir: storageDir })
+    });
+    const firstImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#ffffff"
+      }
+    })
+      .png()
+      .toBuffer();
+    const secondImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#101010"
+      }
+    })
+      .png()
+      .toBuffer();
+    const form = new FormData();
+    form.set("conceptId", "concept_polaroid");
+    form.set("memberId", "member_haerin");
+    form.append("photo", new File([firstImage], "fan.png", { type: "image/png" }));
+    form.append("photo", new File([secondImage], "friend.png", { type: "image/png" }));
+
+    const response = await app.request("/api/generate", {
+      method: "POST",
+      body: form
+    });
+
+    expect(response.status).toBe(200);
+    expect(provider.lastRequest?.inputImages).toHaveLength(2);
+    expect(provider.lastRequest?.inputImages[0]?.mimeType).toBe("image/png");
+    expect(provider.lastRequest?.inputImages[1]?.mimeType).toBe("image/png");
+  });
+
+  test("rejects more than two uploaded photos", async () => {
+    const storageDir = path.join(tempDir, "storage");
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      generationProvider: new StubGenerationProvider(),
+      storage: createLocalStorageService({ rootDir: storageDir })
+    });
+    const inputImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#ffffff"
+      }
+    })
+      .png()
+      .toBuffer();
+    const form = new FormData();
+    form.set("conceptId", "concept_polaroid");
+    form.set("memberId", "member_haerin");
+    form.append("photo", new File([inputImage], "one.png", { type: "image/png" }));
+    form.append("photo", new File([inputImage], "two.png", { type: "image/png" }));
+    form.append("photo", new File([inputImage], "three.png", { type: "image/png" }));
+
+    const response = await app.request("/api/generate", {
+      method: "POST",
+      headers: {
+        "x-forwarded-for": "203.0.113.11"
+      },
+      body: form
+    });
+    const json = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(json.error).toBe("too_many_photos");
   });
 });

@@ -7,8 +7,12 @@
     "node": ">=20.10"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "wrangler dev --local --port 8787",
+    "dev:node": "tsx watch src/index.ts",
     "build": "tsc --noEmit",
+    "cf:deploy": "npm run build && wrangler deploy",
+    "cf:deploy:full": "npm run build && wrangler d1 migrations apply batchloom-db --remote && wrangler deploy",
+    "cf:r2:create": "wrangler r2 bucket create idolbooth-storage",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -24,6 +28,7 @@
     "hono": "4.6.3",
     "lucia": "3.2.0",
     "openai": "4.67.3",
+    "pngjs": "7.0.0",
     "sharp": "0.33.5",
     "stripe": "17.0.0",
     "zod": "3.23.8"
@@ -32,6 +37,7 @@
     "@cloudflare/workers-types": "^4.20260508.1",
     "@eslint/js": "9.9.0",
     "@types/node": "22.5.5",
+    "@types/pngjs": "6.0.5",
     "drizzle-kit": "0.25.0",
     "eslint": "9.9.0",
     "globals": "15.9.0",

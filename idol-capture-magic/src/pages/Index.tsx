@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
+import { ImageFrame } from "@/components/media/ImageFrame";
+import { ratioFromImagePath, type ImageFrameRatio } from "@/lib/imageRatios";
 
 const heroSamples = [
   "/samples/polaroid-selca.png",
@@ -28,6 +30,36 @@ const recentSamples = [
   "/samples/plain-pc-photocard.png",
   "/samples/monochrome-strip.png",
   "/samples/neon-night-selca.png"
+];
+
+const productCards: Array<{
+  title: string;
+  href: string;
+  image: string;
+  description: string;
+  ratio: ImageFrameRatio;
+}> = [
+  {
+    title: "Selca with idol",
+    href: "/selca",
+    image: "/samples/polaroid-selca.png",
+    description: "Square companion-style selcas for profile drops.",
+    ratio: "square"
+  },
+  {
+    title: "AI Photocard",
+    href: "/photocard",
+    image: "/samples/holo-frame-photocard.png",
+    description: "Collectible vertical cards with fan-safe concepts.",
+    ratio: "portrait"
+  },
+  {
+    title: "4-cut Photo Strip",
+    href: "/strip",
+    image: "/samples/life4cuts-classic-strip.png",
+    description: "Use the classic webcam strip builder and download.",
+    ratio: "portrait"
+  }
 ];
 
 function birthdayScore(member: ApiMember): number {
@@ -92,17 +124,29 @@ export default function Index() {
               Pick your bias <ArrowRight className="h-4 w-4" />
             </a>
           </div>
-          <div className="relative min-h-[58vh] overflow-hidden border border-black/10 bg-gray-50">
+          <div className="relative min-h-[58vh] overflow-hidden rounded-md border border-black/10 bg-[#f7f3eb] shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
             {heroSamples.map((sample, index) => (
               <img
                 key={sample}
                 src={sample}
                 alt=""
-                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                  index === activeSample ? "opacity-100" : "opacity-0"
+                className={`absolute inset-0 h-full w-full scale-110 object-cover blur-2xl transition-opacity duration-700 ${
+                  index === activeSample ? "opacity-25" : "opacity-0"
                 }`}
               />
             ))}
+            <div className="absolute inset-4 flex items-center justify-center">
+              {heroSamples.map((sample, index) => (
+                <img
+                  key={`${sample}-contain`}
+                  src={sample}
+                  alt=""
+                  className={`absolute max-h-full max-w-full object-contain transition-all duration-700 ${
+                    index === activeSample ? "scale-100 opacity-100" : "scale-[0.985] opacity-0"
+                  }`}
+                />
+              ))}
+            </div>
             <div className="absolute bottom-4 left-4 flex gap-2">
               {heroSamples.map((sample, index) => (
                 <button
@@ -118,13 +162,9 @@ export default function Index() {
 
         <section className="border-y border-black/10 px-4 py-16 md:px-8 lg:px-14">
           <div className="grid gap-6 md:grid-cols-3">
-            {[
-              ["Selca with idol", "/selca", "/samples/polaroid-selca.png", "Square companion-style selcas for profile drops."],
-              ["AI Photocard", "/photocard", "/samples/holo-frame-photocard.png", "Collectible vertical cards with fan-safe concepts."],
-              ["4-cut Photo Strip", "/strip", "/samples/life4cuts-classic-strip.png", "Use the classic webcam strip builder and download."]
-            ].map(([title, href, image, description]) => (
+            {productCards.map(({ title, href, image, description, ratio }) => (
               <Link key={href} to={href} className="group block">
-                <img src={image} alt="" className="aspect-[4/5] w-full object-cover" />
+                <ImageFrame src={image} alt="" ratio={ratio} tone="warm" interactive />
                 <div className="mt-4 flex items-start justify-between gap-4 border-t border-black/10 pt-4">
                   <div>
                     <h2 className="text-xl font-semibold">{title}</h2>
@@ -161,7 +201,7 @@ export default function Index() {
                 to={`/g/${selectedGroupSlug}/${member.slug}`}
                 className="group overflow-hidden border border-black/10"
               >
-                <img src={member.silhouetteImage} alt="" className="aspect-square w-full object-cover" />
+                <ImageFrame src={member.silhouetteImage} alt="" ratio="square" tone="cool" className="rounded-none border-0 shadow-none" imgClassName="p-2" />
                 <div className="p-3 text-sm font-semibold">{member.name}</div>
               </Link>
             ))}
@@ -203,11 +243,12 @@ export default function Index() {
           <h2 className="text-3xl font-semibold">Recent fan creations</h2>
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-6">
             {recentSamples.map((sample) => (
-              <Link key={sample} to="/selca" className="group relative overflow-hidden border border-black/10">
-                <img src={sample} alt="" className="aspect-[4/5] w-full object-cover" />
-                <span className="absolute inset-x-0 bottom-0 translate-y-full bg-black/75 p-3 text-sm font-semibold text-white transition group-hover:translate-y-0">
-                  Make yours
-                </span>
+              <Link key={sample} to="/selca" className="group relative block overflow-hidden">
+                <ImageFrame src={sample} alt="" ratio={ratioFromImagePath(sample)} interactive>
+                  <span className="absolute inset-x-0 bottom-0 translate-y-full bg-black/75 p-3 text-sm font-semibold text-white transition group-hover:translate-y-0">
+                    Make yours
+                  </span>
+                </ImageFrame>
               </Link>
             ))}
           </div>

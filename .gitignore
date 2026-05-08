@@ -1,9 +1,11 @@
 .DS_Store
 .env
+.dev.vars
 *.local
 node_modules
 dist
 dist-ssr
 .cursor/
+.wrangler/
 
 server/storage/

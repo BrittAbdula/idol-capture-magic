@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { z } from "zod";
 
 const SafetyConfigSchema = z.object({
@@ -10,10 +8,44 @@ const SafetyConfigSchema = z.object({
 
 export type SafetyConfig = z.infer<typeof SafetyConfigSchema>;
 
-export function loadSafetyConfig(
-  fileUrl = new URL("../../config/blocklist.json", import.meta.url)
-): SafetyConfig {
-  return SafetyConfigSchema.parse(JSON.parse(readFileSync(fileUrl, "utf8")));
+const embeddedSafetyConfig = {
+  promptBlocklist: [
+    "boyfriend",
+    "girlfriend",
+    "kiss",
+    "kissing",
+    "dating",
+    "date with",
+    "in bed",
+    "bedroom intimate",
+    "naked",
+    "nude",
+    "topless",
+    "undressed",
+    "sexy",
+    "erotic",
+    "nsfw",
+    "남자친구",
+    "여자친구",
+    "키스",
+    "데이트",
+    "남친",
+    "여친",
+    "彼氏",
+    "彼女",
+    "キス",
+    "デート",
+    "男朋友",
+    "女朋友",
+    "亲吻",
+    "约会"
+  ],
+  memberNameAllowlist: "all from members table",
+  rejectIfMinorAge: true
+};
+
+export function loadSafetyConfig(source: unknown = embeddedSafetyConfig): SafetyConfig {
+  return SafetyConfigSchema.parse(source);
 }
 
 export const safetyConfig = loadSafetyConfig();

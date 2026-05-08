@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 
 export interface StoredObject {
   key: string;
-  absolutePath: string;
+  absolutePath: string | null;
   publicUrl: string;
 }
 
@@ -46,6 +46,43 @@ export function createLocalStorageService(options: {
     },
     deleteObject(key) {
       return unlink(absolutePathFor(key));
+    },
+    publicUrlFor(key) {
+      return `${publicBasePath}/${key}`;
+    }
+  };
+}
+
+export function createR2StorageService(options: {
+  bucket: R2Bucket;
+  publicBasePath?: string;
+}): StorageService {
+  const publicBasePath = options.publicBasePath ?? "/storage";
+
+  return {
+    async putBuffer(buffer, { extension, contentType }) {
+      const normalizedExtension = extension.replace(/^\./, "");
+      const key = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}.${normalizedExtension}`;
+      await options.bucket.put(key, buffer, {
+        httpMetadata: {
+          contentType
+        }
+      });
+      return {
+        key,
+        absolutePath: null,
+        publicUrl: `${publicBasePath}/${key}`
+      };
+    },
+    async readBuffer(key) {
+      const object = await options.bucket.get(key);
+      if (!object) {
+        throw new Error("object_not_found");
+      }
+      return Buffer.from(await object.arrayBuffer());
+    },
+    async deleteObject(key) {
+      await options.bucket.delete(key);
     },
     publicUrlFor(key) {
       return `${publicBasePath}/${key}`;

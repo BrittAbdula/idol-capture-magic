@@ -5,6 +5,7 @@ import { Image } from "lucide-react";
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
+import { ImageFrame } from "@/components/media/ImageFrame";
 
 export default function PublicBinder() {
   const { handle = "" } = useParams();
@@ -36,9 +37,15 @@ export default function PublicBinder() {
         {binder.data?.items.map((item) => (
           <Link key={item.id} to={`/share/${item.generationId}`} className="border border-black/10">
             {item.outputUrl ? (
-              <img src={item.outputUrl} alt="" className="aspect-[54/86] w-full object-cover" />
+              <ImageFrame
+                src={item.outputUrl}
+                alt=""
+                ratio="portrait"
+                interactive
+                className="rounded-none border-0 shadow-none"
+              />
             ) : (
-              <div className="flex aspect-[54/86] items-center justify-center bg-gray-100">
+              <div className="flex aspect-[2/3] items-center justify-center bg-gray-100">
                 <Image className="h-6 w-6 text-gray-400" />
               </div>
             )}

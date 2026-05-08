@@ -1,5 +1,3 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import OpenAI from "openai";
@@ -16,7 +14,7 @@ export class OpenAIImageProvider implements GenerationProvider {
   name = "openai";
   private readonly client: OpenAI;
 
-  constructor(apiKey: string, private readonly outputDir: string) {
+  constructor(apiKey: string) {
     this.client = new OpenAI({ apiKey, timeout: 60_000 });
   }
 
@@ -25,22 +23,31 @@ export class OpenAIImageProvider implements GenerationProvider {
   }
 
   async generate(req: GenerationRequest): Promise<GenerationResult> {
-    await mkdir(this.outputDir, { recursive: true });
-    const outputPath = path.join(this.outputDir, `${randomUUID()}.${req.outputFormat}`);
+    const inputImages = req.inputImages.length
+      ? req.inputImages
+      : [{ image: req.inputImage, mimeType: req.inputMimeType }];
     const prompt = [
       req.conceptPrompt,
       `Style tokens: ${req.styleTokens.join(", ")}`,
-      "Use the uploaded user image as the fan reference.",
-      "Use only an anonymized stylized companion silhouette; do not generate real idol faces.",
+      inputImages.length > 1
+        ? "Use both uploaded photos as person references and compose the people together in one natural scene."
+        : "Use the uploaded user image as the fan reference.",
+      inputImages.length > 1
+        ? "Base the people only on the uploaded references; do not invent or impersonate unprovided real idol faces."
+        : "Use only an anonymized stylized companion silhouette; do not generate real idol faces.",
       "The result must remain clearly AI-generated and safe for fans."
     ].join("\n");
 
     let payload: ImagePayload | undefined;
     try {
-      const image = await toFile(await BunFileCompat.read(req.inputImagePath), "input.png");
+      const imageFiles = await Promise.all(
+        inputImages.map((input, index) =>
+          toFile(input.image, `input-${index + 1}.png`, { type: input.mimeType })
+        )
+      );
       const response = await this.client.images.edit({
         model: "gpt-image-1",
-        image,
+        image: (imageFiles.length === 1 ? imageFiles[0] : imageFiles) as never,
         prompt,
         size: req.size as never,
         n: 1
@@ -60,21 +67,12 @@ export class OpenAIImageProvider implements GenerationProvider {
       payload = response.data?.[0] as ImagePayload | undefined;
     }
 
-    const buffer = await imagePayloadToBuffer(payload);
-    await writeFile(outputPath, buffer);
-
     return {
-      imagePath: outputPath,
+      image: await imagePayloadToBuffer(payload),
+      contentType: "image/png",
       costUsd: this.estimateCost(req),
       providerJobId: randomUUID()
     };
-  }
-}
-
-class BunFileCompat {
-  static async read(filePath: string): Promise<Buffer> {
-    const { readFile } = await import("node:fs/promises");
-    return readFile(filePath);
   }
 }
 

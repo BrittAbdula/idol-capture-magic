@@ -1,5 +1,3 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import type { GenerationProvider, GenerationRequest, GenerationResult } from "./provider.js";
@@ -39,7 +37,6 @@ interface KieResultJson {
 
 export interface KieImageProviderOptions {
   apiKey: string;
-  outputDir: string;
   pollIntervalMs?: number;
   timeoutMs?: number;
 }
@@ -59,33 +56,40 @@ export class KieImageProvider implements GenerationProvider {
   }
 
   async generate(req: GenerationRequest): Promise<GenerationResult> {
-    await mkdir(this.options.outputDir, { recursive: true });
-    const inputUrl = await this.uploadLocalImage(req.inputImagePath);
+    const inputImages = req.inputImages.length
+      ? req.inputImages
+      : [{ image: req.inputImage, mimeType: req.inputMimeType }];
+    const inputUrls = await Promise.all(
+      inputImages.map((input) => this.uploadImage(input.image, input.mimeType))
+    );
     const prompt = [
       req.conceptPrompt,
       `Style tokens: ${req.styleTokens.join(", ")}`,
-      "Use the uploaded image as the fan reference.",
-      "Use only an anonymized stylized companion silhouette; do not generate real idol faces.",
+      inputImages.length > 1
+        ? "Use both uploaded photos as person references and compose the people together in one natural scene."
+        : "Use the uploaded image as the fan reference.",
+      inputImages.length > 1
+        ? "Base the people only on the uploaded references; do not invent or impersonate unprovided real idol faces."
+        : "Use only an anonymized stylized companion silhouette; do not generate real idol faces.",
       "The result must remain clearly AI-generated and safe for fans."
     ].join("\n");
     const taskId = await this.createTask({
       prompt,
-      inputUrls: [inputUrl],
+      inputUrls,
       aspectRatio: sizeToAspectRatio(req.size)
     });
     const resultUrl = await this.pollResultUrl(taskId);
-    const outputPath = path.join(this.options.outputDir, `${randomUUID()}.${req.outputFormat}`);
-    await writeFile(outputPath, await downloadBuffer(resultUrl));
 
     return {
-      imagePath: outputPath,
+      image: await downloadBuffer(resultUrl),
+      contentType: "image/png",
       costUsd: this.estimateCost(req),
       providerJobId: taskId
     };
   }
 
-  private async uploadLocalImage(filePath: string): Promise<string> {
-    const buffer = await readFile(filePath);
+  private async uploadImage(buffer: Buffer, contentType: string): Promise<string> {
+    const extension = mimeExtension(contentType);
     const response = await fetch("https://kieai.redpandaai.co/api/file-base64-upload", {
       method: "POST",
       headers: {
@@ -93,9 +97,9 @@ export class KieImageProvider implements GenerationProvider {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        base64Data: `data:image/png;base64,${buffer.toString("base64")}`,
+        base64Data: `data:${contentType};base64,${buffer.toString("base64")}`,
         uploadPath: "idolbooth/references",
-        fileName: `${randomUUID()}${path.extname(filePath) || ".png"}`
+        fileName: `${randomUUID()}.${extension}`
       })
     });
     const json = (await response.json().catch(() => null)) as KieUploadResponse | null;
@@ -178,6 +182,16 @@ export class KieImageProvider implements GenerationProvider {
 
     throw new Error(`Kie task timed out: ${taskId}`);
   }
+}
+
+function mimeExtension(mimeType: string): "png" | "jpg" | "webp" {
+  if (mimeType === "image/jpeg") {
+    return "jpg";
+  }
+  if (mimeType === "image/webp") {
+    return "webp";
+  }
+  return "png";
 }
 
 function sizeToAspectRatio(size: GenerationRequest["size"]): KieAspectRatio {

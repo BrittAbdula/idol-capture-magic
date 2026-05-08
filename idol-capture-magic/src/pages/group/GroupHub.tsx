@@ -5,6 +5,8 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
+import { ImageFrame } from "@/components/media/ImageFrame";
+import { ratioFromImagePath } from "@/lib/imageRatios";
 
 const recentSamples = [
   "/samples/polaroid-selca.png",
@@ -82,14 +84,18 @@ export default function GroupHub() {
             <Link
               key={member.id}
               to={`/g/${groupSlug}/${member.slug}`}
-              className="group aspect-[3/4] overflow-hidden border border-black/10 bg-white"
+              className="group overflow-hidden border border-black/10 bg-white"
             >
-              <img
+              <ImageFrame
                 src={member.silhouetteImage}
                 alt=""
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                ratio="square"
+                tone="cool"
+                interactive
+                className="rounded-none border-0 shadow-none"
+                imgClassName="p-2"
               />
-              <div className="-mt-12 bg-white/90 px-3 py-2 text-sm font-semibold backdrop-blur">
+              <div className="border-t border-black/10 bg-white px-3 py-2 text-sm font-semibold">
                 {member.name}
               </div>
             </Link>
@@ -101,8 +107,8 @@ export default function GroupHub() {
         <h2 className="text-2xl font-semibold">Recent generations</h2>
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           {recentSamples.map((sample) => (
-            <Link key={sample} to="/selca" className="group border border-black/10">
-              <img src={sample} alt="" className="aspect-[4/5] w-full object-cover" />
+            <Link key={sample} to="/selca" className="group block">
+              <ImageFrame src={sample} alt="" ratio={ratioFromImagePath(sample)} interactive />
               <div className="flex items-center justify-between p-3 text-sm font-semibold">
                 Make yours <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </div>
