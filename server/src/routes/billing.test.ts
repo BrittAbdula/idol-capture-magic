@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { createApp } from "../app.js";
 import { createLucia } from "../auth/lucia.js";
@@ -44,10 +44,28 @@ class FailingBillingService extends FakeBillingService {
   }
 }
 
+class StaleCustomerBillingService extends FakeBillingService {
+  calls: CheckoutInput[] = [];
+
+  async createCheckoutSession(input: CheckoutInput) {
+    this.calls.push(input);
+    if (input.stripeCustomerId) {
+      throw new Error("No such customer");
+    }
+
+    return {
+      id: "cs_test_recovered",
+      url: "https://checkout.stripe.test/recovered",
+      customerId: "cus_recovered"
+    };
+  }
+}
+
 describe("billing routes", () => {
   let client: TestDatabaseClient;
 
   beforeEach(async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
     client = await createTestD1DatabaseClient();
     await client.db
       .insert(users)
@@ -66,6 +84,7 @@ describe("billing routes", () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await client.dispose();
   });
 
@@ -117,6 +136,39 @@ describe("billing routes", () => {
 
     expect(response.status).toBe(502);
     expect(json.error).toBe("checkout_unavailable");
+  });
+
+  test("recovers checkout by replacing a stale Stripe customer id", async () => {
+    await client.db
+      .update(users)
+      .set({ stripeCustomerId: "cus_stale" })
+      .where(eq(users.id, "user_123"))
+      .run();
+    const billing = new StaleCustomerBillingService();
+    const auth = createLucia(client, false);
+    const session = await auth.createSession("user_123", {});
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      auth,
+      billing
+    });
+
+    const response = await app.request("/api/billing/checkout", {
+      method: "POST",
+      headers: {
+        Cookie: auth.createSessionCookie(session.id).serialize(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ plan: "plus" })
+    });
+    const json = (await response.json()) as { url: string };
+
+    expect(response.status).toBe(200);
+    expect(json.url).toBe("https://checkout.stripe.test/recovered");
+    expect(billing.calls.map((call) => call.stripeCustomerId ?? null)).toEqual(["cus_stale", null]);
+    const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
+    expect(user?.stripeCustomerId).toBe("cus_recovered");
   });
 
   test("syncs subscription status from Stripe webhooks", async () => {

@@ -91,8 +91,26 @@ export function createBillingRoutes(deps: BillingRouteDeps): Hono {
         plan: parsed.data.plan,
         stripeCustomerId: user.stripeCustomerId
       });
-    } catch {
-      return jsonError(c, 502, "checkout_unavailable");
+    } catch (error) {
+      console.warn("Stripe checkout failed", checkoutErrorDetails(error, parsed.data.plan, true));
+      if (!user.stripeCustomerId) {
+        return jsonError(c, 502, "checkout_unavailable");
+      }
+
+      try {
+        session = await deps.billing.createCheckoutSession({
+          userId: user.id,
+          email: user.email,
+          plan: parsed.data.plan,
+          stripeCustomerId: null
+        });
+      } catch (retryError) {
+        console.warn(
+          "Stripe checkout retry failed",
+          checkoutErrorDetails(retryError, parsed.data.plan, false)
+        );
+        return jsonError(c, 502, "checkout_unavailable");
+      }
     }
 
     if (session.customerId && session.customerId !== user.stripeCustomerId) {
@@ -123,6 +141,28 @@ export function createBillingRoutes(deps: BillingRouteDeps): Hono {
   });
 
   return app;
+}
+
+function checkoutErrorDetails(
+  error: unknown,
+  plan: "plus" | "pro",
+  usedExistingCustomer: boolean
+): Record<string, unknown> {
+  if (!error || typeof error !== "object") {
+    return { plan, usedExistingCustomer, message: String(error) };
+  }
+
+  const details = error as Record<string, unknown>;
+  return {
+    plan,
+    usedExistingCustomer,
+    type: details.type,
+    rawType: details.rawType,
+    code: details.code,
+    param: details.param,
+    statusCode: details.statusCode,
+    message: details.message
+  };
 }
 
 export function createStripeWebhookRoutes(
