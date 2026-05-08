@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,7 +8,7 @@ import { PhotoStripProvider } from "./contexts/PhotoStripContext";
 import { ErrorBoundary } from "@/components/app/ErrorBoundary";
 
 // Import the new component
-import ScrollToTop from '@/components/ScrollToTop';
+import ScrollToTop from "@/components/ScrollToTop";
 
 import Index from "./pages/Index";
 import PhotoStrip from "./pages/PhotoStrip";
@@ -87,7 +87,7 @@ const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> =
   {
     match: /^\/me$/,
     title: "My IdolBooth Dashboard | IdolBooth",
-    description: "Review quota, recent generations, and Binder shortcuts."
+    description: "Review credits, generation history, and Binder shortcuts."
   },
   {
     match: /^\/me\/binder$/,
@@ -124,7 +124,7 @@ const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> =
 // Title update component
 const TitleUpdater = () => {
   const location = useLocation();
-  
+
   useEffect(() => {
     const updateTitle = () => {
       const path = location.pathname;
@@ -133,17 +133,17 @@ const TitleUpdater = () => {
       const description =
         routeMeta?.description ??
         "Create fan-safe, watermarked K-pop AI selcas, photocards, and photo strips.";
-      
+
       document.title = title;
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute("content", description);
       }
     };
-    
+
     updateTitle();
   }, [location]);
-  
+
   return null;
 };
 

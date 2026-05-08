@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -286,6 +286,51 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
         .run();
       return jsonError(c, 422, "provider_rejected");
     }
+  });
+
+  app.get("/generations", async (c) => {
+    const user = await getCurrentUser(deps, c.req.header("Cookie"));
+    if (!user) {
+      return jsonError(c, 401, "auth_required");
+    }
+
+    const rows = await deps.client.db
+      .select({
+        id: generations.id,
+        status: generations.status,
+        format: generations.format,
+        outputImageRef: generations.outputImageRef,
+        errorMessage: generations.errorMessage,
+        cost: generations.cost,
+        watermarkLevel: generations.watermarkLevel,
+        isPublic: generations.isPublic,
+        createdAt: generations.createdAt,
+        conceptName: concepts.name,
+        memberName: members.name
+      })
+      .from(generations)
+      .leftJoin(concepts, eq(generations.conceptId, concepts.id))
+      .leftJoin(members, eq(generations.memberId, members.id))
+      .where(eq(generations.userId, user.id))
+      .orderBy(desc(generations.createdAt))
+      .all();
+
+    return c.json({
+      items: rows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        format: row.format,
+        conceptName: row.conceptName ?? "Unknown concept",
+        memberName: row.memberName ?? "Unknown member",
+        outputUrl: row.outputImageRef ? deps.storage.publicUrlFor(row.outputImageRef) : null,
+        errorMessage: row.errorMessage,
+        watermarkLevel: row.watermarkLevel,
+        isPublic: row.isPublic,
+        createdAt: row.createdAt,
+        creditsUsed: 1,
+        costUsd: row.cost
+      }))
+    });
   });
 
   app.get("/generations/:id", async (c) => {

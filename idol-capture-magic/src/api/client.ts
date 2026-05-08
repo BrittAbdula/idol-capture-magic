@@ -90,6 +90,21 @@ export interface AuthUser {
   plan: "free" | "plus" | "pro";
 }
 
+export interface ApiGenerationHistoryItem {
+  id: string;
+  status: "queued" | "running" | "succeeded" | "failed";
+  format: string;
+  conceptName: string;
+  memberName: string;
+  outputUrl: string | null;
+  errorMessage: string | null;
+  watermarkLevel: string;
+  isPublic: boolean;
+  createdAt: number;
+  creditsUsed: number;
+  costUsd: number | null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -182,6 +197,10 @@ export const api = {
         outputUrl: string | null;
       }>;
     }>("/api/binder/items"),
+  generationHistory: () =>
+    requestJson<{
+      items: ApiGenerationHistoryItem[];
+    }>("/api/generations"),
   saveBinderItem: (generationId: string, customCaption?: string) =>
     requestJson<{ item: { id: string } }>("/api/binder/items", {
       method: "POST",
