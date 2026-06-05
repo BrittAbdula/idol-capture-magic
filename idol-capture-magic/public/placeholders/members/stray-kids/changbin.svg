@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#201819;--shade:#090b12">
+  <title>Changbin original silhouette</title>
+  <defs>
+    <linearGradient id="bg-stray-kids-changbin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe7df"/>
+      <stop offset="1" stop-color="#f2f4ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-stray-kids-changbin)"/>
+  <ellipse cx="512" cy="462" rx="235" ry="267" fill="#ffffff" opacity=".2"/>
+  <circle cx="478" cy="347" r="6" fill="#ef9a7c" opacity=".14"/><circle cx="480" cy="589" r="10" fill="#ef9a7c" opacity=".14"/><circle cx="285" cy="631" r="7" fill="#ef9a7c" opacity=".14"/><circle cx="716" cy="528" r="5" fill="#ef9a7c" opacity=".14"/><circle cx="445" cy="653" r="10" fill="#ef9a7c" opacity=".14"/>
+  <g transform="rotate(-1.8 512 512)">
+    <path d="M196 1024c25-171 86-284 182-337 31-18 67-27 108-27 96 0 169 46 219 138 35 65 58 141 69 226H196Z" fill="#201819"/>
+    <path d="M512 252c92 0 158 60 178 158 17 83-2 157-55 223-33 41-75 61-126 61-54 0-98-22-132-66-48-63-61-138-37-226 26-100 83-150 172-150Z" fill="#201819"/>
+    <path d="M356 398c11-88 59-145 144-171 78-18 147 2 207 60 30 29 47 69 52 119-72-5-138-32-199-82-42 48-110 73-204 74Z" fill="var(--hair)"/><path d="M360 407c-24 69-13 139 34 210" fill="none" stroke="var(--hair)" stroke-width="34" stroke-linecap="round"/><path d="M704 423c34 73 27 143-21 211" fill="none" stroke="var(--hair)" stroke-width="34" stroke-linecap="round"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.13"/>
+    <path d="M464 667l-44 30 49 13 42-33-47-10Zm94 0 44 30-49 13-42-33 47-10Z" fill="#ef9a7c" opacity=".72"/>
+  </g>
+</svg>

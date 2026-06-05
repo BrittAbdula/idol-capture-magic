@@ -20,8 +20,35 @@ export interface GenerationResult {
   providerJobId: string;
 }
 
+export interface GenerationStartResult {
+  providerJobId: string;
+  costUsd: number;
+}
+
+export type GenerationPollResult =
+  | { status: "queued" | "running" }
+  | { status: "failed"; errorMessage: string }
+  | {
+      status: "succeeded";
+      image: Buffer;
+      contentType: string;
+      costUsd: number;
+    };
+
 export interface GenerationProvider {
   name: string;
   generate(req: GenerationRequest): Promise<GenerationResult>;
   estimateCost(req: GenerationRequest): number;
+}
+
+export interface AsyncGenerationProvider extends GenerationProvider {
+  start(req: GenerationRequest): Promise<GenerationStartResult>;
+  poll(providerJobId: string): Promise<GenerationPollResult>;
+}
+
+export function isAsyncGenerationProvider(
+  provider: GenerationProvider
+): provider is AsyncGenerationProvider {
+  const candidate = provider as Partial<AsyncGenerationProvider>;
+  return typeof candidate.start === "function" && typeof candidate.poll === "function";
 }

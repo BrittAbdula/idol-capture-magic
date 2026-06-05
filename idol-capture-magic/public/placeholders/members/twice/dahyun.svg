@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#2a1d2a;--shade:#090b12">
+  <title>Dahyun original silhouette</title>
+  <defs>
+    <linearGradient id="bg-twice-dahyun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe8f1"/>
+      <stop offset="1" stop-color="#e9f7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-twice-dahyun)"/>
+  <ellipse cx="512" cy="462" rx="215" ry="244" fill="#ffffff" opacity=".2"/>
+  <circle cx="-234" cy="9" r="-3" fill="#f5a8c8" opacity=".14"/><circle cx="-129" cy="-167" r="-4" fill="#f5a8c8" opacity=".14"/><circle cx="-51" cy="85" r="-4" fill="#f5a8c8" opacity=".14"/><circle cx="24" cy="-162" r="-2" fill="#f5a8c8" opacity=".14"/><circle cx="163" cy="216" r="3" fill="#f5a8c8" opacity=".14"/>
+  <g transform="rotate(5.4 512 512)">
+    <path d="M207 1024c24-172 81-287 169-346 35-24 76-36 121-36 93 0 164 48 213 143 32 63 53 143 63 239H207Z" fill="#2a1d2a"/>
+    <path d="M521 260c88 0 151 57 169 151 15 77-2 148-51 212-33 43-78 64-136 64-57 0-103-22-137-66-46-60-58-133-36-220 24-94 88-141 191-141Z" fill="#2a1d2a"/>
+    <circle cx="648.0" cy="390.0" r="42" fill="var(--hair)"/><circle cx="639.8" cy="430.4" r="53" fill="var(--hair)"/><circle cx="616.2" cy="465.8" r="46" fill="var(--hair)"/><circle cx="580.0" cy="492.2" r="57" fill="var(--hair)"/><circle cx="535.6" cy="506.2" r="50" fill="var(--hair)"/><circle cx="488.4" cy="506.2" r="43" fill="var(--hair)"/><circle cx="444.0" cy="492.2" r="54" fill="var(--hair)"/><circle cx="407.8" cy="465.8" r="47" fill="var(--hair)"/><circle cx="384.2" cy="430.4" r="58" fill="var(--hair)"/><circle cx="376.0" cy="390.0" r="51" fill="var(--hair)"/><circle cx="384.2" cy="349.6" r="44" fill="var(--hair)"/><circle cx="407.8" cy="314.2" r="55" fill="var(--hair)"/><circle cx="444.0" cy="287.8" r="48" fill="var(--hair)"/><circle cx="488.4" cy="273.8" r="59" fill="var(--hair)"/><circle cx="535.6" cy="273.8" r="52" fill="var(--hair)"/><circle cx="580.0" cy="287.8" r="45" fill="var(--hair)"/><circle cx="616.2" cy="314.2" r="56" fill="var(--hair)"/><circle cx="639.8" cy="349.6" r="49" fill="var(--hair)"/><path d="M385 398c17-97 73-150 168-159 89 19 139 76 150 172-43-3-88-22-135-57-47 43-108 58-183 44Z" fill="var(--hair)"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.14"/>
+    <path d="M729 304l15 40 40 15-40 15-15 40-15-40-40-15 40-15 15-40Z" fill="#f5a8c8" opacity=".7"/>
+  </g>
+</svg>

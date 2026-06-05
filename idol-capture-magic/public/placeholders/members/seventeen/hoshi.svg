@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1d2230;--shade:#090b12">
+  <title>Hoshi original silhouette</title>
+  <defs>
+    <linearGradient id="bg-seventeen-hoshi" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf2ff"/>
+      <stop offset="1" stop-color="#fff1f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-seventeen-hoshi)"/>
+  <ellipse cx="512" cy="462" rx="217" ry="247" fill="#ffffff" opacity=".2"/>
+  <circle cx="479" cy="577" r="11" fill="#9db4f2" opacity=".14"/><circle cx="285" cy="525" r="4" fill="#9db4f2" opacity=".14"/><circle cx="261" cy="312" r="5" fill="#9db4f2" opacity=".14"/><circle cx="518" cy="272" r="12" fill="#9db4f2" opacity=".14"/><circle cx="420" cy="480" r="11" fill="#9db4f2" opacity=".14"/>
+  <g transform="rotate(5.4 512 512)">
+    <path d="M209 1024c25-171 86-284 182-337 31-18 67-27 108-27 96 0 169 46 219 138 35 65 58 141 69 226H209Z" fill="#1d2230"/>
+    <path d="M512 252c92 0 158 60 178 158 17 83-2 157-55 223-33 41-75 61-126 61-54 0-98-22-132-66-48-63-61-138-37-226 26-100 83-150 172-150Z" fill="#1d2230"/>
+    <path d="M383 378c23-88 78-137 165-148 78 16 132 62 162 138-76 1-135-20-177-64-45 41-95 65-150 74Z" fill="var(--hair)"/><path d="M521 235c21-55 61-79 120-72-16 43-50 77-104 101Z" fill="var(--hair)"/><path d="M654 456c63 32 87 84 73 156" fill="none" stroke="var(--hair)" stroke-width="32" stroke-linecap="round"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.13"/>
+    <path d="M692 620c36 20 61 52 74 96" fill="none" stroke="#9db4f2" stroke-width="15" stroke-linecap="round" opacity=".72"/><circle cx="684" cy="612" r="15" fill="#9db4f2" opacity=".82"/>
+  </g>
+</svg>

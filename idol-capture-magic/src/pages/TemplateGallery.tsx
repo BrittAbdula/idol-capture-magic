@@ -25,8 +25,8 @@ const TemplateGallery: React.FC = () => {
   return (
     <div className="min-h-screen">
     <SEO 
-      title="Create Stunning Photo Strips with Idols | IdolBooth.com"
-      description="Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator."
+      title="K-pop Photobooth Templates Online | IdolBooth"
+      description="Browse free K-pop photobooth templates for idol photo strips, selca-style layouts, and printable online photo booth sessions."
     />
       <Navbar />
       
@@ -45,7 +45,7 @@ const TemplateGallery: React.FC = () => {
             {categories.map((category, index) => (
               <Link 
                 key={index}
-                to={`/template/${category}`}
+                to={`/templates/${category}`}
                 className="glass-panel p-6 transition-all hover:shadow-lg hover:-translate-y-1"
               >
                 <ImageFrame

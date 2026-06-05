@@ -1,27 +1,121 @@
-import { useState } from "react";
-import { Check, Minus } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Check, LogIn, Minus } from "lucide-react";
 import { toast } from "sonner";
 
-import { api } from "@/api/client";
+import { api, getGoogleAuthUrl, isApiError, type BillingCycle } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/hooks/useAuth";
+import { trackEvent } from "@/lib/analytics";
+import { openGoogleSignInTab } from "@/lib/authWindow";
 import { PRICING_FEATURES, PRICING_PLANS, type PaidPlan } from "@/lib/pricing";
 
+interface PendingCheckout {
+  plan: PaidPlan;
+  billingCycle: BillingCycle;
+}
+
 export default function Pricing() {
+  const [searchParams] = useSearchParams();
   const [annual, setAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<PaidPlan | null>(null);
+  const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
+  const auth = useAuth();
+  const authBusy = auth.isLoading || auth.isFetching;
+  const billingStatus = searchParams.get("billing");
+  const waitingForSignIn = Boolean(pendingCheckout && !auth.user);
+
+  useEffect(() => {
+    if (billingStatus !== "cancelled") {
+      return;
+    }
+
+    trackEvent("checkout_return", {
+      status: "cancelled",
+      plan: auth.user?.plan ?? "unknown"
+    });
+  }, [auth.user?.plan, billingStatus]);
+
+  const openCheckout = useCallback(
+    async (plan: PaidPlan, billingCycle: BillingCycle, resumedAfterSignIn = false) => {
+      setLoadingPlan(plan);
+      trackEvent("checkout_start", {
+        surface: "pricing_page",
+        trigger_surface: "pricing_page",
+        plan,
+        billing_cycle: billingCycle,
+        resumed_after_sign_in: resumedAfterSignIn
+      });
+      try {
+        const session = await api.billingCheckout(plan, billingCycle, {
+          source: "pricing_page",
+          triggerSurface: "pricing_page",
+          checkoutFlow: resumedAfterSignIn ? "resumed_after_sign_in" : "direct"
+        });
+        window.location.href = session.url;
+      } catch (error) {
+        trackEvent("checkout_error", {
+          surface: "pricing_page",
+          trigger_surface: "pricing_page",
+          plan,
+          billing_cycle: billingCycle,
+          resumed_after_sign_in: resumedAfterSignIn,
+          error_code: isApiError(error) ? error.code : "unknown"
+        });
+        toast.info(error instanceof Error ? error.message : "Sign in before checkout.");
+      } finally {
+        setLoadingPlan(null);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!pendingCheckout || auth.user) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void auth.refetch();
+    }, 2_000);
+
+    return () => window.clearInterval(intervalId);
+  }, [auth, pendingCheckout]);
+
+  useEffect(() => {
+    if (!auth.user || !pendingCheckout || loadingPlan) {
+      return;
+    }
+
+    const checkout = pendingCheckout;
+    setPendingCheckout(null);
+    toast.success("Signed in. Opening checkout...");
+    void openCheckout(checkout.plan, checkout.billingCycle, true);
+  }, [auth.user, loadingPlan, openCheckout, pendingCheckout]);
 
   async function startCheckout(plan: PaidPlan) {
-    setLoadingPlan(plan);
-    try {
-      const session = await api.billingCheckout(plan);
-      window.location.href = session.url;
-    } catch (error) {
-      toast.info(error instanceof Error ? error.message : "Sign in before checkout.");
-    } finally {
-      setLoadingPlan(null);
+    const billingCycle: BillingCycle = annual ? "annual" : "monthly";
+
+    if (!auth.user) {
+      trackEvent("sign_in_prompt", {
+        surface: "pricing_page",
+        trigger_surface: "pricing_page",
+        plan,
+        billing_cycle: billingCycle
+      });
+      const opened = openGoogleSignInTab(getGoogleAuthUrl());
+      if (opened) {
+        setPendingCheckout({ plan, billingCycle });
+        toast.info("Sign in with Google. Checkout will continue here.");
+      } else {
+        toast.error("Popup blocked. Allow popups and try again.");
+      }
+      return;
     }
+
+    await openCheckout(plan, billingCycle);
   }
 
   return (
@@ -31,6 +125,20 @@ export default function Pricing() {
         <Switch checked={annual} onCheckedChange={setAnnual} />
         <span className="text-sm font-semibold text-idol-gold">Annual, 2 months free</span>
       </div>
+
+      {!auth.user && !authBusy && (
+        <div className="mb-6 border border-idol-gold/30 bg-idol-gold/10 p-4 text-sm text-gray-700">
+          {waitingForSignIn
+            ? "Waiting for Google sign-in. Checkout will continue in this tab."
+            : "Sign in first so the plan is attached to your IdolBooth account."}
+        </div>
+      )}
+
+      {billingStatus === "cancelled" && (
+        <div className="mb-6 border border-black/10 bg-gray-50 p-4 text-sm text-gray-700">
+          Checkout was cancelled. Your current plan was not changed.
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3">
         {PRICING_PLANS.map((item) => (
@@ -44,9 +152,18 @@ export default function Pricing() {
               <Button
                 className="mt-5 w-full"
                 onClick={() => startCheckout(item.plan as PaidPlan)}
-                disabled={loadingPlan === item.plan}
+                disabled={authBusy || waitingForSignIn || loadingPlan === item.plan}
               >
-                {loadingPlan === item.plan ? "Opening..." : `Choose ${item.name}`}
+                {!auth.user && !authBusy ? <LogIn className="mr-2 h-4 w-4" /> : null}
+                {loadingPlan === item.plan
+                  ? "Opening..."
+                  : authBusy
+                    ? "Checking session..."
+                    : waitingForSignIn && pendingCheckout?.plan === item.plan
+                      ? "Waiting for sign-in..."
+                      : auth.user
+                        ? `Choose ${item.name}`
+                        : `Sign in for ${item.name}`}
               </Button>
             ) : (
               <Button className="mt-5 w-full" variant="outline" asChild>

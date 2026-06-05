@@ -1,59 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Free Idol Photo Booth Online: Take a Virtual Photo with Your Favorite Idol | IdolBooth.com</title>
-    <meta name="description" content="Use our free Idol Photo Booth online to take stunning photos with your favorite Kpop idols. Capture your special moments and share them instantly. Try IdolBooth now!" />
+    <title>Free K-pop AI Selca, Photocard & Photobooth | IdolBooth</title>
+    <meta
+      name="description"
+      content="Make a free K-pop AI selca, photocard, or photo booth strip with your bias in seconds. Upload a photo, choose a concept, and try IdolBooth online."
+    />
     <meta name="author" content="IdolBooth.com" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://idolBooth.com" />
-    <meta property="og:title" content="Free Idol Photo Booth Online: Take a Photo with Your Favorite Idol | IdolBooth.com" />
-    <meta property="og:description" content="Use our free Idol Photo Booth online to take stunning photos with your favorite Kpop idols. Try IdolBooth now!" />
-    <meta property="og:image" content="https://idolBooth.comimages/hero.png" />
-    
+    <meta property="og:url" content="https://idolbooth.com/" />
+    <meta property="og:title" content="Free K-pop AI Selca, Photocard & Photobooth | IdolBooth" />
+    <meta
+      property="og:description"
+      content="Make a free K-pop AI selca, photocard, or photo booth strip with your bias in seconds."
+    />
+    <meta property="og:image" content="https://idolbooth.com/samples/life4cuts-classic-strip.png" />
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://idolBooth.com" />
-    <meta name="twitter:title" content="Free Idol Photo Booth Online: Photos with Kpop Idols | IdolBooth.com" />
-    <meta name="twitter:description" content="Use our free Idol Photo Booth to take stunning photos with your favorite Kpop idols. Capture your special moments instantly!" />
-    <meta name="twitter:image" content="https://idolBooth.comimages/hero.png" />
-        
+    <meta name="twitter:url" content="https://idolbooth.com/" />
+    <meta name="twitter:title" content="Free K-pop AI Selca, Photocard & Photobooth | IdolBooth" />
+    <meta
+      name="twitter:description"
+      content="Make a free K-pop AI selca, photocard, or photo booth strip with your bias in seconds."
+    />
+    <meta
+      name="twitter:image"
+      content="https://idolbooth.com/samples/life4cuts-classic-strip.png"
+    />
+
     <!-- Canonical Link -->
-    <meta rel="canonical" href="https://idolBooth.com" />
+    <link rel="canonical" href="https://idolbooth.com/" />
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-09BFPR6EPR"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-      gtag('config', 'G-09BFPR6EPR');
+      gtag("config", "G-09BFPR6EPR", { send_page_view: false });
     </script>
-    <script type="application/ld+json">
+    <script type="application/ld+json" id="idolbooth-site-schema">
       {
         "@context": "https://schema.org",
-        "@type": "Product",
-        "name": "Idol Photo Booth",
-        "image": [
-          "https://www.yourdomain.com/images/idol-photo-booth-example.jpg",
-          "https://www.yourdomain.com/images/ai-idol-generation-process.png"
-        ],
-        "description": "Free online idol photo booth to take virtual photos with your favorite Kpop idols, Jpop stars, and anime characters.",
-        "brand": {
-          "@type": "Brand",
-          "name": "IdolBooth"
-        },
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD",
-          "availability": "https://schema.org/InStock"
-        }
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://idolbooth.com/#organization",
+            "name": "IdolBooth",
+            "url": "https://idolbooth.com/",
+            "logo": "https://idolbooth.com/brand/logo.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://idolbooth.com/#website",
+            "name": "IdolBooth.com",
+            "url": "https://idolbooth.com/",
+            "description": "Free online photo booth to take virtual photos with your favorite idols, anime characters, and celebrities.",
+            "publisher": {
+              "@id": "https://idolbooth.com/#organization"
+            },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://idolbooth.com/templates?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
       }
-      </script> 
+    </script>
   </head>
 
   <body>

@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>Jimin stylized silhouette</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cfe8ff"/>
+      <stop offset="1" stop-color="#f8d8df"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eca9b8"/>
+      <stop offset="1" stop-color="#d58fa1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <ellipse cx="528" cy="480" rx="270" ry="292" fill="#ffffff" opacity=".18"/>
+  <path d="M555 653c79 37 132 161 158 371H361c17-179 56-293 116-344 22-18 48-27 78-27Z" fill="url(#ink)"/>
+  <path d="M555 248c88 0 154 63 174 159 18 88-3 171-63 250-31 41-74 60-129 57-54-3-92-27-115-73-18-36-22-81-13-137-24-6-41-19-51-39-11-23-7-42 12-57-4-43 6-78 29-105 32-37 84-55 156-55Z" fill="url(#ink)"/>
+  <path d="M405 406c-9-61 6-106 45-136 36-28 85-40 148-35 70 6 120 37 150 93 22 42 30 88 25 139-54-2-96-20-124-56-49 46-109 58-181 36-19-5-40-19-63-41Z" fill="#f0a8ba"/>
+  <path d="M427 445c-28 48-33 99-15 153-29-15-47-42-55-82-8-41 4-65 37-72 11-2 22-2 33 1Z" fill="#e69baf"/>
+  <path d="M657 695c15 2 28-2 41-14" stroke="#f6e0e9" stroke-width="10" stroke-linecap="round" opacity=".65"/>
+  <path d="M501 285c44 76 111 119 201 131" fill="none" stroke="#f7c2ce" stroke-width="4" opacity=".46"/>
+</svg>

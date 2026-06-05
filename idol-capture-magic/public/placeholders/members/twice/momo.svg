@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#2a1d2a;--shade:#090b12">
+  <title>Momo original silhouette</title>
+  <defs>
+    <linearGradient id="bg-twice-momo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe8f1"/>
+      <stop offset="1" stop-color="#e9f7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-twice-momo)"/>
+  <ellipse cx="512" cy="462" rx="243" ry="275" fill="#ffffff" opacity=".2"/>
+  <circle cx="-95" cy="143" r="4" fill="#f5a8c8" opacity=".14"/><circle cx="18" cy="52" r="1" fill="#f5a8c8" opacity=".14"/><circle cx="-32" cy="-7" r="-5" fill="#f5a8c8" opacity=".14"/><circle cx="-39" cy="42" r="-1" fill="#f5a8c8" opacity=".14"/><circle cx="220" cy="177" r="2" fill="#f5a8c8" opacity=".14"/>
+  <g transform="rotate(-1.8 512 512)">
+    <path d="M307 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H307Z" fill="#2a1d2a"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#2a1d2a"/>
+    <path d="M353 407c17-102 79-163 185-181 76 6 129 46 160 119-81-2-153 24-216 78-44 38-87 53-129 45 0-21 0-41 0-61Z" fill="var(--hair)"/><path d="M496 251c64 89 130 136 198 141" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".3"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.18"/>
+    <path d="M464 667l-44 30 49 13 42-33-47-10Zm94 0 44 30-49 13-42-33 47-10Z" fill="#f5a8c8" opacity=".72"/>
+  </g>
+</svg>

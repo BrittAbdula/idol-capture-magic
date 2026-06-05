@@ -36,7 +36,7 @@ export const PRICING_PLANS: Array<{
     name: "Pro",
     monthlyPrice: "$9.99/mo",
     annualPrice: "$99.90/yr",
-    description: "High-volume generation and Pro-only stubs.",
+    description: "High-volume creation, watermark-free output, and pro export tools.",
     plan: "pro"
   }
 ];

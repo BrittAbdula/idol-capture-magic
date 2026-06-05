@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, CreditCard, Image, Sparkles } from "lucide-react";
 
@@ -9,6 +10,7 @@ import { ImageFrame } from "@/components/media/ImageFrame";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuota } from "@/hooks/useQuota";
+import { trackEvent } from "@/lib/analytics";
 import type { ImageFrameRatio } from "@/lib/imageRatios";
 
 function formatGenerationDate(createdAt: number): string {
@@ -39,8 +41,10 @@ function statusClassName(status: ApiGenerationHistoryItem["status"]): string {
 }
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
   const quota = useQuota();
   const auth = useAuth();
+  const billingStatus = searchParams.get("billing");
   const history = useQuery({
     queryKey: ["generations", "history"],
     queryFn: api.generationHistory,
@@ -51,9 +55,26 @@ export default function Dashboard() {
   const completedCount = historyItems.filter((item) => item.status === "succeeded").length;
   const usedPercent = ((quota.total - quota.remaining) / quota.total) * 100;
 
+  useEffect(() => {
+    if (billingStatus !== "success") {
+      return;
+    }
+
+    trackEvent("checkout_return", {
+      status: "success",
+      plan: auth.user?.plan ?? "unknown"
+    });
+  }, [auth.user?.plan, billingStatus]);
+
   return (
     <AppPageShell title="My IdolBooth" description="Your account, credits, and generation history.">
       {auth.isLoading && <LoadingSkeleton rows={2} />}
+
+      {billingStatus === "success" && !auth.isLoading && (
+        <div className="mb-6 border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
+          Checkout complete. Your plan updates here after Stripe confirms the subscription.
+        </div>
+      )}
 
       {!auth.isLoading && !auth.isAuthenticated && (
         <div className="border border-idol-gold p-5">

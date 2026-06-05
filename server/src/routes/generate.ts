@@ -8,7 +8,12 @@ import type { Auth } from "../auth/lucia.js";
 import type { DatabaseClient } from "../db/client.js";
 import { concepts, generations, members, users, type Concept } from "../db/schema.js";
 import { jsonError } from "../lib/http.js";
-import type { GenerationProvider, GenerationRequest } from "../services/generation/provider.js";
+import {
+  isAsyncGenerationProvider,
+  type GenerationProvider,
+  type GenerationRequest
+} from "../services/generation/provider.js";
+import { reconcileGenerationById } from "../services/generation/reconcile.js";
 import { applyWatermark, watermarkLevelForPlan } from "../services/generation/watermark.js";
 import { consumeUserQuota, refundUserQuota } from "../services/quota.js";
 import { checkConcept } from "../services/safety.js";
@@ -220,10 +225,15 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       return jsonError(c, 402, "quota_exhausted");
     }
 
-    const inputObject = await deps.storage.putBuffer(primaryPhotoBuffer, {
-      extension: mimeExtension(primaryPhoto.type),
-      contentType: primaryPhoto.type
-    });
+    const inputObjects = await Promise.all(
+      photos.map((photo, index) =>
+        deps.storage.putBuffer(photoBuffers[index], {
+          extension: mimeExtension(photo.type),
+          contentType: photo.type
+        })
+      )
+    );
+    const inputObject = inputObjects[0];
 
     const generationId = randomUUID();
     const dbUser = user
@@ -241,6 +251,7 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
         format: concept.format,
         status: "queued",
         inputImageRef: inputObject.key,
+        inputImageRefs: JSON.stringify(inputObjects.map((object) => object.key)),
         watermarkLevel,
         isPublic: parsed.data.makePublic,
         createdAt
@@ -253,19 +264,43 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
       .where(eq(generations.id, generationId))
       .run();
 
+    const generationRequest: GenerationRequest = {
+      conceptPrompt: concept.promptTemplate,
+      styleTokens: safeStyleTokens(concept),
+      inputImage: primaryPhotoBuffer,
+      inputMimeType: primaryPhoto.type,
+      inputImages: photoBuffers.map((buffer, index) => ({
+        image: buffer,
+        mimeType: photos[index].type
+      })),
+      outputFormat: "png",
+      size: outputSize(concept.format)
+    };
+
     try {
-      const result = await deps.provider.generate({
-        conceptPrompt: concept.promptTemplate,
-        styleTokens: safeStyleTokens(concept),
-        inputImage: primaryPhotoBuffer,
-        inputMimeType: primaryPhoto.type,
-        inputImages: photoBuffers.map((buffer, index) => ({
-          image: buffer,
-          mimeType: photos[index].type
-        })),
-        outputFormat: "png",
-        size: outputSize(concept.format)
-      });
+      if (isAsyncGenerationProvider(deps.provider)) {
+        const task = await deps.provider.start(generationRequest);
+        await deps.client.db
+          .update(generations)
+          .set({
+            providerJobId: task.providerJobId
+          })
+          .where(eq(generations.id, generationId))
+          .run();
+
+        return c.json(
+          {
+            id: generationId,
+            status: "running",
+            outputUrl: null,
+            watermarkLevel,
+            quotaRemaining
+          },
+          202
+        );
+      }
+
+      const result = await deps.provider.generate(generationRequest);
       const watermarkedImage = await applyWatermark({
         input: result.image,
         level: watermarkLevel
@@ -279,6 +314,7 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
         .update(generations)
         .set({
           status: "succeeded",
+          providerJobId: result.providerJobId,
           outputImageRef: outputObject.key,
           cost: result.costUsd
         })
@@ -355,6 +391,7 @@ export function createGenerateRoutes(deps: GenerateRouteDeps): Hono {
 
   app.get("/generations/:id", async (c) => {
     const id = c.req.param("id");
+    await reconcileGenerationById(deps, id);
     const generation = await deps.client.db
       .select()
       .from(generations)

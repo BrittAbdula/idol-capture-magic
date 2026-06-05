@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1b171b;--shade:#090b12">
+  <title>Lisa original silhouette</title>
+  <defs>
+    <linearGradient id="bg-blackpink-lisa" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffdce9"/>
+      <stop offset="1" stop-color="#f7f1f4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-blackpink-lisa)"/>
+  <ellipse cx="512" cy="462" rx="240" ry="273" fill="#ffffff" opacity=".2"/>
+  <circle cx="47" cy="9" r="-3" fill="#ff91bd" opacity=".14"/><circle cx="231" cy="-62" r="3" fill="#ff91bd" opacity=".14"/><circle cx="254" cy="-119" r="-2" fill="#ff91bd" opacity=".14"/><circle cx="257" cy="9" r="-2" fill="#ff91bd" opacity=".14"/><circle cx="127" cy="-114" r="-4" fill="#ff91bd" opacity=".14"/>
+  <g transform="rotate(1.8 512 512)">
+    <path d="M324 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H324Z" fill="#1b171b"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#1b171b"/>
+    <path d="M383 378c23-88 78-137 165-148 78 16 132 62 162 138-76 1-135-20-177-64-45 41-95 65-150 74Z" fill="var(--hair)"/><path d="M521 235c21-55 61-79 120-72-16 43-50 77-104 101Z" fill="var(--hair)"/><path d="M654 456c63 32 87 84 73 156" fill="none" stroke="var(--hair)" stroke-width="32" stroke-linecap="round"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.20"/>
+    
+  </g>
+</svg>

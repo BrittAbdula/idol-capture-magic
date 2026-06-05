@@ -1,12 +1,17 @@
 import Stripe from "stripe";
 
 export type PaidPlan = "plus" | "pro";
+export type BillingCycle = "monthly" | "annual";
 export type Plan = "free" | PaidPlan;
 
 export interface CheckoutInput {
   userId: string;
   email: string;
   plan: PaidPlan;
+  billingCycle: BillingCycle;
+  source?: string | null;
+  triggerSurface?: string | null;
+  checkoutFlow?: string | null;
   stripeCustomerId?: string | null;
 }
 
@@ -29,6 +34,9 @@ export interface BillingWebhookEvent {
   userId?: string | null;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
+  source?: string | null;
+  triggerSurface?: string | null;
+  checkoutFlow?: string | null;
   plan?: Plan;
   planRenewsAt?: number | null;
 }
@@ -43,13 +51,17 @@ export interface StripeBillingConfig {
   secretKey: string;
   webhookSecret: string;
   appOrigin: string;
-  plusPriceId: string;
-  proPriceId: string;
+  plusPriceId?: string | null;
+  proPriceId?: string | null;
+  plusMonthlyPriceId?: string | null;
+  plusAnnualPriceId?: string | null;
+  proMonthlyPriceId?: string | null;
+  proAnnualPriceId?: string | null;
 }
 
 export class StripeBillingService implements BillingService {
   private readonly stripe: Stripe;
-  private readonly priceByPlan: Record<PaidPlan, string>;
+  private readonly priceByPlan: Record<PaidPlan, Record<BillingCycle, string | null>>;
   private readonly planByPrice: Map<string, PaidPlan>;
 
   constructor(private readonly config: StripeBillingConfig) {
@@ -58,16 +70,30 @@ export class StripeBillingService implements BillingService {
       httpClient: Stripe.createFetchHttpClient()
     });
     this.priceByPlan = {
-      plus: config.plusPriceId,
-      pro: config.proPriceId
+      plus: {
+        monthly: config.plusMonthlyPriceId ?? config.plusPriceId ?? null,
+        annual: config.plusAnnualPriceId ?? null
+      },
+      pro: {
+        monthly: config.proMonthlyPriceId ?? config.proPriceId ?? null,
+        annual: config.proAnnualPriceId ?? null
+      }
     };
-    this.planByPrice = new Map([
-      [config.plusPriceId, "plus"],
-      [config.proPriceId, "pro"]
-    ]);
+    this.planByPrice = new Map(
+      Object.entries(this.priceByPlan).flatMap(([plan, prices]) =>
+        Object.values(prices)
+          .filter((priceId): priceId is string => Boolean(priceId))
+          .map((priceId) => [priceId, plan as PaidPlan])
+      )
+    );
   }
 
   async createCheckoutSession(input: CheckoutInput): Promise<CheckoutSessionResult> {
+    const priceId = this.priceByPlan[input.plan][input.billingCycle];
+    if (!priceId) {
+      throw new Error(`Missing Stripe price id for ${input.plan} ${input.billingCycle}`);
+    }
+
     const session = await this.stripe.checkout.sessions.create({
       mode: "subscription",
       customer: input.stripeCustomerId ?? undefined,
@@ -75,18 +101,26 @@ export class StripeBillingService implements BillingService {
       client_reference_id: input.userId,
       line_items: [
         {
-          price: this.priceByPlan[input.plan],
+          price: priceId,
           quantity: 1
         }
       ],
       metadata: {
         userId: input.userId,
-        plan: input.plan
+        plan: input.plan,
+        billingCycle: input.billingCycle,
+        source: input.source ?? "",
+        triggerSurface: input.triggerSurface ?? "",
+        checkoutFlow: input.checkoutFlow ?? ""
       },
       subscription_data: {
         metadata: {
           userId: input.userId,
-          plan: input.plan
+          plan: input.plan,
+          billingCycle: input.billingCycle,
+          source: input.source ?? "",
+          triggerSurface: input.triggerSurface ?? "",
+          checkoutFlow: input.checkoutFlow ?? ""
         }
       },
       success_url: `${this.config.appOrigin}/me?billing=success`,
@@ -127,6 +161,9 @@ export class StripeBillingService implements BillingService {
         stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
         stripeSubscriptionId:
           typeof session.subscription === "string" ? session.subscription : null,
+        source: safeMetadataValue(session.metadata?.source),
+        triggerSurface: safeMetadataValue(session.metadata?.triggerSurface),
+        checkoutFlow: safeMetadataValue(session.metadata?.checkoutFlow),
         plan: plan ?? undefined
       };
     }
@@ -141,6 +178,9 @@ export class StripeBillingService implements BillingService {
             ? subscription.customer
             : subscription.customer.id,
         stripeSubscriptionId: subscription.id,
+        source: safeMetadataValue(subscription.metadata?.source),
+        triggerSurface: safeMetadataValue(subscription.metadata?.triggerSurface),
+        checkoutFlow: safeMetadataValue(subscription.metadata?.checkoutFlow),
         plan,
         planRenewsAt: subscription.current_period_end ?? null
       };
@@ -155,6 +195,9 @@ export class StripeBillingService implements BillingService {
             ? subscription.customer
             : subscription.customer.id,
         stripeSubscriptionId: subscription.id,
+        source: safeMetadataValue(subscription.metadata?.source),
+        triggerSurface: safeMetadataValue(subscription.metadata?.triggerSurface),
+        checkoutFlow: safeMetadataValue(subscription.metadata?.checkoutFlow),
         plan: "free",
         planRenewsAt: null
       };
@@ -166,4 +209,12 @@ export class StripeBillingService implements BillingService {
 
 function toPlan(value: string | undefined): PaidPlan | null {
   return value === "plus" || value === "pro" ? value : null;
+}
+
+function safeMetadataValue(value: string | undefined): string | null {
+  if (!value || !/^[a-z0-9_-]{1,80}$/.test(value)) {
+    return null;
+  }
+
+  return value;
 }

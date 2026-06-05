@@ -8,7 +8,9 @@ export const users = sqliteTable("users", {
   biasGroupId: text("bias_group_id"),
   biasMemberId: text("bias_member_id"),
   locale: text("locale").notNull().default("en"),
-  plan: text("plan", { enum: ["free", "plus", "pro"] }).notNull().default("free"),
+  plan: text("plan", { enum: ["free", "plus", "pro"] })
+    .notNull()
+    .default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   planRenewsAt: integer("plan_renews_at"),
@@ -94,6 +96,8 @@ export const generations = sqliteTable("generations", {
   format: text("format").notNull(),
   status: text("status", { enum: ["queued", "running", "succeeded", "failed"] }).notNull(),
   inputImageRef: text("input_image_ref"),
+  inputImageRefs: text("input_image_refs"),
+  providerJobId: text("provider_job_id"),
   outputImageRef: text("output_image_ref"),
   errorMessage: text("error_message"),
   cost: real("cost"),
@@ -115,6 +119,31 @@ export const binderItems = sqliteTable("binder_items", {
   addedAt: integer("added_at").notNull()
 });
 
+export const billingEvents = sqliteTable("billing_events", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id),
+  eventType: text("event_type", {
+    enum: [
+      "checkout_created",
+      "checkout_failed",
+      "checkout_retry_succeeded",
+      "webhook_subscription_updated",
+      "webhook_subscription_deleted",
+      "webhook_ignored"
+    ]
+  }).notNull(),
+  plan: text("plan", { enum: ["free", "plus", "pro"] }),
+  billingCycle: text("billing_cycle", { enum: ["monthly", "annual"] }),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  source: text("source"),
+  triggerSurface: text("trigger_surface"),
+  checkoutFlow: text("checkout_flow"),
+  errorCode: text("error_code"),
+  createdAt: integer("created_at").notNull()
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
@@ -124,3 +153,4 @@ export type Concept = typeof concepts.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
 export type Generation = typeof generations.$inferSelect;
 export type BinderItem = typeof binderItems.$inferSelect;
+export type BillingEvent = typeof billingEvents.$inferSelect;

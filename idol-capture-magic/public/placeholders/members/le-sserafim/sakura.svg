@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#241b20;--shade:#090b12">
+  <title>Sakura original silhouette</title>
+  <defs>
+    <linearGradient id="bg-le-sserafim-sakura" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0ef"/>
+      <stop offset="1" stop-color="#f7f2df"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-le-sserafim-sakura)"/>
+  <ellipse cx="512" cy="462" rx="253" ry="287" fill="#ffffff" opacity=".2"/>
+  <circle cx="70" cy="115" r="0" fill="#f0aaa5" opacity=".14"/><circle cx="-26" cy="76" r="2" fill="#f0aaa5" opacity=".14"/><circle cx="92" cy="-31" r="-3" fill="#f0aaa5" opacity=".14"/><circle cx="-88" cy="-12" r="-2" fill="#f0aaa5" opacity=".14"/><circle cx="84" cy="16" r="1" fill="#f0aaa5" opacity=".14"/>
+  <g transform="rotate(-3.6 512 512)">
+    <path d="M305 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H305Z" fill="#241b20"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#241b20"/>
+    <path d="M363 407c14-103 73-163 177-178 85 11 139 68 162 172 10 74 2 145-24 214-53-2-99-21-139-57-43 38-92 58-148 59-33-66-42-136-28-210Z" fill="var(--hair)"/><path d="M385 439c45 23 96 20 153-9 45 35 93 51 143 48" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".28"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.19"/>
+    
+  </g>
+</svg>

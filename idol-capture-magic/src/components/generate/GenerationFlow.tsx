@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Camera,
   Check,
+  Download,
   ImagePlus,
   Loader2,
   LogIn,
@@ -17,7 +18,13 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
-import { api, getGoogleAuthUrl, isApiError, type ApiConcept } from "@/api/client";
+import {
+  api,
+  getGoogleAuthUrl,
+  isApiError,
+  type ApiConcept,
+  type ApiGenerationStatus
+} from "@/api/client";
 import { UpgradeDialog } from "@/components/billing/UpgradeDialog";
 import { Button } from "@/components/ui/button";
 import { ImageFrame } from "@/components/media/ImageFrame";
@@ -31,6 +38,8 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuota } from "@/hooks/useQuota";
+import { getMemberSilhouetteImage } from "@/data/memberSilhouettes";
+import { trackEvent } from "@/lib/analytics";
 import { shouldPromptForGoogleSignIn } from "@/lib/authPrompt";
 import { openGoogleSignInTab } from "@/lib/authWindow";
 import { ratioFromFormat } from "@/lib/imageRatios";
@@ -42,6 +51,8 @@ interface GenerationFlowProps {
   format: GenerationFormat;
   memberId?: string | null;
   conceptId?: string | null;
+  preferredConceptSlug?: string | null;
+  landingProofItems?: string[];
 }
 
 const FORMAT_LABEL: Record<GenerationFormat, string> = {
@@ -49,17 +60,31 @@ const FORMAT_LABEL: Record<GenerationFormat, string> = {
   photocard: "photocard",
   strip: "photo strip"
 };
+const GENERATION_POLL_INTERVAL_MS = 3_000;
+const GENERATION_MAX_POLLS = 80;
 
-export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowProps) {
+export function GenerationFlow({
+  format,
+  memberId,
+  conceptId,
+  preferredConceptSlug,
+  landingProofItems = []
+}: GenerationFlowProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadGuidanceTrackedRef = useRef(false);
+  const generationPollTokenRef = useRef(0);
   const [step, setStep] = useState<1 | 2 | 3>(conceptId ? 2 : 1);
   const [manualConceptId, setManualConceptId] = useState<string | null>(null);
+  const [preferredConceptId, setPreferredConceptId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeSurface, setUpgradeSurface] = useState<string | null>(null);
   const [isWaitingForSignIn, setIsWaitingForSignIn] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [generationId, setGenerationId] = useState<string | null>(null);
+  const [localQuotaRemaining, setLocalQuotaRemaining] = useState<number | null>(null);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const auth = useAuth();
   const {
@@ -80,7 +105,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
     setMemberId,
     conceptId: storedConceptId
   } = useGenerationFlowStore();
-  const selectedConceptId = manualConceptId ?? conceptId ?? storedConceptId;
+  const selectedConceptId = manualConceptId ?? conceptId ?? storedConceptId ?? preferredConceptId;
   const selectedPhotos = useMemo(
     () => (photos.length ? photos : photo ? [photo] : []),
     [photo, photos]
@@ -101,22 +126,57 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
         : defaultGroup.data?.members[0],
     [defaultGroup.data?.members, memberId]
   );
+  const selectedMemberSilhouette = getMemberSilhouetteImage(
+    "newjeans",
+    selectedMember?.slug,
+    selectedMember?.silhouetteImage
+  );
   const resolvedMemberId = memberId || selectedMember?.id || "";
 
   const selectedConcept = useMemo(
     () => concepts.data?.find((item) => item.id === selectedConceptId),
     [concepts.data, selectedConceptId]
   );
-  const quotaExhausted = quota.remaining <= 0;
+  const quotaRemaining = localQuotaRemaining ?? quota.remaining;
+  const quotaExhausted = quotaRemaining <= 0;
 
   useEffect(() => {
     setManualConceptId(null);
+    setPreferredConceptId(null);
     setFormat(format);
     setMemberId(memberId ?? null);
     if (conceptId) {
       setConceptId(conceptId);
     }
   }, [conceptId, format, memberId, setConceptId, setFormat, setMemberId]);
+
+  useEffect(() => {
+    if (conceptId || manualConceptId || storedConceptId || preferredConceptId) {
+      return;
+    }
+
+    const preferredConcept = concepts.data?.find((item) => item.slug === preferredConceptSlug);
+    if (!preferredConcept) {
+      return;
+    }
+
+    setPreferredConceptId(preferredConcept.id);
+    setStep(2);
+    trackEvent("concept_auto_select", {
+      format,
+      concept_id: preferredConcept.id,
+      concept_slug: preferredConcept.slug,
+      source: "search_landing"
+    });
+  }, [
+    concepts.data,
+    conceptId,
+    format,
+    manualConceptId,
+    preferredConceptId,
+    preferredConceptSlug,
+    storedConceptId
+  ]);
 
   useEffect(() => {
     if (!selectedPhotos.length) {
@@ -150,6 +210,41 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
     toast.success("Signed in. Your concept and uploaded photos are still ready.");
   }, [isAuthenticated, showSignInDialog]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocalQuotaRemaining(null);
+    }
+  }, [isAuthenticated, quota.remaining, quota.resetAt]);
+
+  useEffect(() => {
+    if (!showUpgradeDialog) {
+      return;
+    }
+
+    trackEvent("upgrade_view", {
+      surface: "generation_flow",
+      trigger_surface: upgradeSurface,
+      format,
+      plan: quota.plan,
+      quota_remaining: quotaRemaining,
+      result_ready: Boolean(resultUrl)
+    });
+  }, [format, quota.plan, quotaRemaining, resultUrl, showUpgradeDialog, upgradeSurface]);
+
+  useEffect(() => {
+    if (step !== 2 || selectedPhotos.length || uploadGuidanceTrackedRef.current) {
+      return;
+    }
+
+    uploadGuidanceTrackedRef.current = true;
+    trackEvent("upload_guidance_view", {
+      format,
+      plan: quota.plan,
+      signed_in: isAuthenticated,
+      concept_selected: Boolean(selectedConceptId)
+    });
+  }, [format, isAuthenticated, quota.plan, selectedConceptId, selectedPhotos.length, step]);
+
   function choosePhotos(fileList: FileList | File[] | null | undefined) {
     const incomingFiles = Array.from(fileList ?? []);
     if (!incomingFiles.length) {
@@ -170,6 +265,11 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
       toast.info("Only the first 2 photos were added.");
     }
     setPhotos(nextPhotos);
+    trackEvent("photo_upload", {
+      format,
+      photo_count: nextPhotos.length,
+      added_count: Math.min(validPhotos.length, availableSlots)
+    });
   }
 
   function removePhoto(index: number) {
@@ -177,9 +277,27 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
   }
 
   function chooseConcept(nextConceptId: string) {
+    const nextConcept = concepts.data?.find((item) => item.id === nextConceptId);
     setManualConceptId(nextConceptId);
     setConceptId(nextConceptId);
     setStep(2);
+    trackEvent("concept_select", {
+      format,
+      concept_id: nextConceptId,
+      concept_premium: Boolean(nextConcept?.premium)
+    });
+  }
+
+  function openUpgrade(surface: string) {
+    setUpgradeSurface(surface);
+    trackEvent("upgrade_click", {
+      surface,
+      format,
+      plan: quota.plan,
+      quota_remaining: quotaRemaining,
+      result_ready: Boolean(resultUrl)
+    });
+    setShowUpgradeDialog(true);
   }
 
   async function checkSignIn() {
@@ -205,22 +323,27 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
       return;
     }
     if (quotaExhausted) {
-      setShowUpgradeDialog(true);
+      openUpgrade("quota_exhausted_pre_generate");
       return;
     }
     if (isAuthLoading) {
       toast.info("Checking your session. Try again in a moment.");
       return;
     }
-    if (!isAuthenticated) {
-      setShowSignInDialog(true);
-      setIsWaitingForSignIn(false);
-      return;
-    }
 
     setIsGenerating(true);
     setResultUrl(null);
     setStep(3);
+    const pollToken = generationPollTokenRef.current + 1;
+    generationPollTokenRef.current = pollToken;
+    trackEvent("generate_start", {
+      format,
+      mode,
+      plan: quota.plan,
+      signed_in: isAuthenticated,
+      photo_count: selectedPhotos.length,
+      concept_premium: Boolean(selectedConcept?.premium)
+    });
     try {
       const form = new FormData();
       selectedPhotos.forEach((selectedPhoto) => {
@@ -230,23 +353,83 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
       form.set("memberId", resolvedMemberId);
       form.set("makePublic", "true");
       const result = await api.generate(form);
-      setResultUrl(result.outputUrl);
       setGenerationId(result.id);
+      setLocalQuotaRemaining(result.quotaRemaining);
+      const finalResult =
+        result.status === "queued" || result.status === "running"
+          ? await waitForGenerationResult(result.id, pollToken)
+          : result;
+      if (finalResult.status === "failed") {
+        throw new Error(finalResult.errorMessage || "Generation failed.");
+      }
+      if (!finalResult.outputUrl) {
+        throw new Error("Generation finished without an output image.");
+      }
+
+      setResultUrl(finalResult.outputUrl);
+      trackEvent("generate_success", {
+        format,
+        mode,
+        plan: quota.plan,
+        signed_in: isAuthenticated,
+        watermark_level: result.watermarkLevel,
+        quota_remaining: result.quotaRemaining
+      });
+      if (isAuthenticated) {
+        void refetchAuth();
+      }
       toast.success(mode === "variation" ? "Variation complete." : "Generation complete.");
     } catch (error) {
+      trackEvent("generate_error", {
+        format,
+        mode,
+        plan: quota.plan,
+        signed_in: isAuthenticated,
+        error_code: isApiError(error) ? error.code : "unknown"
+      });
       if (isApiError(error) && error.code === "quota_exhausted") {
-        setShowUpgradeDialog(true);
+        setLocalQuotaRemaining(0);
+        openUpgrade("quota_exhausted_error");
         toast.info("Daily credits reached. Upgrade to continue generating today.");
       } else if (shouldPromptForGoogleSignIn(error, isAuthenticated)) {
+        trackEvent("sign_in_prompt", {
+          surface: "generate_error",
+          format,
+          plan: quota.plan
+        });
         setShowSignInDialog(true);
         setIsWaitingForSignIn(false);
         toast.info("Sign in with Google to continue generating.");
       } else {
         toast.error(error instanceof Error ? error.message : "Generation failed.");
       }
+      if (isAuthenticated) {
+        void refetchAuth();
+      }
     } finally {
       setIsGenerating(false);
     }
+  }
+
+  async function waitForGenerationResult(
+    id: string,
+    pollToken: number
+  ): Promise<ApiGenerationStatus> {
+    toast.info("Generation started. Keeping this page open while the result finishes.");
+
+    for (let attempt = 0; attempt < GENERATION_MAX_POLLS; attempt += 1) {
+      await delay(GENERATION_POLL_INTERVAL_MS);
+      if (generationPollTokenRef.current !== pollToken) {
+        throw new Error("Generation was replaced by a newer request.");
+      }
+
+      const status = await api.generationStatus(id);
+      if (status.status === "succeeded" || status.status === "failed") {
+        return status;
+      }
+    }
+
+    throw new Error("Generation is still running. Check your dashboard shortly.");
   }
 
   async function saveToBinder() {
@@ -255,6 +438,12 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
     }
     try {
       await api.saveBinderItem(generationId, selectedConcept?.name);
+      trackEvent("result_action", {
+        action: "save_to_binder",
+        format,
+        plan: quota.plan,
+        signed_in: isAuthenticated
+      });
       toast.success("Saved to Binder.");
     } catch {
       toast.info("Binder save is available after sign-in.");
@@ -267,12 +456,66 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
     }
     const shareUrl = `${window.location.origin}/share/${generationId}`;
     await navigator.clipboard.writeText(shareUrl);
+    trackEvent("result_action", {
+      action: "share",
+      format,
+      plan: quota.plan,
+      signed_in: isAuthenticated
+    });
     toast.success("Share link copied.");
+  }
+
+  async function downloadResult() {
+    if (!resultUrl) {
+      return;
+    }
+    trackEvent("result_action", {
+      action: "download",
+      format,
+      plan: quota.plan,
+      signed_in: isAuthenticated
+    });
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch(resultUrl);
+      if (!response.ok) {
+        throw new Error(`Download failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `idolbooth-${format}-${generationId ?? "result"}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1_000);
+      toast.success("Downloaded watermarked result.");
+    } catch {
+      trackEvent("result_action", {
+        action: "download_fallback",
+        format,
+        plan: quota.plan,
+        signed_in: isAuthenticated
+      });
+      window.open(resultUrl, "_blank", "noopener,noreferrer");
+      toast.info(
+        "Opened the image in a new tab. Save it from there if direct download is blocked."
+      );
+    } finally {
+      setIsDownloading(false);
+    }
   }
 
   return (
     <>
-      <UpgradeDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog} />
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        sourceSurface={upgradeSurface}
+      />
       <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -300,13 +543,17 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
         </DialogContent>
       </Dialog>
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside className="border-r border-black/10 pr-0 lg:pr-6">
+        <aside className="border-b border-black/10 pb-6 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-6">
           <div className="border-b border-black/10 pb-5">
             <p className="text-xs uppercase tracking-wide text-gray-500">Member</p>
             <div className="mt-3 flex items-center gap-3">
               <ImageFrame
-                src={selectedMember?.silhouetteImage ?? "/placeholders/silhouette_1.png"}
-                alt=""
+                src={selectedMemberSilhouette}
+                alt={
+                  selectedMember
+                    ? `${selectedMember.name} silhouette`
+                    : "Selected member silhouette"
+                }
                 ratio="square"
                 tone="cool"
                 className="h-12 w-12 shadow-none"
@@ -314,7 +561,11 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
               />
               <div>
                 <p className="font-semibold">{selectedMember?.name ?? "Selected member"}</p>
-                <button onClick={() => setStep(1)} className="text-sm text-idol-gold">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="inline-flex min-h-11 items-center text-sm text-idol-gold"
+                >
                   Change concept
                 </button>
               </div>
@@ -328,8 +579,10 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
           ].map(([label, value]) => (
             <button
               key={label}
+              type="button"
               onClick={() => setStep(value as 1 | 2 | 3)}
-              className={`flex w-full items-center gap-3 border-b border-black/10 py-4 text-left ${
+              aria-current={step === value ? "step" : undefined}
+              className={`flex min-h-14 w-full items-center gap-3 border-b border-black/10 py-4 text-left ${
                 step === value ? "text-black" : "text-gray-500"
               }`}
             >
@@ -340,11 +593,22 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
             </button>
           ))}
           <p className="mt-6 text-sm text-gray-600">
-            {quota.remaining}/{quota.total} credits left today on {quota.plan}.
+            {quotaRemaining}/{quota.total} credits left today on {quota.plan}.
           </p>
         </aside>
 
         <section>
+          {landingProofItems.length > 0 && (
+            <div className="mb-6 grid gap-2 sm:grid-cols-3">
+              {landingProofItems.map((item) => (
+                <div key={item} className="flex items-center gap-2 border border-black/10 p-3">
+                  <Check className="h-4 w-4 shrink-0 text-idol-gold" />
+                  <span className="text-sm font-medium text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {step === 1 && (
             <div id="concepts">
               <div>
@@ -396,7 +660,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                           type="button"
                           aria-label={`Remove photo ${index + 1}`}
                           onClick={() => removePhoto(index)}
-                          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center bg-black/70 text-white transition hover:bg-black"
+                          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center bg-black/70 text-white transition hover:bg-black"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -404,7 +668,25 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                     ))}
                   </div>
                 ) : (
-                  <ImagePlus className="h-12 w-12 text-idol-gold" />
+                  <>
+                    <ImagePlus className="h-12 w-12 text-idol-gold" />
+                    <div className="mt-5 grid w-full max-w-2xl gap-3 text-left sm:grid-cols-3">
+                      <div className="border border-black/10 bg-white p-3">
+                        <Check className="h-4 w-4 text-idol-gold" />
+                        <p className="mt-2 text-sm font-medium">Use any selfie or screenshot.</p>
+                      </div>
+                      <div className="border border-black/10 bg-white p-3">
+                        <Lock className="h-4 w-4 text-idol-gold" />
+                        <p className="mt-2 text-sm font-medium">Only used for this generation.</p>
+                      </div>
+                      <div className="border border-black/10 bg-white p-3">
+                        <Sparkles className="h-4 w-4 text-idol-gold" />
+                        <p className="mt-2 text-sm font-medium">
+                          Free output keeps a visible watermark.
+                        </p>
+                      </div>
+                    </div>
+                  </>
                 )}
                 <p className="mt-4 font-medium">
                   {selectedPhotos.length
@@ -457,7 +739,10 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
               </div>
               <p className="mt-4 text-sm text-gray-600">
                 Photo is processed only to generate your output. We do not train AI on it.{" "}
-                <Link to="/legal/safety" className="text-idol-gold">
+                <Link
+                  to="/legal/safety"
+                  className="inline-flex min-h-11 items-center align-middle text-idol-gold"
+                >
                   Safety policy
                 </Link>
               </p>
@@ -473,10 +758,10 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                   ) : (
                     <Sparkles className="mr-2 h-4 w-4" />
                   )}
-                  Generate ({quota.remaining}/{quota.total} credits left today)
+                  Generate ({quotaRemaining}/{quota.total} credits left today)
                 </Button>
                 {quotaExhausted && (
-                  <Button variant="outline" onClick={() => setShowUpgradeDialog(true)}>
+                  <Button variant="outline" onClick={() => openUpgrade("photo_step_quota")}>
                     Upgrade
                   </Button>
                 )}
@@ -501,24 +786,58 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                 )}
               </div>
               {resultUrl && (
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Button onClick={saveToBinder}>
-                    <Check className="mr-2 h-4 w-4" />
-                    Save to Binder
-                  </Button>
-                  <Button variant="outline" onClick={() => generate()}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Regenerate
-                  </Button>
-                  <Button variant="outline" onClick={() => generate("variation")}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Try variation
-                  </Button>
-                  <Button variant="outline" onClick={shareResult}>
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
-                  </Button>
-                </div>
+                <>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Button onClick={saveToBinder}>
+                      <Check className="mr-2 h-4 w-4" />
+                      Save to Binder
+                    </Button>
+                    <Button variant="outline" onClick={() => generate()}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Regenerate
+                    </Button>
+                    <Button variant="outline" onClick={() => generate("variation")}>
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Try variation
+                    </Button>
+                    <Button variant="outline" onClick={downloadResult} disabled={isDownloading}>
+                      {isDownloading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                      )}
+                      {isDownloading ? "Preparing..." : "Download"}
+                    </Button>
+                    <Button variant="outline" onClick={shareResult}>
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Share
+                    </Button>
+                  </div>
+                  {(quota.plan === "guest" || quota.plan === "free") && (
+                    <div className="mt-5 border border-idol-gold/30 bg-idol-gold/10 p-5">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Sparkles className="h-4 w-4 text-idol-gold" />
+                        Keep this result without the free limits
+                      </div>
+                      <p className="mt-2 max-w-2xl text-sm text-gray-700">
+                        Plus reduces the watermark and unlocks 30 daily generations. Pro adds
+                        watermark-free output, HD export, and print tools.
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <Button onClick={() => openUpgrade("result_watermark")}>
+                          Remove watermark
+                        </Button>
+                        <Button variant="outline" onClick={() => openUpgrade("result_hd_download")}>
+                          <Download className="mr-2 h-4 w-4" />
+                          HD download
+                        </Button>
+                        <Button variant="outline" onClick={() => openUpgrade("result_value")}>
+                          View plans
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
               {quotaExhausted && !isGenerating && (
                 <div className="mt-5 border border-black/10 p-5">
@@ -529,7 +848,7 @@ export function GenerationFlow({ format, memberId, conceptId }: GenerationFlowPr
                   <p className="mt-2 text-sm text-gray-600">
                     Plus unlocks 30 daily generations and smaller watermarks.
                   </p>
-                  <Button className="mt-4" onClick={() => setShowUpgradeDialog(true)}>
+                  <Button className="mt-4" onClick={() => openUpgrade("result_quota")}>
                     View plans
                   </Button>
                 </div>
@@ -582,10 +901,14 @@ function KpopComposingAnimation() {
       </div>
       <div className="mt-5 flex items-center justify-center gap-2 font-medium">
         <Sparkles className="h-4 w-4 animate-pulse text-idol-gold" />
-        <span>Composing... about 12s</span>
+        <span>Composing... usually under a minute</span>
       </div>
     </div>
   );
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function ConceptButton({
@@ -599,6 +922,7 @@ function ConceptButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`group overflow-hidden border text-left transition ${
         selected ? "border-idol-gold" : "border-black/10 hover:border-black/30"
@@ -606,7 +930,7 @@ function ConceptButton({
     >
       <ImageFrame
         src={concept.sampleOutputUrl}
-        alt=""
+        alt={`Sample output for ${concept.name}`}
         ratio={ratioFromFormat(concept.format)}
         interactive
         className="rounded-none border-0 shadow-none"

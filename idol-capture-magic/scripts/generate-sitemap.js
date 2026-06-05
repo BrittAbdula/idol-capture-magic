@@ -8,7 +8,6 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const seedDir = path.join(repoRoot, "server", "src", "db", "seed");
 const publicDir = path.resolve(__dirname, "../public");
 const siteUrl = "https://idolbooth.com";
-const today = new Date().toISOString().split("T")[0];
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(path.join(seedDir, file), "utf8"));
@@ -23,50 +22,43 @@ function escapeXml(value) {
     .replaceAll(">", "&gt;");
 }
 
-function url(pathname, priority, changefreq = "weekly") {
+function url(pathname) {
   return {
-    loc: `${siteUrl}${pathname}`,
-    priority,
-    changefreq
+    loc: `${siteUrl}${pathname}`
   };
 }
 
 const groups = readJson("groups.json");
 const memberGroups = readJson("members.json");
-const concepts = readJson("concepts.json");
 const campaigns = readJson("campaigns.json");
 
 const urls = [
-  url("/", "1.0"),
-  url("/selca", "0.9"),
-  url("/photocard", "0.9"),
-  url("/strip", "0.8"),
-  url("/calendar", "0.7"),
-  url("/pricing", "0.7"),
-  url("/templates", "0.5"),
-  url("/privacy", "0.4", "yearly"),
-  url("/terms", "0.4", "yearly"),
-  url("/legal/safety", "0.5", "monthly"),
-  url("/legal/takedown", "0.5", "monthly")
+  url("/"),
+  url("/photo-with-idol"),
+  url("/selca"),
+  url("/photocard"),
+  url("/strip"),
+  url("/calendar"),
+  url("/pricing"),
+  url("/templates"),
+  url("/privacy"),
+  url("/terms"),
+  url("/legal/safety"),
+  url("/legal/takedown")
 ];
 
 for (const group of groups) {
-  urls.push(url(`/g/${group.slug}`, "0.7"));
+  urls.push(url(`/g/${group.slug}`));
 }
 
 for (const entry of memberGroups) {
   for (const member of entry.members) {
-    urls.push(url(`/g/${entry.groupSlug}/${member.slug}`, "0.8"));
+    urls.push(url(`/g/${entry.groupSlug}/${member.slug}`));
   }
 }
 
-for (const concept of concepts) {
-  const formatPath = concept.format === "fancall" ? "photocard" : concept.format;
-  urls.push(url(`/${formatPath}?concept=${encodeURIComponent(concept.slug)}`, "0.6"));
-}
-
 for (const campaign of campaigns) {
-  urls.push(url(`/c/${campaign.slug}`, "0.7"));
+  urls.push(url(`/c/${campaign.slug}`));
 }
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -75,9 +67,6 @@ ${urls
   .map(
     (item) => `  <url>
     <loc>${escapeXml(item.loc)}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${item.changefreq}</changefreq>
-    <priority>${item.priority}</priority>
   </url>`
   )
   .join("\n")}

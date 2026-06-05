@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#2a1d2a;--shade:#090b12">
+  <title>Mina original silhouette</title>
+  <defs>
+    <linearGradient id="bg-twice-mina" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe8f1"/>
+      <stop offset="1" stop-color="#e9f7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-twice-mina)"/>
+  <ellipse cx="512" cy="462" rx="253" ry="287" fill="#ffffff" opacity=".2"/>
+  <circle cx="690" cy="510" r="8" fill="#f5a8c8" opacity=".14"/><circle cx="572" cy="626" r="5" fill="#f5a8c8" opacity=".14"/><circle cx="622" cy="344" r="4" fill="#f5a8c8" opacity=".14"/><circle cx="303" cy="327" r="8" fill="#f5a8c8" opacity=".14"/><circle cx="718" cy="536" r="6" fill="#f5a8c8" opacity=".14"/>
+  <g transform="rotate(1.8 512 512)">
+    <path d="M248 1024c25-171 86-284 182-337 31-18 67-27 108-27 96 0 169 46 219 138 35 65 58 141 69 226H248Z" fill="#2a1d2a"/>
+    <path d="M512 252c92 0 158 60 178 158 17 83-2 157-55 223-33 41-75 61-126 61-54 0-98-22-132-66-48-63-61-138-37-226 26-100 83-150 172-150Z" fill="#2a1d2a"/>
+    <path d="M363 407c14-103 73-163 177-178 85 11 139 68 162 172 10 74 2 145-24 214-53-2-99-21-139-57-43 38-92 58-148 59-33-66-42-136-28-210Z" fill="var(--hair)"/><path d="M385 439c45 23 96 20 153-9 45 35 93 51 143 48" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".28"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.20"/>
+    <path d="M692 620c36 20 61 52 74 96" fill="none" stroke="#f5a8c8" stroke-width="15" stroke-linecap="round" opacity=".72"/><circle cx="684" cy="612" r="15" fill="#f5a8c8" opacity=".82"/>
+  </g>
+</svg>

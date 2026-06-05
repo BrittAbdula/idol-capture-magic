@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1d2230;--shade:#090b12">
+  <title>Dino original silhouette</title>
+  <defs>
+    <linearGradient id="bg-seventeen-dino" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf2ff"/>
+      <stop offset="1" stop-color="#fff1f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-seventeen-dino)"/>
+  <ellipse cx="512" cy="462" rx="235" ry="267" fill="#ffffff" opacity=".2"/>
+  <circle cx="70" cy="-5" r="0" fill="#9db4f2" opacity=".14"/><circle cx="-26" cy="121" r="3" fill="#9db4f2" opacity=".14"/><circle cx="-103" cy="76" r="0" fill="#9db4f2" opacity=".14"/><circle cx="-113" cy="100" r="0" fill="#9db4f2" opacity=".14"/><circle cx="211" cy="128" r="1" fill="#9db4f2" opacity=".14"/>
+  <g transform="rotate(-3.6 512 512)">
+    <path d="M227 1024c13-166 57-283 132-351 34-31 77-45 130-42 87 5 154 49 200 132 35 64 58 151 70 261H227Z" fill="#1d2230"/>
+    <path d="M536 278c-75-3-132 40-155 112-20 65-10 130 30 195 31 50 75 79 130 86 59 7 106-12 140-57 25-33 34-74 27-123 31-8 51-23 58-45 7-23-5-42-35-57-14-67-80-108-195-111Z" fill="#1d2230"/>
+    <path d="M352 390c16-105 80-166 192-183 93 18 149 85 168 201 18 107 6 223-36 350H518c-61-71-107-164-139-278-13 96-2 188 33 278H312c-1-137 12-260 40-368Z" fill="var(--hair)"/><path d="M545 214c-14 120 16 223 90 310" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".3"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.19"/>
+    <circle cx="368" cy="548" r="28" fill="none" stroke="#9db4f2" stroke-width="9" opacity=".78"/>
+  </g>
+</svg>

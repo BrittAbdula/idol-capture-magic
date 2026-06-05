@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1d2230;--shade:#090b12">
+  <title>DK original silhouette</title>
+  <defs>
+    <linearGradient id="bg-seventeen-dk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf2ff"/>
+      <stop offset="1" stop-color="#fff1f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-seventeen-dk)"/>
+  <ellipse cx="512" cy="462" rx="243" ry="275" fill="#ffffff" opacity=".2"/>
+  <circle cx="63" cy="-117" r="4" fill="#9db4f2" opacity=".14"/><circle cx="38" cy="-96" r="4" fill="#9db4f2" opacity=".14"/><circle cx="100" cy="37" r="0" fill="#9db4f2" opacity=".14"/><circle cx="-152" cy="150" r="-3" fill="#9db4f2" opacity=".14"/><circle cx="11" cy="-105" r="0" fill="#9db4f2" opacity=".14"/>
+  <g transform="rotate(3.6 512 512)">
+    <path d="M257 1024c24-172 81-287 169-346 35-24 76-36 121-36 93 0 164 48 213 143 32 63 53 143 63 239H257Z" fill="#1d2230"/>
+    <path d="M521 260c88 0 151 57 169 151 15 77-2 148-51 212-33 43-78 64-136 64-57 0-103-22-137-66-46-60-58-133-36-220 24-94 88-141 191-141Z" fill="#1d2230"/>
+    <path d="M363 385c22-94 80-146 173-156 86 12 142 61 169 147-65 0-121-21-169-63-50 44-108 68-173 72Z" fill="var(--hair)"/><path d="M692 470c72 24 106 77 103 159-3 51-24 84-64 99 7-72-15-125-66-158Z" fill="var(--hair)"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.18"/>
+    <path d="M666 544c21 22 21 48 0 77" fill="none" stroke="#9db4f2" stroke-width="10" stroke-linecap="round" opacity=".85"/>
+  </g>
+</svg>

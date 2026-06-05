@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>V stylized silhouette</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3a7"/>
+      <stop offset="1" stop-color="#fffbe0"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efb6db"/>
+      <stop offset="1" stop-color="#d889c3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <ellipse cx="512" cy="480" rx="280" ry="302" fill="#ffffff" opacity=".18"/>
+  <path d="M282 1024c25-181 87-290 184-327h92c103 38 168 147 194 327H282Z" fill="url(#ink)"/>
+  <path d="M512 236c77 0 139 40 171 108 28 60 30 127 7 202-25 82-82 128-171 137-84 8-147-30-189-114-33-66-35-135-8-207 32-84 95-126 190-126Z" fill="url(#ink)"/>
+  <path d="M361 267c12-28 33-42 63-42 16-29 45-38 86-28 29-22 62-22 99 0 39-3 65 12 79 46 37 10 57 36 60 78 33 19 42 51 27 96 18 39 8 72-28 100 4 48-17 79-64 94-33 46-79 62-139 48-52 22-94 13-125-28-48 1-73-22-76-69-44-19-57-52-40-99-27-37-26-72 3-106-6-43 12-73 55-90Z" fill="#efb6db"/>
+  <path d="M419 354c19-61 53-93 102-98 55-5 97 21 126 79-54 0-99-14-135-42-26 31-57 51-93 61Z" fill="#e8a7d0"/>
+  <path d="M360 430c-30 57-23 122 22 195" fill="none" stroke="#f8d3e8" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+  <path d="M664 429c26 57 20 120-20 190" fill="none" stroke="#f8d3e8" stroke-width="10" stroke-linecap="round" opacity=".48"/>
+</svg>

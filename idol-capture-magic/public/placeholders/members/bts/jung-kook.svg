@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>Jung Kook stylized silhouette</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d7f4ce"/>
+      <stop offset="1" stop-color="#f2f9e8"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#202531"/>
+      <stop offset="1" stop-color="#121720"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <ellipse cx="490" cy="458" rx="250" ry="286" fill="#ffffff" opacity=".2"/>
+  <path d="M319 1024c21-183 70-301 147-356 37-26 82-39 134-37 86 3 150 44 193 123 36 66 58 156 68 270H319Z" fill="url(#ink)"/>
+  <path d="M487 222c83-6 146 31 188 111 31 60 39 124 23 193-15 65-50 112-104 139-56 28-111 27-165-3-45-25-73-66-85-121-31-3-51-17-61-40-10-25 0-46 31-62 4-118 62-210 173-217Z" fill="url(#ink)"/>
+  <path d="M319 428c-1-71 23-127 73-168 49-39 108-56 178-49 77 8 129 46 157 113 20 48 24 102 12 161-49-9-95-31-138-67-53 38-111 51-174 39-31-6-67-16-108-29Z" fill="#171b24"/>
+  <path d="M358 417c13-80 57-135 132-166 31-13 63-18 96-15-54 31-91 77-111 138-32 29-71 43-117 43Z" fill="#222936"/>
+  <path d="M673 548c24 5 39 19 44 42 4 23-5 43-27 59" fill="none" stroke="#c9b069" stroke-width="10" stroke-linecap="round" opacity=".78"/>
+  <path d="M396 275c44 73 109 117 194 132" fill="none" stroke="#303849" stroke-width="5" opacity=".45"/>
+  <path d="M345 508c-15 52-10 100 14 144" fill="none" stroke="#2a3140" stroke-width="10" stroke-linecap="round" opacity=".5"/>
+</svg>

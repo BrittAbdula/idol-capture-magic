@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import type { GenerationProvider, GenerationRequest, GenerationResult } from "./provider.js";
+import type {
+  AsyncGenerationProvider,
+  GenerationPollResult,
+  GenerationRequest,
+  GenerationResult,
+  GenerationStartResult
+} from "./provider.js";
 
 type KieAspectRatio = "1:1" | "2:3" | "3:2" | "auto";
 
@@ -37,14 +43,17 @@ export interface KieImageProviderOptions {
   timeoutMs?: number;
 }
 
-export class KieImageProvider implements GenerationProvider {
+const DEFAULT_POLL_INTERVAL_MS = 3_000;
+const DEFAULT_TIMEOUT_MS = 55_000;
+
+export class KieImageProvider implements AsyncGenerationProvider {
   name = "kie-gpt-image-2";
   private readonly pollIntervalMs: number;
   private readonly timeoutMs: number;
 
   constructor(private readonly options: KieImageProviderOptions) {
-    this.pollIntervalMs = options.pollIntervalMs ?? 3_000;
-    this.timeoutMs = options.timeoutMs ?? 15 * 60_000;
+    this.pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
+    this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
   estimateCost(_req: GenerationRequest): number {
@@ -52,6 +61,18 @@ export class KieImageProvider implements GenerationProvider {
   }
 
   async generate(req: GenerationRequest): Promise<GenerationResult> {
+    const task = await this.start(req);
+    const result = await this.pollUntilSucceeded(task.providerJobId);
+
+    return {
+      image: result.image,
+      contentType: result.contentType,
+      costUsd: result.costUsd,
+      providerJobId: task.providerJobId
+    };
+  }
+
+  async start(req: GenerationRequest): Promise<GenerationStartResult> {
     const inputImages = req.inputImages.length
       ? req.inputImages
       : [{ image: req.inputImage, mimeType: req.inputMimeType }];
@@ -74,14 +95,75 @@ export class KieImageProvider implements GenerationProvider {
       inputUrls,
       aspectRatio: sizeToAspectRatio(req.size)
     });
-    const resultUrl = await this.pollResultUrl(taskId);
 
     return {
-      image: await downloadBuffer(resultUrl),
-      contentType: "image/png",
-      costUsd: this.estimateCost(req),
-      providerJobId: taskId
+      providerJobId: taskId,
+      costUsd: this.estimateCost(req)
     };
+  }
+
+  async poll(providerJobId: string): Promise<GenerationPollResult> {
+    const response = await fetch(
+      `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(providerJobId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.options.apiKey}`
+        }
+      }
+    );
+    const json = (await response.json().catch(() => null)) as KieTaskResponse | null;
+    if (!response.ok || !json || json.code !== 200) {
+      throw new Error(`Kie task polling failed: ${json?.msg ?? response.statusText}`);
+    }
+
+    if (json.data?.state === "fail") {
+      return {
+        status: "failed",
+        errorMessage: `Kie task failed: ${json.data.failMsg ?? "unknown failure"}`
+      };
+    }
+
+    if (json.data?.state === "success") {
+      const resultUrl = parseKieResultUrl(json.data.resultJson);
+      if (!resultUrl) {
+        return {
+          status: "failed",
+          errorMessage: "Kie task result did not include a result URL"
+        };
+      }
+
+      return {
+        status: "succeeded",
+        image: await downloadBuffer(resultUrl),
+        contentType: "image/png",
+        costUsd: this.estimateCostForJob()
+      };
+    }
+
+    return { status: "running" };
+  }
+
+  private async pollUntilSucceeded(
+    providerJobId: string
+  ): Promise<Extract<GenerationPollResult, { status: "succeeded" }>> {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < this.timeoutMs) {
+      await delay(this.pollIntervalMs);
+      const result = await this.poll(providerJobId);
+      if (result.status === "failed") {
+        throw new Error(result.errorMessage);
+      }
+      if (result.status === "succeeded") {
+        return result;
+      }
+    }
+
+    throw new Error(`Kie task timed out: ${providerJobId}`);
+  }
+
+  private estimateCostForJob(): number {
+    return 0.04;
   }
 
   private async uploadImage(buffer: Buffer, contentType: string): Promise<string> {
@@ -144,39 +226,6 @@ export class KieImageProvider implements GenerationProvider {
     return taskId;
   }
 
-  private async pollResultUrl(taskId: string): Promise<string> {
-    const startedAt = Date.now();
-
-    while (Date.now() - startedAt < this.timeoutMs) {
-      await delay(this.pollIntervalMs);
-      const response = await fetch(
-        `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(taskId)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.options.apiKey}`
-          }
-        }
-      );
-      const json = (await response.json().catch(() => null)) as KieTaskResponse | null;
-      if (!response.ok || !json || json.code !== 200) {
-        throw new Error(`Kie task polling failed: ${json?.msg ?? response.statusText}`);
-      }
-
-      if (json.data?.state === "fail") {
-        throw new Error(`Kie task failed: ${json.data.failMsg ?? "unknown failure"}`);
-      }
-
-      if (json.data?.state === "success") {
-        const resultUrl = parseKieResultUrl(json.data.resultJson);
-        if (!resultUrl) {
-          throw new Error("Kie task result did not include a result URL");
-        }
-        return resultUrl;
-      }
-    }
-
-    throw new Error(`Kie task timed out: ${taskId}`);
-  }
 }
 
 export function parseKieResultUrl(resultJson: string | undefined): string | null {

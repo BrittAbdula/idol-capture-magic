@@ -7,6 +7,7 @@ import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 import { ImageFrame } from "@/components/media/ImageFrame";
+import { getMemberSilhouetteImage } from "@/data/memberSilhouettes";
 import { ratioFromFormat } from "@/lib/imageRatios";
 
 function parsePalette(value: string | undefined): string[] {
@@ -142,7 +143,14 @@ export default function CampaignPage() {
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">
           {group.data?.members.map((member) => (
             <Link key={member.id} to={`/g/${groupSlug}/${member.slug}`} className="border border-black/10 p-3">
-              <ImageFrame src={member.silhouetteImage} alt="" ratio="square" tone="cool" interactive imgClassName="p-2" />
+              <ImageFrame
+                src={getMemberSilhouetteImage(groupSlug, member.slug, member.silhouetteImage)}
+                alt=""
+                ratio="square"
+                tone="cool"
+                interactive
+                imgClassName="p-2"
+              />
               <p className="mt-3 font-semibold">{member.name}</p>
             </Link>
           ))}

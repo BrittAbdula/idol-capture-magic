@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>Minji editorial silhouette portrait</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dff4f0"/>
+      <stop offset=".55" stop-color="#f7efe2"/>
+      <stop offset="1" stop-color="#fff8dc"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1=".1" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3d7c5"/>
+      <stop offset="1" stop-color="#d9aa94"/>
+    </linearGradient>
+    <linearGradient id="hair" x1=".35" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#151b24"/>
+      <stop offset=".6" stop-color="#24222b"/>
+      <stop offset="1" stop-color="#10141b"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#24303a" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="444" r="268" fill="#fffaf0" opacity=".5"/>
+  <g filter="url(#soft)">
+    <path d="M281 1024c22-161 80-277 174-347 42-31 91-47 148-48 92-2 161 43 205 134 31 65 52 153 64 261H281Z" fill="#171b23"/>
+    <path d="M411 666c47 45 102 68 164 69 63 1 119-20 168-64-25 102-86 163-182 182-85-20-135-82-150-187Z" fill="#202530"/>
+    <path d="M380 316c34-83 99-126 195-130 89 8 148 55 176 142 24 75 19 152-16 231-31 70-83 109-156 116-75 7-132-24-171-92-39-68-48-157-28-267Z" fill="url(#skin)"/>
+    <path d="M339 412c9-126 69-205 181-236 100-14 175 27 224 122 26 51 37 109 32 173-95-12-169-43-222-94-63 58-135 90-215 95v-60Z" fill="url(#hair)"/>
+    <path d="M360 468c-24 89-16 182 25 281 33 79 81 132 145 159H333c-16-171-7-318 27-440Z" fill="url(#hair)"/>
+    <path d="M708 444c28 115 18 269-31 464h-98c82-96 121-228 116-398l13-66Z" fill="#171923"/>
+    <path d="M522 196c-11 109 22 201 99 276" fill="none" stroke="#343541" stroke-width="5" stroke-linecap="round" opacity=".38"/>
+    <path d="M412 390c52-12 99-41 142-87 43 46 96 77 158 93" fill="none" stroke="#3a3b46" stroke-width="4" opacity=".3"/>
+    <path d="M674 516c22 7 36 20 43 39 8 22 0 40-23 55" fill="none" stroke="#d3a48d" stroke-width="12" stroke-linecap="round" opacity=".72"/>
+    <path d="M552 488c-9 36-5 66 12 90" fill="none" stroke="#c99380" stroke-width="8" stroke-linecap="round" opacity=".5"/>
+  </g>
+</svg>

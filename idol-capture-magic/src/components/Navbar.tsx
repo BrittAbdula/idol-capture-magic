@@ -29,39 +29,6 @@ const Navbar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // Schema.org structured data for better SEO
-  useEffect(() => {
-    const schemaData = {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: "IdolBooth.com",
-      url: "https://idolbooth.com",
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://idolbooth.com/template?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      },
-      description:
-        "Free online photo booth to take virtual photos with your favorite idols, anime characters, and celebrities."
-    };
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.text = JSON.stringify(schemaData);
-
-    // Check if the script already exists
-    const existingScript = document.querySelector('script[type="application/ld+json"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
-
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, []);
-
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -69,7 +36,7 @@ const Navbar = () => {
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group" aria-label="IdolBooth Home">
+        <Link to="/" className="group flex min-h-11 items-center gap-2" aria-label="IdolBooth Home">
           <div className="relative w-10 h-10 flex items-center justify-center">
             <div className="absolute inset-0 border-2 border-idol-gold opacity-80 group-hover:opacity-100 transition-opacity"></div>
             {/* <Camera className="w-6 h-6 text-idol-gold group-hover:scale-110 transition-transform" /> */}
@@ -81,95 +48,106 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-3">
           <Link
             to="/"
-            className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/" ? "text-idol-gold" : ""}`}
+            className={`inline-flex min-h-11 items-center px-2 font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/" ? "text-idol-gold" : ""}`}
           >
             Home
           </Link>
           <Link
             to="/selca"
-            className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/selca" ? "text-idol-gold" : ""}`}
+            className={`inline-flex min-h-11 items-center px-2 font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/selca" ? "text-idol-gold" : ""}`}
           >
             Selca
           </Link>
           <Link
             to="/photocard"
-            className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/photocard" ? "text-idol-gold" : ""}`}
+            className={`inline-flex min-h-11 items-center px-2 font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/photocard" ? "text-idol-gold" : ""}`}
           >
             Photocard
           </Link>
           <Link
             to="/templates"
-            className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes("/template") && !location.pathname.includes("/template-creator") ? "text-idol-gold" : ""}`}
+            className={`inline-flex min-h-11 items-center px-2 font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname.includes("/template") && !location.pathname.includes("/template-creator") ? "text-idol-gold" : ""}`}
           >
             Templates
           </Link>
           <Link
             to="/strip"
-            className={`font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/strip" ? "text-idol-gold" : ""}`}
+            className={`inline-flex min-h-11 items-center px-2 font-montserrat text-sm transition-colors hover:text-idol-gold ${location.pathname === "/strip" ? "text-idol-gold" : ""}`}
           >
             Strip
           </Link>
           <AuthStatus />
         </nav>
 
-        <button className="md:hidden" onClick={toggleMobileMenu} aria-label="Toggle Menu">
+        <button
+          className="inline-flex h-11 w-11 items-center justify-center md:hidden"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle Menu"
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-navigation"
+        >
           <Menu className="h-6 w-6" />
         </button>
 
         {/* Mobile Menu */}
-        <div
-          className={`fixed inset-0 bg-black/90 backdrop-blur-md z-50 transition-opacity duration-300 md:hidden ${
-            isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <div className="flex justify-end p-4">
-            <button onClick={toggleMobileMenu} aria-label="Close Menu">
-              <X className="h-6 w-6 text-white" />
-            </button>
+        {isMobileMenuOpen && (
+          <div
+            id="mobile-navigation"
+            className="fixed inset-0 z-50 bg-black/90 opacity-100 backdrop-blur-md transition-opacity duration-300 md:hidden"
+          >
+            <div className="flex justify-end p-4">
+              <button
+                className="inline-flex h-11 w-11 items-center justify-center"
+                onClick={toggleMobileMenu}
+                aria-label="Close Menu"
+              >
+                <X className="h-6 w-6 text-white" />
+              </button>
+            </div>
+            <nav className="flex h-[80vh] flex-col items-center justify-center gap-3">
+              <Link
+                to="/"
+                className={`inline-flex min-h-12 items-center px-4 font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/" ? "text-idol-gold" : "text-white"}`}
+              >
+                Home
+              </Link>
+              <Link
+                to="/selca"
+                className={`inline-flex min-h-12 items-center px-4 font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/selca" ? "text-idol-gold" : "text-white"}`}
+              >
+                Selca
+              </Link>
+              <Link
+                to="/photocard"
+                className={`inline-flex min-h-12 items-center px-4 font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/photocard" ? "text-idol-gold" : "text-white"}`}
+              >
+                Photocard
+              </Link>
+              <Link
+                to="/templates"
+                className={`inline-flex min-h-12 items-center px-4 font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes("/template") && !location.pathname.includes("/template-creator") ? "text-idol-gold" : "text-white"}`}
+              >
+                Templates
+              </Link>
+              <Link
+                to="/pricing"
+                className={`inline-flex min-h-12 items-center px-4 font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/pricing" ? "text-idol-gold" : "text-white"}`}
+              >
+                Pricing
+              </Link>
+              <Link
+                to="/strip"
+                className={`inline-flex min-h-12 items-center px-4 font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/strip" ? "text-idol-gold" : "text-white"}`}
+              >
+                Strip
+              </Link>
+              <AuthStatus />
+            </nav>
           </div>
-          <nav className="flex flex-col items-center justify-center h-[80vh] gap-8">
-            <Link
-              to="/"
-              className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/" ? "text-idol-gold" : "text-white"}`}
-            >
-              Home
-            </Link>
-            <Link
-              to="/selca"
-              className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/selca" ? "text-idol-gold" : "text-white"}`}
-            >
-              Selca
-            </Link>
-            <Link
-              to="/photocard"
-              className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/photocard" ? "text-idol-gold" : "text-white"}`}
-            >
-              Photocard
-            </Link>
-            <Link
-              to="/templates"
-              className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname.includes("/template") && !location.pathname.includes("/template-creator") ? "text-idol-gold" : "text-white"}`}
-            >
-              Templates
-            </Link>
-            <Link
-              to="/pricing"
-              className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/pricing" ? "text-idol-gold" : "text-white"}`}
-            >
-              Pricing
-            </Link>
-            <Link
-              to="/strip"
-              className={`font-montserrat text-2xl transition-colors hover:text-idol-gold ${location.pathname === "/strip" ? "text-idol-gold" : "text-white"}`}
-            >
-              Strip
-            </Link>
-            <AuthStatus />
-          </nav>
-        </div>
+        )}
       </div>
     </header>
   );

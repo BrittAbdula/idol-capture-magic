@@ -10,8 +10,27 @@ const WorkerEnvSchema = z.object({
   KIE_API_KEY: z.string().min(1),
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
-  STRIPE_PLUS_PRICE_ID: z.string().min(1),
-  STRIPE_PRO_PRICE_ID: z.string().min(1)
+  STRIPE_PLUS_PRICE_ID: z.string().min(1).optional(),
+  STRIPE_PRO_PRICE_ID: z.string().min(1).optional(),
+  STRIPE_PLUS_MONTHLY_PRICE_ID: z.string().min(1).optional(),
+  STRIPE_PLUS_ANNUAL_PRICE_ID: z.string().min(1).optional(),
+  STRIPE_PRO_MONTHLY_PRICE_ID: z.string().min(1).optional(),
+  STRIPE_PRO_ANNUAL_PRICE_ID: z.string().min(1).optional()
+}).superRefine((value, ctx) => {
+  if (!value.STRIPE_PLUS_MONTHLY_PRICE_ID && !value.STRIPE_PLUS_PRICE_ID) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["STRIPE_PLUS_MONTHLY_PRICE_ID"],
+      message: "STRIPE_PLUS_MONTHLY_PRICE_ID is required when STRIPE_PLUS_PRICE_ID is unset"
+    });
+  }
+  if (!value.STRIPE_PRO_MONTHLY_PRICE_ID && !value.STRIPE_PRO_PRICE_ID) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["STRIPE_PRO_MONTHLY_PRICE_ID"],
+      message: "STRIPE_PRO_MONTHLY_PRICE_ID is required when STRIPE_PRO_PRICE_ID is unset"
+    });
+  }
 });
 
 export type WorkerEnvConfig = z.infer<typeof WorkerEnvSchema>;

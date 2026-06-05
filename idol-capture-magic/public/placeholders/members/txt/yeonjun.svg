@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#18221d;--shade:#090b12">
+  <title>Yeonjun original silhouette</title>
+  <defs>
+    <linearGradient id="bg-txt-yeonjun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6f8e8"/>
+      <stop offset="1" stop-color="#eef1ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-txt-yeonjun)"/>
+  <ellipse cx="512" cy="462" rx="227" ry="258" fill="#ffffff" opacity=".2"/>
+  <circle cx="-189" cy="-120" r="3" fill="#97d6a7" opacity=".14"/><circle cx="7" cy="-70" r="-4" fill="#97d6a7" opacity=".14"/><circle cx="226" cy="-93" r="-1" fill="#97d6a7" opacity=".14"/><circle cx="189" cy="-16" r="-1" fill="#97d6a7" opacity=".14"/><circle cx="-11" cy="-63" r="4" fill="#97d6a7" opacity=".14"/>
+  <g transform="rotate(-1.8 512 512)">
+    <path d="M203 1024c13-166 57-283 132-351 34-31 77-45 130-42 87 5 154 49 200 132 35 64 58 151 70 261H203Z" fill="#18221d"/>
+    <path d="M536 278c-75-3-132 40-155 112-20 65-10 130 30 195 31 50 75 79 130 86 59 7 106-12 140-57 25-33 34-74 27-123 31-8 51-23 58-45 7-23-5-42-35-57-14-67-80-108-195-111Z" fill="#18221d"/>
+    <circle cx="648.0" cy="390.0" r="42" fill="var(--hair)"/><circle cx="639.8" cy="430.4" r="53" fill="var(--hair)"/><circle cx="616.2" cy="465.8" r="46" fill="var(--hair)"/><circle cx="580.0" cy="492.2" r="57" fill="var(--hair)"/><circle cx="535.6" cy="506.2" r="50" fill="var(--hair)"/><circle cx="488.4" cy="506.2" r="43" fill="var(--hair)"/><circle cx="444.0" cy="492.2" r="54" fill="var(--hair)"/><circle cx="407.8" cy="465.8" r="47" fill="var(--hair)"/><circle cx="384.2" cy="430.4" r="58" fill="var(--hair)"/><circle cx="376.0" cy="390.0" r="51" fill="var(--hair)"/><circle cx="384.2" cy="349.6" r="44" fill="var(--hair)"/><circle cx="407.8" cy="314.2" r="55" fill="var(--hair)"/><circle cx="444.0" cy="287.8" r="48" fill="var(--hair)"/><circle cx="488.4" cy="273.8" r="59" fill="var(--hair)"/><circle cx="535.6" cy="273.8" r="52" fill="var(--hair)"/><circle cx="580.0" cy="287.8" r="45" fill="var(--hair)"/><circle cx="616.2" cy="314.2" r="56" fill="var(--hair)"/><circle cx="639.8" cy="349.6" r="49" fill="var(--hair)"/><path d="M385 398c17-97 73-150 168-159 89 19 139 76 150 172-43-3-88-22-135-57-47 43-108 58-183 44Z" fill="var(--hair)"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.13"/>
+    <path d="M409 698c75 41 151 41 228 0" fill="none" stroke="#97d6a7" stroke-width="16" stroke-linecap="round" opacity=".55"/>
+  </g>
+</svg>

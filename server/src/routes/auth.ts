@@ -8,7 +8,7 @@ import type { Auth } from "../auth/lucia.js";
 import type { DatabaseClient } from "../db/client.js";
 import { users, type User } from "../db/schema.js";
 import { jsonError } from "../lib/http.js";
-import { getNextQuotaResetAt } from "../services/quota.js";
+import { getNextQuotaResetAt, getUserQuota } from "../services/quota.js";
 
 const GOOGLE_STATE_COOKIE = "idolbooth_google_oauth_state";
 const GOOGLE_VERIFIER_COOKIE = "idolbooth_google_oauth_verifier";
@@ -142,25 +142,27 @@ export function createAuthRoutes(deps: AuthRouteDeps): Hono {
 
   app.get("/me", async (c) => {
     if (!deps.auth) {
-      return c.json({ user: null });
+      return c.json({ user: null, quota: null });
     }
 
     const sessionId = deps.auth.readSessionCookie(c.req.header("Cookie") ?? "");
     if (!sessionId) {
-      return c.json({ user: null });
+      return c.json({ user: null, quota: null });
     }
 
     const { user, session } = await deps.auth.validateSession(sessionId);
     if (!session || !user) {
       setSerializedCookie(c, deps.auth.createBlankSessionCookie());
-      return c.json({ user: null });
+      return c.json({ user: null, quota: null });
     }
 
     if (session.fresh) {
       setSerializedCookie(c, deps.auth.createSessionCookie(session.id));
     }
 
-    return c.json({ user });
+    const quota = deps.client ? await getUserQuota(deps.client, user.id) : null;
+
+    return c.json({ user, quota });
   });
 
   return app;

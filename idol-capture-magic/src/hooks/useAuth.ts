@@ -11,6 +11,7 @@ export function useAuth() {
 
   return {
     user: query.data?.user ?? null,
+    quota: query.data?.quota ?? null,
     isAuthenticated: Boolean(query.data?.user),
     isLoading: query.isLoading,
     isFetching: query.isFetching,

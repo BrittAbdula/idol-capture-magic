@@ -1,1 +1,6 @@
-   /*    /index.html   200
+/photo-booth              /strip                 301
+/template                 /templates             301
+/template/:category       /templates/:category   301
+/template/:category/:idol /templates/:category/:idol 301
+
+/*                       /index.html            200

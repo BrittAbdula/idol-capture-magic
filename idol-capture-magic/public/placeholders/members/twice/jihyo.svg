@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#2a1d2a;--shade:#090b12">
+  <title>Jihyo original silhouette</title>
+  <defs>
+    <linearGradient id="bg-twice-jihyo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe8f1"/>
+      <stop offset="1" stop-color="#e9f7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-twice-jihyo)"/>
+  <ellipse cx="512" cy="462" rx="217" ry="247" fill="#ffffff" opacity=".2"/>
+  <circle cx="-88" cy="-25" r="0" fill="#f5a8c8" opacity=".14"/><circle cx="84" cy="-90" r="1" fill="#f5a8c8" opacity=".14"/><circle cx="-154" cy="63" r="-4" fill="#f5a8c8" opacity=".14"/><circle cx="141" cy="-137" r="4" fill="#f5a8c8" opacity=".14"/><circle cx="-17" cy="192" r="-4" fill="#f5a8c8" opacity=".14"/>
+  <g transform="rotate(5.4 512 512)">
+    <path d="M197 1024c13-166 57-283 132-351 34-31 77-45 130-42 87 5 154 49 200 132 35 64 58 151 70 261H197Z" fill="#2a1d2a"/>
+    <path d="M536 278c-75-3-132 40-155 112-20 65-10 130 30 195 31 50 75 79 130 86 59 7 106-12 140-57 25-33 34-74 27-123 31-8 51-23 58-45 7-23-5-42-35-57-14-67-80-108-195-111Z" fill="#2a1d2a"/>
+    <path d="M352 390c16-105 80-166 192-183 93 18 149 85 168 201 18 107 6 223-36 350H518c-61-71-107-164-139-278-13 96-2 188 33 278H312c-1-137 12-260 40-368Z" fill="var(--hair)"/><path d="M545 214c-14 120 16 223 90 310" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".3"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.14"/>
+    <path d="M409 698c75 41 151 41 228 0" fill="none" stroke="#f5a8c8" stroke-width="16" stroke-linecap="round" opacity=".55"/>
+  </g>
+</svg>

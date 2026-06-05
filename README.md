@@ -52,8 +52,10 @@ npx wrangler secret put GOOGLE_CLIENT_SECRET
 npx wrangler secret put KIE_API_KEY
 npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_WEBHOOK_SECRET
-npx wrangler secret put STRIPE_PLUS_PRICE_ID
-npx wrangler secret put STRIPE_PRO_PRICE_ID
+npx wrangler secret put STRIPE_PLUS_MONTHLY_PRICE_ID
+npx wrangler secret put STRIPE_PLUS_ANNUAL_PRICE_ID
+npx wrangler secret put STRIPE_PRO_MONTHLY_PRICE_ID
+npx wrangler secret put STRIPE_PRO_ANNUAL_PRICE_ID
 ```
 
 ## Run

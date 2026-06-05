@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 
 import { Miniflare } from "miniflare";
 
@@ -28,15 +28,18 @@ export async function createTestD1DatabaseClient(): Promise<TestDatabaseClient> 
 }
 
 async function applyMigrations(client: DatabaseClient): Promise<void> {
-  const migration = await readFile(
-    new URL("./migrations/0000_dizzy_karnak.sql", import.meta.url),
-    "utf8"
-  );
+  const migrationsUrl = new URL("./migrations/", import.meta.url);
+  const migrationFiles = (await readdir(migrationsUrl))
+    .filter((file) => file.endsWith(".sql"))
+    .sort();
 
-  for (const statement of migration.split("--> statement-breakpoint")) {
-    const sql = statement.trim();
-    if (sql) {
-      await client.d1.execute(sql, []);
+  for (const file of migrationFiles) {
+    const migration = await readFile(new URL(file, migrationsUrl), "utf8");
+    for (const statement of migration.split("--> statement-breakpoint")) {
+      const sql = statement.trim();
+      if (sql) {
+        await client.d1.execute(sql, []);
+      }
     }
   }
 }

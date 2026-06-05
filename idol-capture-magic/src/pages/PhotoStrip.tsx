@@ -1,8 +1,18 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Download, Upload, Undo2, Type, Image as ImageIcon, Printer, Share2, Settings, Star } from 'lucide-react';
-import { toast } from 'sonner';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { useRef, useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Download,
+  Upload,
+  Undo2,
+  Type,
+  Image as ImageIcon,
+  Printer,
+  Share2,
+  Settings,
+  Star
+} from "lucide-react";
+import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,34 +23,44 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
+  SheetTrigger
 } from "@/components/ui/sheet";
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import MultiPhotoUpload from '../components/MultiPhotoUpload';
-import { usePhotoStrip } from '../contexts/PhotoStripContext';
-import PhotoStrip from '../components/PhotoStrip';
-import { processPhotoStripData } from '@/lib/imageProcessing';
-import SEO from '../components/SEO';
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import MultiPhotoUpload from "../components/MultiPhotoUpload";
+import { usePhotoStrip } from "../contexts/PhotoStripContext";
+import PhotoStrip from "../components/PhotoStrip";
+import { processPhotoStripData } from "@/lib/imageProcessing";
+import SEO from "../components/SEO";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogClose,
+  DialogClose
 } from "@/components/ui/dialog";
-import { X, Copy, Mail, Twitter, Eye } from 'lucide-react';
+import { X, Copy, Mail, Twitter, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const PhotoStripPage: React.FC = () => {
-  const { photoStripData, setPhotoStripData, updatePhotos, updateBackground, updateText, updateDecoration, updatePhotoOverlays, currentTemplate, setCurrentTemplate } = usePhotoStrip();
+  const {
+    photoStripData,
+    setPhotoStripData,
+    updatePhotos,
+    updateBackground,
+    updateText,
+    updateDecoration,
+    updatePhotoOverlays,
+    currentTemplate,
+    setCurrentTemplate
+  } = usePhotoStrip();
   const navigate = useNavigate();
   const stripCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedColor, setSelectedColor] = useState<string>('#F7DC6F');
+  const [selectedColor, setSelectedColor] = useState<string>("#F7DC6F");
   const [customText, setCustomText] = useState<string>("My photo booth memories");
   const [showDate, setShowDate] = useState<boolean>(true);
-  const [customColorInput, setCustomColorInput] = useState<string>('#F7DC6F');
+  const [customColorInput, setCustomColorInput] = useState<string>("#F7DC6F");
   const [isGeneratingDownload, setIsGeneratingDownload] = useState<boolean>(false);
   const [isPrinting, setIsPrinting] = useState<boolean>(false);
   const [isSharing, setIsSharing] = useState<boolean>(false);
@@ -48,19 +68,20 @@ const PhotoStripPage: React.FC = () => {
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
   const [showBorder, setShowBorder] = useState<boolean>(true);
   const [showShareDialog, setShowShareDialog] = useState<boolean>(false);
-  const [shareUrl, setShareUrl] = useState<string>('');
+  const [shareUrl, setShareUrl] = useState<string>("");
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [customIdol, setCustomIdol] = useState<string>("");
   const [isGeneratingIdol, setIsGeneratingIdol] = useState<boolean>(false);
 
   // New state for adaptive layout
-  const [selectedMargin, setSelectedMargin] = useState<string>('20');
-  const [selectedCols, setSelectedCols] = useState<string>('1');
+  const [selectedMargin, setSelectedMargin] = useState<string>("20");
+  const [selectedCols, setSelectedCols] = useState<string>("1");
 
   console.log("------PhotoStripPage - photoStripData:", photoStripData);
 
   const processedData = useMemo(() => {
-    if (!photoStripData) return { hasValidPhotos: false, processedPhotos: [], processedOverlays: undefined };
+    if (!photoStripData)
+      return { hasValidPhotos: false, processedPhotos: [], processedOverlays: undefined };
 
     const data = processPhotoStripData(photoStripData);
     return {
@@ -75,7 +96,12 @@ const PhotoStripPage: React.FC = () => {
       console.log("PhotoStripPage - Initial data loading");
       const processed = processPhotoStripData(photoStripData);
 
-      const updates: { showUpload?: boolean; selectedColor?: string; customColorInput?: string; customText?: string; } = {};
+      const updates: {
+        showUpload?: boolean;
+        selectedColor?: string;
+        customColorInput?: string;
+        customText?: string;
+      } = {};
 
       if (processed.hasValidPhotos && processed.processedPhotos.length > 0) {
         updates.showUpload = false;
@@ -160,7 +186,7 @@ const PhotoStripPage: React.FC = () => {
   };
 
   const isDarkColor = (hexColor: string): boolean => {
-    const hex = hexColor.replace('#', '');
+    const hex = hexColor.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
@@ -172,9 +198,9 @@ const PhotoStripPage: React.FC = () => {
     if (customText && photoStripData && photoStripData.text?.content !== customText) {
       updateText({
         content: customText,
-        font: photoStripData.text?.font || 'Arial',
+        font: photoStripData.text?.font || "Arial",
         size: photoStripData.text?.size || 24,
-        color: photoStripData.text?.color || '#FF4081',
+        color: photoStripData.text?.color || "#FF4081",
         position: {
           x: photoStripData.canvasSize ? photoStripData.canvasSize.width / 2 : 600,
           y: photoStripData.canvasSize ? photoStripData.canvasSize.height - 100 : 1500
@@ -185,7 +211,7 @@ const PhotoStripPage: React.FC = () => {
     if (photoStripData && photoStripData.background.color !== selectedColor) {
       updateBackground({
         ...photoStripData.background,
-        type: 'color' as const,
+        type: "color" as const,
         color: selectedColor
       });
     }
@@ -200,7 +226,7 @@ const PhotoStripPage: React.FC = () => {
     setIsGeneratingDownload(true);
 
     // Find the image element rendered by the PhotoStrip component
-    const imgElement = document.querySelector('.photo-strip-preview img');
+    const imgElement = document.querySelector(".photo-strip-preview img");
 
     if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
       console.error("Download error: Could not find photo strip image element");
@@ -211,7 +237,7 @@ const PhotoStripPage: React.FC = () => {
 
     const dataUrl = imgElement.src;
 
-    if (!dataUrl || dataUrl === '') {
+    if (!dataUrl || dataUrl === "") {
       console.error("Download error: Image element has no source");
       toast.error("Failed to download photo strip: invalid image data");
       setIsGeneratingDownload(false);
@@ -219,7 +245,7 @@ const PhotoStripPage: React.FC = () => {
     }
 
     try {
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.download = `idolbooth_photostrip_${Date.now()}.jpg`;
       link.href = dataUrl;
       document.body.appendChild(link);
@@ -245,13 +271,13 @@ const PhotoStripPage: React.FC = () => {
 
     setTimeout(() => {
       try {
-        const imgElement = document.querySelector('.photo-strip-preview img');
+        const imgElement = document.querySelector(".photo-strip-preview img");
         if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
           throw new Error("Could not find photo strip image element");
         }
         const dataUrl = imgElement.src;
 
-        const printWindow = window.open('', '_blank');
+        const printWindow = window.open("", "_blank");
         if (!printWindow) {
           toast.error("Pop-up blocked. Please allow pop-ups to print.");
           setIsPrinting(false);
@@ -317,7 +343,7 @@ const PhotoStripPage: React.FC = () => {
 
     try {
       // Get the image element from the photo strip preview
-      const imgElement = document.querySelector('.photo-strip-preview img');
+      const imgElement = document.querySelector(".photo-strip-preview img");
       if (!imgElement || !(imgElement instanceof HTMLImageElement)) {
         throw new Error("Could not find photo strip image element");
       }
@@ -328,17 +354,19 @@ const PhotoStripPage: React.FC = () => {
 
       // Create form data
       const formData = new FormData();
-      formData.append('image', blob, 'photostrip.png');
+      formData.append("image", blob, "photostrip.png");
 
       // Upload to server
-      const uploadResponse = await fetch('https://api.idolbooth.com/api/photos/upload', {
-        method: 'POST',
+      const uploadResponse = await fetch("https://api.idolbooth.com/api/photos/upload", {
+        method: "POST",
         body: formData
       });
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
-        throw new Error(`Failed to upload image: ${errorData.message || uploadResponse.statusText}`);
+        throw new Error(
+          `Failed to upload image: ${errorData.message || uploadResponse.statusText}`
+        );
       }
 
       const data = await uploadResponse.json();
@@ -356,7 +384,6 @@ const PhotoStripPage: React.FC = () => {
       setShowShareDialog(true);
 
       toast.success("Photo strip ready to share!");
-
     } catch (error) {
       console.error("Share error:", error);
       if (error instanceof Error) {
@@ -383,11 +410,34 @@ const PhotoStripPage: React.FC = () => {
   };
 
   const colors = [
-    '#F7DC6F', '#FFFFFF', '#000000', '#FFD1DC', '#F5A9B8', '#B19CD9', '#AEC6CF',
-    '#FF69B4', '#00008B', '#BDFFA3', '#FFDAB9', '#3A1E1E',
-    '#C0C0C0', '#F2D7D5', '#A9CCE3', '#D5F5E3',
-    '#4182E4', '#58D3F7', '#F9E79F', '#ABEBC6', '#F7B6D2', '#D3D3D3',
-    '#F97316', '#0EA5E9', '#8B5CF6', '#D946EF', '#22C55E', '#EAB308'
+    "#F7DC6F",
+    "#FFFFFF",
+    "#000000",
+    "#FFD1DC",
+    "#F5A9B8",
+    "#B19CD9",
+    "#AEC6CF",
+    "#FF69B4",
+    "#00008B",
+    "#BDFFA3",
+    "#FFDAB9",
+    "#3A1E1E",
+    "#C0C0C0",
+    "#F2D7D5",
+    "#A9CCE3",
+    "#D5F5E3",
+    "#4182E4",
+    "#58D3F7",
+    "#F9E79F",
+    "#ABEBC6",
+    "#F7B6D2",
+    "#D3D3D3",
+    "#F97316",
+    "#0EA5E9",
+    "#8B5CF6",
+    "#D946EF",
+    "#22C55E",
+    "#EAB308"
   ];
 
   const handleGenerateIdol = async () => {
@@ -401,29 +451,32 @@ const PhotoStripPage: React.FC = () => {
 
       // 将画布转换为 Blob
       const blob = await new Promise<Blob | null>((resolve) => {
-        stripCanvas.toBlob(resolve, 'image/png');
+        stripCanvas.toBlob(resolve, "image/png");
       });
-      
+
       if (!blob) {
         throw new Error("Failed to convert canvas to blob");
       }
 
       const formData = new FormData();
-      formData.append('image', blob, 'photostrip.png');
-      formData.append('idolPrompt', customIdol);
+      formData.append("image", blob, "photostrip.png");
+      formData.append("idolPrompt", customIdol);
 
       // 生成偶像照片条
-      const idolResponse = await fetch('https://api.idolbooth.com/api/ai/generate-photo-with-idol', {
-        method: 'POST',
-        body: formData
-      }); 
+      const idolResponse = await fetch(
+        "https://api.idolbooth.com/api/ai/generate-photo-with-idol",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
 
       if (!idolResponse.ok) {
         throw new Error("Failed to generate idol photo");
       }
 
       const { data } = await idolResponse.json();
-      updatePhotos([data.image_url]); 
+      updatePhotos([data.image_url]);
       toast.success("Idol photo strip generated successfully!");
     } catch (error) {
       console.error("Generate idol error:", error);
@@ -434,21 +487,30 @@ const PhotoStripPage: React.FC = () => {
   };
 
   console.log("PhotoStripPage render - showUpload:", showUpload);
-  console.log("PhotoStripPage render - photoStripData:", processedData.processedPhotos.length, "photos");
+  console.log(
+    "PhotoStripPage render - photoStripData:",
+    processedData.processedPhotos.length,
+    "photos"
+  );
 
   return (
     <div className="min-h-screen">
       <SEO
-        title="Create Stunning Photo Strips with Idols | IdolBooth.com"
-        description="Make beautiful photo strips with your idol photos. Download, share, and print your memories with our free online photo strip creator."
+        title="Free K-pop Photo Strip Maker Online | IdolBooth"
+        description="Upload selfies and make a free K-pop style photo strip online. Customize the frame, caption, layout, and download your idol photobooth strip."
+        image="/samples/retro-photobooth-strip.png"
       />
       <Navbar />
 
       <main className="pt-28 px-4">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center font-montserrat">
-            IdolBooth Photo Strip
+            Free K-pop Photo Strip Maker Online
           </h1>
+          <p className="mx-auto -mt-4 mb-8 max-w-2xl text-center text-sm text-gray-600 md:text-base">
+            Upload selfies, customize the frame and caption, then download a free idol
+            photobooth-style strip in your browser. No app download.
+          </p>
 
           {processedData.hasValidPhotos && processedData.processedPhotos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -457,8 +519,8 @@ const PhotoStripPage: React.FC = () => {
                   <PhotoStrip
                     ref={stripCanvasRef}
                     images={processedData.processedPhotos}
-                    filter={photoStripData?.photoBoothSettings?.filter || 'Normal'}
-                    backgroundColor={photoStripData?.background?.color || '#F7DC6F'}
+                    filter={photoStripData?.photoBoothSettings?.filter || "Normal"}
+                    backgroundColor={photoStripData?.background?.color || "#F7DC6F"}
                     text={photoStripData?.text}
                     decoration={photoStripData?.decoration}
                     showDate={showDate}
@@ -473,7 +535,10 @@ const PhotoStripPage: React.FC = () => {
                 <div className="mt-4 block md:hidden">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <Button variant="outline" className="idol-button-outline flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="idol-button-outline flex items-center justify-center gap-2"
+                      >
                         <Settings className="w-5 h-5" />
                         <span>Settings</span>
                       </Button>
@@ -481,9 +546,7 @@ const PhotoStripPage: React.FC = () => {
                     <SheetContent side="bottom" className="h-[50vh] overflow-auto">
                       <SheetHeader className="mb-4">
                         <SheetTitle>Photo Strip Settings</SheetTitle>
-                        <SheetDescription>
-                          Customize your photo strip appearance
-                        </SheetDescription>
+                        <SheetDescription>Customize your photo strip appearance</SheetDescription>
                       </SheetHeader>
                       <ScrollArea className="h-full pr-4">
                         {/* 添加生成偶像面板 */}
@@ -512,27 +575,27 @@ const PhotoStripPage: React.FC = () => {
                                       "JENNIE",
                                       "Lisa",
                                       "Rosé",
-                                      "Jisoo",
-                                    ].map(idol => (
+                                      "Jisoo"
+                                    ].map((idol) => (
                                       <button
                                         key={idol}
                                         onClick={() => setCustomIdol(idol)}
-                                        className={`text-xs px-2 py-1 rounded-full ${customIdol === idol ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'}`}
+                                        className={`text-xs px-2 py-1 rounded-full ${customIdol === idol ? "bg-idol-gold text-black" : "bg-gray-100 hover:bg-gray-200"}`}
                                       >
                                         {idol}
                                       </button>
                                     ))}
                                   </div>
                                   <div className="mt-2">
-                                    <button 
+                                    <button
                                       onClick={handleGenerateIdol}
                                       disabled={isGeneratingIdol}
                                       className={`text-xs px-2 py-1 rounded-full flex items-center justify-center w-full ${
-                                        isGeneratingIdol 
-                                          ? 'bg-gray-300 cursor-not-allowed' 
-                                          : customIdol 
-                                            ? 'bg-idol-gold text-black hover:bg-amber-400' 
-                                            : 'bg-gray-100 hover:bg-gray-200'
+                                        isGeneratingIdol
+                                          ? "bg-gray-300 cursor-not-allowed"
+                                          : customIdol
+                                            ? "bg-idol-gold text-black hover:bg-amber-400"
+                                            : "bg-gray-100 hover:bg-gray-200"
                                       }`}
                                     >
                                       {isGeneratingIdol ? (
@@ -550,7 +613,7 @@ const PhotoStripPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Layout Settings */}
                         <div className="glass-panel p-6 mb-6">
                           <h2 className="text-xl font-semibold mb-4 font-montserrat">
@@ -564,20 +627,28 @@ const PhotoStripPage: React.FC = () => {
                                 onValueChange={setSelectedMargin}
                                 className="flex gap-3"
                               >
-                                {['0', '5', '10', '20', '40'].map((margin) => (
+                                {["0", "5", "10", "20", "40"].map((margin) => (
                                   <label
                                     key={margin}
                                     htmlFor={`margin-${margin}-mobile`}
                                     className="cursor-pointer flex-1"
                                   >
                                     <div
-                                      className={`flex items-center justify-center h-16 rounded-md transition-all ${selectedMargin === margin ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}
-                                      style={{ border: `${Math.max(1, parseInt(margin) / 6)}px solid` }}
+                                      className={`flex items-center justify-center h-16 rounded-md transition-all ${selectedMargin === margin ? "border-idol-gold bg-idol-gold/10" : "border-gray-200"}`}
+                                      style={{
+                                        border: `${Math.max(1, parseInt(margin) / 6)}px solid`
+                                      }}
                                     >
                                       <div className="bg-gray-300 rounded-md w-3/4 h-3/4"></div>
-                                      <RadioGroupItem value={margin} id={`margin-${margin}-mobile`} className="sr-only" />
+                                      <RadioGroupItem
+                                        value={margin}
+                                        id={`margin-${margin}-mobile`}
+                                        className="sr-only"
+                                      />
                                     </div>
-                                    <span className={`block text-xs text-center mt-1 ${selectedMargin === margin ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                                    <span
+                                      className={`block text-xs text-center mt-1 ${selectedMargin === margin ? "font-medium text-idol-gold" : "text-gray-600"}`}
+                                    >
                                       {margin}px
                                     </span>
                                   </label>
@@ -592,24 +663,52 @@ const PhotoStripPage: React.FC = () => {
                                 className="flex gap-3"
                               >
                                 {[
-                                  { value: '1', label: '1 Column' },
-                                  { value: '2', label: '2 Columns' },
-                                  { value: '3', label: '3 Columns' },
-                                  { value: '4', label: '4 Columns' }
+                                  { value: "1", label: "1 Column" },
+                                  { value: "2", label: "2 Columns" },
+                                  { value: "3", label: "3 Columns" },
+                                  { value: "4", label: "4 Columns" }
                                 ].map((col) => (
                                   <label
                                     key={col.value}
                                     htmlFor={`cols-${col.value}-mobile`}
                                     className={`cursor-pointer flex-1`}
                                   >
-                                    <div className={`border-2 p-2 rounded-md h-12 transition-all ${selectedCols === col.value ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}>
-                                      {col.value === '1' && <div className="w-full h-full bg-gray-300 rounded-sm"></div>}
-                                      {col.value === '2' && <div className="flex h-full gap-1"><div className="w-1/2 bg-gray-300 rounded-sm"></div><div className="w-1/2 bg-gray-300 rounded-sm"></div></div>}
-                                      {col.value === '3' && <div className="flex h-full gap-1"><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div></div>}
-                                      {col.value === '4' && <div className="flex h-full gap-1"><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div></div>}
-                                      <RadioGroupItem value={col.value} id={`cols-${col.value}-mobile`} className="sr-only" />
+                                    <div
+                                      className={`border-2 p-2 rounded-md h-12 transition-all ${selectedCols === col.value ? "border-idol-gold bg-idol-gold/10" : "border-gray-200"}`}
+                                    >
+                                      {col.value === "1" && (
+                                        <div className="w-full h-full bg-gray-300 rounded-sm"></div>
+                                      )}
+                                      {col.value === "2" && (
+                                        <div className="flex h-full gap-1">
+                                          <div className="w-1/2 bg-gray-300 rounded-sm"></div>
+                                          <div className="w-1/2 bg-gray-300 rounded-sm"></div>
+                                        </div>
+                                      )}
+                                      {col.value === "3" && (
+                                        <div className="flex h-full gap-1">
+                                          <div className="w-1/3 bg-gray-300 rounded-sm"></div>
+                                          <div className="w-1/3 bg-gray-300 rounded-sm"></div>
+                                          <div className="w-1/3 bg-gray-300 rounded-sm"></div>
+                                        </div>
+                                      )}
+                                      {col.value === "4" && (
+                                        <div className="flex h-full gap-1">
+                                          <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                          <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                          <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                          <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                        </div>
+                                      )}
+                                      <RadioGroupItem
+                                        value={col.value}
+                                        id={`cols-${col.value}-mobile`}
+                                        className="sr-only"
+                                      />
                                     </div>
-                                    <span className={`block text-xs text-center mt-1 ${selectedCols === col.value ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                                    <span
+                                      className={`block text-xs text-center mt-1 ${selectedCols === col.value ? "font-medium text-idol-gold" : "text-gray-600"}`}
+                                    >
                                       {col.label}
                                     </span>
                                   </label>
@@ -638,7 +737,7 @@ const PhotoStripPage: React.FC = () => {
                             {colors.map((color, index) => (
                               <button
                                 key={index}
-                                className={`w-10 h-10 rounded-full border ${selectedColor === color ? 'ring-2 ring-offset-2 ring-idol-gold' : 'ring-1 ring-gray-200'}`}
+                                className={`w-10 h-10 rounded-full border ${selectedColor === color ? "ring-2 ring-offset-2 ring-idol-gold" : "ring-1 ring-gray-200"}`}
                                 style={{ backgroundColor: color }}
                                 onClick={() => setSelectedColor(color)}
                                 aria-label={`Select color ${index + 1}`}
@@ -703,12 +802,15 @@ const PhotoStripPage: React.FC = () => {
                                       "Ultimate fan moment 🔥",
                                       "Fandom life 💕",
                                       "Dream came true 🌟"
-                                    ].map(caption => (
+                                    ].map((caption) => (
                                       <button
                                         key={caption}
                                         onClick={() => setCustomText(caption)}
-                                        className={`text-xs px-2 py-1 rounded-full ${customText === caption ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'
-                                          }`}
+                                        className={`text-xs px-2 py-1 rounded-full ${
+                                          customText === caption
+                                            ? "bg-idol-gold text-black"
+                                            : "bg-gray-100 hover:bg-gray-200"
+                                        }`}
                                       >
                                         {caption}
                                       </button>
@@ -722,8 +824,7 @@ const PhotoStripPage: React.FC = () => {
                               <Checkbox
                                 id="showDate-mobile"
                                 checked={showDate}
-                                onCheckedChange={(checked) =>
-                                  setShowDate(checked === true)}
+                                onCheckedChange={(checked) => setShowDate(checked === true)}
                               />
                               <Label
                                 htmlFor="showDate-mobile"
@@ -771,12 +872,12 @@ const PhotoStripPage: React.FC = () => {
                   </Button>
 
                   <Button
-                    onClick={() => navigate('/photo-booth')}
+                    onClick={() => navigate("/strip")}
                     className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
                     variant="outline"
                   >
                     <Undo2 className="w-5 h-5" />
-                    <span>Take New Photos</span>
+                    <span>Create AI Strip</span>
                   </Button>
 
                   <Button
@@ -835,28 +936,31 @@ const PhotoStripPage: React.FC = () => {
                               "JENNIE",
                               "Lisa",
                               "Rosé",
-                              "Jisoo",
-                            ].map(idol => (
+                              "Jisoo"
+                            ].map((idol) => (
                               <button
                                 key={idol}
                                 onClick={() => setCustomIdol(idol)}
-                                className={`text-xs px-2 py-1 rounded-full ${customIdol === idol ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'
-                                  }`}
+                                className={`text-xs px-2 py-1 rounded-full ${
+                                  customIdol === idol
+                                    ? "bg-idol-gold text-black"
+                                    : "bg-gray-100 hover:bg-gray-200"
+                                }`}
                               >
                                 {idol + " " + "💖"}
                               </button>
                             ))}
                           </div>
                           <div className="mt-2">
-                            <button 
+                            <button
                               onClick={handleGenerateIdol}
                               disabled={isGeneratingIdol}
                               className={`text-xs px-2 py-1 rounded-full flex items-center justify-center ${
-                                isGeneratingIdol 
-                                  ? 'bg-gray-300 cursor-not-allowed' 
-                                  : customIdol 
-                                    ? 'bg-idol-gold text-black hover:bg-amber-400' 
-                                    : 'bg-gray-100 hover:bg-gray-200'
+                                isGeneratingIdol
+                                  ? "bg-gray-300 cursor-not-allowed"
+                                  : customIdol
+                                    ? "bg-idol-gold text-black hover:bg-amber-400"
+                                    : "bg-gray-100 hover:bg-gray-200"
                               }`}
                             >
                               {isGeneratingIdol ? (
@@ -875,9 +979,7 @@ const PhotoStripPage: React.FC = () => {
                 </div>
 
                 <div className="glass-panel p-6 mb-6">
-                  <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                    Layout Settings
-                  </h2>
+                  <h2 className="text-xl font-semibold mb-4 font-montserrat">Layout Settings</h2>
                   <div className="space-y-6">
                     <div>
                       <label className="block mb-3">Photo Margin (px)</label>
@@ -886,20 +988,26 @@ const PhotoStripPage: React.FC = () => {
                         onValueChange={setSelectedMargin}
                         className="flex gap-4"
                       >
-                        {['0', '5', '10', '20', '40'].map((margin) => (
+                        {["0", "5", "10", "20", "40"].map((margin) => (
                           <label
                             key={margin}
                             htmlFor={`margin-${margin}`}
                             className="cursor-pointer flex-1"
                           >
                             <div
-                              className={`flex items-center justify-center h-20 rounded-md transition-all ${selectedMargin === margin ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}
+                              className={`flex items-center justify-center h-20 rounded-md transition-all ${selectedMargin === margin ? "border-idol-gold bg-idol-gold/10" : "border-gray-200"}`}
                               style={{ border: `${Math.max(1, parseInt(margin) / 5)}px solid` }}
                             >
                               <div className="bg-gray-300 rounded-md w-3/4 h-3/4"></div>
-                              <RadioGroupItem value={margin} id={`margin-${margin}`} className="sr-only" />
+                              <RadioGroupItem
+                                value={margin}
+                                id={`margin-${margin}`}
+                                className="sr-only"
+                              />
                             </div>
-                            <span className={`block text-sm text-center mt-1 ${selectedMargin === margin ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                            <span
+                              className={`block text-sm text-center mt-1 ${selectedMargin === margin ? "font-medium text-idol-gold" : "text-gray-600"}`}
+                            >
                               {margin}px
                             </span>
                           </label>
@@ -914,24 +1022,52 @@ const PhotoStripPage: React.FC = () => {
                         className="flex gap-4"
                       >
                         {[
-                          { value: '1', label: '1 Column' },
-                          { value: '2', label: '2 Columns' },
-                          { value: '3', label: '3 Columns' },
-                          { value: '4', label: '4 Columns' }
+                          { value: "1", label: "1 Column" },
+                          { value: "2", label: "2 Columns" },
+                          { value: "3", label: "3 Columns" },
+                          { value: "4", label: "4 Columns" }
                         ].map((col) => (
                           <label
                             key={col.value}
                             htmlFor={`cols-${col.value}`}
                             className={`cursor-pointer w-[100px]`}
                           >
-                            <div className={`border-2 p-2 rounded-md h-14 flex items-center justify-center transition-all ${selectedCols === col.value ? 'border-idol-gold bg-idol-gold/10' : 'border-gray-200'}`}>
-                              {col.value === '1' && <div className="w-full h-full bg-gray-300 rounded-sm"></div>}
-                              {col.value === '2' && <div className="flex h-full w-full gap-1"><div className="w-1/2 bg-gray-300 rounded-sm"></div><div className="w-1/2 bg-gray-300 rounded-sm"></div></div>}
-                              {col.value === '3' && <div className="flex h-full w-full gap-1"><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div><div className="w-1/3 bg-gray-300 rounded-sm"></div></div>}
-                              {col.value === '4' && <div className="flex h-full w-full gap-1"><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div><div className="w-1/4 bg-gray-300 rounded-sm"></div></div>}
-                              <RadioGroupItem value={col.value} id={`cols-${col.value}`} className="sr-only" />
+                            <div
+                              className={`border-2 p-2 rounded-md h-14 flex items-center justify-center transition-all ${selectedCols === col.value ? "border-idol-gold bg-idol-gold/10" : "border-gray-200"}`}
+                            >
+                              {col.value === "1" && (
+                                <div className="w-full h-full bg-gray-300 rounded-sm"></div>
+                              )}
+                              {col.value === "2" && (
+                                <div className="flex h-full w-full gap-1">
+                                  <div className="w-1/2 bg-gray-300 rounded-sm"></div>
+                                  <div className="w-1/2 bg-gray-300 rounded-sm"></div>
+                                </div>
+                              )}
+                              {col.value === "3" && (
+                                <div className="flex h-full w-full gap-1">
+                                  <div className="w-1/3 bg-gray-300 rounded-sm"></div>
+                                  <div className="w-1/3 bg-gray-300 rounded-sm"></div>
+                                  <div className="w-1/3 bg-gray-300 rounded-sm"></div>
+                                </div>
+                              )}
+                              {col.value === "4" && (
+                                <div className="flex h-full w-full gap-1">
+                                  <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                  <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                  <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                  <div className="w-1/4 bg-gray-300 rounded-sm"></div>
+                                </div>
+                              )}
+                              <RadioGroupItem
+                                value={col.value}
+                                id={`cols-${col.value}`}
+                                className="sr-only"
+                              />
                             </div>
-                            <span className={`block text-sm text-center mt-1 ${selectedCols === col.value ? 'font-medium text-idol-gold' : 'text-gray-600'}`}>
+                            <span
+                              className={`block text-sm text-center mt-1 ${selectedCols === col.value ? "font-medium text-idol-gold" : "text-gray-600"}`}
+                            >
                               {col.label}
                             </span>
                           </label>
@@ -952,14 +1088,12 @@ const PhotoStripPage: React.FC = () => {
                 </div>
 
                 <div className="glass-panel p-6 mb-6">
-                  <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                    Frame color
-                  </h2>
+                  <h2 className="text-xl font-semibold mb-4 font-montserrat">Frame color</h2>
                   <div className="flex flex-wrap gap-3">
                     {colors.map((color, index) => (
                       <button
                         key={index}
-                        className={`w-10 h-10 rounded-full border ${selectedColor === color ? 'ring-2 ring-offset-2 ring-idol-gold' : 'ring-1 ring-gray-200'}`}
+                        className={`w-10 h-10 rounded-full border ${selectedColor === color ? "ring-2 ring-offset-2 ring-idol-gold" : "ring-1 ring-gray-200"}`}
                         style={{ backgroundColor: color }}
                         onClick={() => setSelectedColor(color)}
                         aria-label={`Select color ${index + 1}`}
@@ -995,9 +1129,7 @@ const PhotoStripPage: React.FC = () => {
                 </div>
 
                 <div className="glass-panel p-6 mb-6">
-                  <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                    Caption settings
-                  </h2>
+                  <h2 className="text-xl font-semibold mb-4 font-montserrat">Caption settings</h2>
 
                   <div className="space-y-6">
                     <div>
@@ -1023,12 +1155,15 @@ const PhotoStripPage: React.FC = () => {
                               "Ultimate fan moment 🔥",
                               "Fandom life 💕",
                               "Dream came true 🌟"
-                            ].map(caption => (
+                            ].map((caption) => (
                               <button
                                 key={caption}
                                 onClick={() => setCustomText(caption)}
-                                className={`text-xs px-2 py-1 rounded-full ${customText === caption ? 'bg-idol-gold text-black' : 'bg-gray-100 hover:bg-gray-200'
-                                  }`}
+                                className={`text-xs px-2 py-1 rounded-full ${
+                                  customText === caption
+                                    ? "bg-idol-gold text-black"
+                                    : "bg-gray-100 hover:bg-gray-200"
+                                }`}
                               >
                                 {caption}
                               </button>
@@ -1042,8 +1177,7 @@ const PhotoStripPage: React.FC = () => {
                       <Checkbox
                         id="showDate"
                         checked={showDate}
-                        onCheckedChange={(checked) =>
-                          setShowDate(checked === true)}
+                        onCheckedChange={(checked) => setShowDate(checked === true)}
                       />
                       <Label
                         htmlFor="showDate"
@@ -1086,12 +1220,12 @@ const PhotoStripPage: React.FC = () => {
                   </Button>
 
                   <Button
-                    onClick={() => navigate('/photo-booth')}
+                    onClick={() => navigate("/strip")}
                     className="flex-1 idol-button-outline flex items-center justify-center gap-2 py-3"
                     variant="outline"
                   >
                     <Undo2 className="w-5 h-5" />
-                    <span>Take New Photos</span>
+                    <span>Create AI Strip</span>
                   </Button>
 
                   <Button
@@ -1109,7 +1243,7 @@ const PhotoStripPage: React.FC = () => {
             <div className="max-w-4xl mx-auto">
               <div className="glass-panel p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4 font-montserrat">
-                  Upload Photos to Create a Photo Strip
+                  Upload selfies for your K-pop photo strip
                 </h2>
 
                 <MultiPhotoUpload
@@ -1120,14 +1254,14 @@ const PhotoStripPage: React.FC = () => {
 
                 <div className="mt-6 flex justify-between items-center">
                   <p className="text-sm text-gray-500">
-                    Upload 1-9 photos to create your photo strip, or use the photo booth to take new photos
+                    Upload 1-9 photos to create a free photo strip, or start the AI strip maker.
                   </p>
                   <Button
-                    onClick={() => navigate('/photo-booth')}
+                    onClick={() => navigate("/strip")}
                     variant="outline"
                     className="idol-button-outline"
                   >
-                    Go to Photo Booth
+                    Start AI Strip
                   </Button>
                 </div>
               </div>
@@ -1138,7 +1272,9 @@ const PhotoStripPage: React.FC = () => {
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent className="sm:max-w-md glass-panel animate-scale-in">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-montserrat text-center">Share Your Strip</DialogTitle>
+            <DialogTitle className="text-2xl font-montserrat text-center">
+              Share Your Strip
+            </DialogTitle>
             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <span className="sr-only">Close</span>
             </DialogClose>
@@ -1162,7 +1298,10 @@ const PhotoStripPage: React.FC = () => {
             <div className="grid grid-cols-1 gap-4">
               <button
                 onClick={() => {
-                  window.open(`https://x.com/intent/tweet?text=Check out my photo strip!&url=${encodeURIComponent(shareUrl)}`, '_blank');
+                  window.open(
+                    `https://x.com/intent/tweet?text=Check out my photo strip!&url=${encodeURIComponent(shareUrl)}`,
+                    "_blank"
+                  );
                 }}
                 className="idol-button-outline flex items-center justify-center gap-3 w-full"
               >
@@ -1182,7 +1321,7 @@ const PhotoStripPage: React.FC = () => {
 
               <button
                 onClick={() => {
-                  window.open(shareUrl, '_blank');
+                  window.open(shareUrl, "_blank");
                 }}
                 className="idol-button-outline flex items-center justify-center gap-3 w-full"
               >

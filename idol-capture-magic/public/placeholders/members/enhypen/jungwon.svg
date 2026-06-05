@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#161b25;--shade:#090b12">
+  <title>Jungwon original silhouette</title>
+  <defs>
+    <linearGradient id="bg-enhypen-jungwon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e5eeff"/>
+      <stop offset="1" stop-color="#f8f4e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-enhypen-jungwon)"/>
+  <ellipse cx="512" cy="462" rx="258" ry="293" fill="#ffffff" opacity=".2"/>
+  <circle cx="518" cy="487" r="6" fill="#8da4d6" opacity=".14"/><circle cx="680" cy="624" r="4" fill="#8da4d6" opacity=".14"/><circle cx="700" cy="607" r="9" fill="#8da4d6" opacity=".14"/><circle cx="508" cy="579" r="12" fill="#8da4d6" opacity=".14"/><circle cx="289" cy="420" r="9" fill="#8da4d6" opacity=".14"/>
+  <g transform="rotate(-5.4 512 512)">
+    <path d="M297 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H297Z" fill="#161b25"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#161b25"/>
+    <path d="M356 397c16-85 70-139 162-162 82 5 142 45 181 120-54 18-111 20-171 6-55 39-112 51-172 36Z" fill="var(--hair)"/><path d="M411 279c48 58 112 95 193 110" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".32"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.19"/>
+    
+  </g>
+</svg>

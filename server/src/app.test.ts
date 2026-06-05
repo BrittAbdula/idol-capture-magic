@@ -22,4 +22,16 @@ describe("createApp", () => {
     );
     expect(response.headers.get("access-control-allow-credentials")).toBe("true");
   });
+
+  test("allows localhost frontend requests when configured for production", async () => {
+    const app = createApp({ publicAppOrigin: "https://idolbooth.com" });
+    const response = await app.request("/health", {
+      headers: { Origin: "http://localhost:8080" }
+    });
+
+    expect(response.headers.get("access-control-allow-origin")).toBe(
+      "http://localhost:8080"
+    );
+    expect(response.headers.get("access-control-allow-credentials")).toBe("true");
+  });
 });

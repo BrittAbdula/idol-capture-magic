@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1b171b;--shade:#090b12">
+  <title>Rose original silhouette</title>
+  <defs>
+    <linearGradient id="bg-blackpink-rose" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffdce9"/>
+      <stop offset="1" stop-color="#f7f1f4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-blackpink-rose)"/>
+  <ellipse cx="512" cy="462" rx="238" ry="270" fill="#ffffff" opacity=".2"/>
+  <circle cx="-113" cy="-161" r="2" fill="#ff91bd" opacity=".14"/><circle cx="-114" cy="85" r="4" fill="#ff91bd" opacity=".14"/><circle cx="-179" cy="179" r="-4" fill="#ff91bd" opacity=".14"/><circle cx="-187" cy="28" r="-2" fill="#ff91bd" opacity=".14"/><circle cx="202" cy="-34" r="-4" fill="#ff91bd" opacity=".14"/>
+  <g transform="rotate(-1.8 512 512)">
+    <path d="M232 1024c24-172 81-287 169-346 35-24 76-36 121-36 93 0 164 48 213 143 32 63 53 143 63 239H232Z" fill="#1b171b"/>
+    <path d="M521 260c88 0 151 57 169 151 15 77-2 148-51 212-33 43-78 64-136 64-57 0-103-22-137-66-46-60-58-133-36-220 24-94 88-141 191-141Z" fill="#1b171b"/>
+    <path d="M512 229c-76 27-130 86-162 178 67-8 121-39 162-92 42 53 97 84 166 92-19-96-74-156-166-178Z" fill="var(--hair)"/><path d="M512 235c-8 79 13 148 63 207" fill="none" stroke="var(--shade)" stroke-width="6" opacity=".36"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.15"/>
+    <path d="M409 698c75 41 151 41 228 0" fill="none" stroke="#ff91bd" stroke-width="16" stroke-linecap="round" opacity=".55"/>
+  </g>
+</svg>

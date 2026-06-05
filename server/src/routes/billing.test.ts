@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { createApp } from "../app.js";
 import { createLucia } from "../auth/lucia.js";
-import { users } from "../db/schema.js";
+import { billingEvents, users } from "../db/schema.js";
 import { createTestD1DatabaseClient, type TestDatabaseClient } from "../db/test-d1.js";
 import type {
   BillingService,
@@ -12,8 +12,13 @@ import type {
   BillingWebhookEvent
 } from "../services/billing.js";
 
+type CheckoutInputWithCycle = CheckoutInput & { billingCycle?: string };
+
 class FakeBillingService implements BillingService {
+  lastCheckoutInput: CheckoutInputWithCycle | null = null;
+
   async createCheckoutSession(input: CheckoutInput) {
+    this.lastCheckoutInput = input as CheckoutInputWithCycle;
     return {
       id: "cs_test_123",
       url: `https://checkout.stripe.test/${input.plan}`,
@@ -91,11 +96,12 @@ describe("billing routes", () => {
   test("creates a checkout session for the authenticated user", async () => {
     const auth = createLucia(client, false);
     const session = await auth.createSession("user_123", {});
+    const billing = new FakeBillingService();
     const app = createApp({
       publicAppOrigin: "http://localhost:8080",
       client,
       auth,
-      billing: new FakeBillingService()
+      billing
     });
 
     const response = await app.request("/api/billing/checkout", {
@@ -104,14 +110,70 @@ describe("billing routes", () => {
         Cookie: auth.createSessionCookie(session.id).serialize(),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ plan: "plus" })
+      body: JSON.stringify({
+        plan: "plus",
+        source: "upgrade_dialog",
+        triggerSurface: "result_watermark",
+        checkoutFlow: "resumed_after_sign_in"
+      })
     });
     const json = (await response.json()) as { url: string };
 
     expect(response.status).toBe(200);
     expect(json.url).toBe("https://checkout.stripe.test/plus");
+    expect(billing.lastCheckoutInput).toMatchObject({
+      billingCycle: "monthly",
+      source: "upgrade_dialog",
+      triggerSurface: "result_watermark",
+      checkoutFlow: "resumed_after_sign_in"
+    });
     const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
     expect(user?.stripeCustomerId).toBe("cus_test_123");
+    const events = await client.db.select().from(billingEvents).all();
+    expect(events).toMatchObject([
+      {
+        userId: "user_123",
+        eventType: "checkout_created",
+        plan: "plus",
+        billingCycle: "monthly",
+        source: "upgrade_dialog",
+        triggerSurface: "result_watermark",
+        checkoutFlow: "resumed_after_sign_in",
+        stripeCustomerId: "cus_test_123",
+        stripeCheckoutSessionId: "cs_test_123",
+        errorCode: null
+      }
+    ]);
+  });
+
+  test("passes annual billing cycle into checkout session creation", async () => {
+    const auth = createLucia(client, false);
+    const session = await auth.createSession("user_123", {});
+    const billing = new FakeBillingService();
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      auth,
+      billing
+    });
+
+    const response = await app.request("/api/billing/checkout", {
+      method: "POST",
+      headers: {
+        Cookie: auth.createSessionCookie(session.id).serialize(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ plan: "pro", billingCycle: "annual" })
+    });
+
+    expect(response.status).toBe(200);
+    expect(billing.lastCheckoutInput).toMatchObject({
+      plan: "pro",
+      billingCycle: "annual",
+      source: null,
+      triggerSurface: null,
+      checkoutFlow: null
+    });
   });
 
   test("returns a checkout error instead of an internal server error", async () => {
@@ -130,12 +192,29 @@ describe("billing routes", () => {
         Cookie: auth.createSessionCookie(session.id).serialize(),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ plan: "plus" })
+      body: JSON.stringify({
+        plan: "plus",
+        source: "pricing_page",
+        triggerSurface: "pricing_page"
+      })
     });
     const json = (await response.json()) as { error: string };
 
     expect(response.status).toBe(502);
     expect(json.error).toBe("checkout_unavailable");
+    const events = await client.db.select().from(billingEvents).all();
+    expect(events).toMatchObject([
+      {
+        userId: "user_123",
+        eventType: "checkout_failed",
+        plan: "plus",
+        billingCycle: "monthly",
+        source: "pricing_page",
+        triggerSurface: "pricing_page",
+        checkoutFlow: null,
+        errorCode: "unknown"
+      }
+    ]);
   });
 
   test("recovers checkout by replacing a stale Stripe customer id", async () => {
@@ -160,7 +239,12 @@ describe("billing routes", () => {
         Cookie: auth.createSessionCookie(session.id).serialize(),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ plan: "plus" })
+      body: JSON.stringify({
+        plan: "plus",
+        source: "upgrade_dialog",
+        triggerSurface: "result_quota",
+        checkoutFlow: "direct"
+      })
     });
     const json = (await response.json()) as { url: string };
 
@@ -169,6 +253,21 @@ describe("billing routes", () => {
     expect(billing.calls.map((call) => call.stripeCustomerId ?? null)).toEqual(["cus_stale", null]);
     const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
     expect(user?.stripeCustomerId).toBe("cus_recovered");
+    const events = await client.db.select().from(billingEvents).all();
+    expect(events).toMatchObject([
+      {
+        userId: "user_123",
+        eventType: "checkout_retry_succeeded",
+        plan: "plus",
+        billingCycle: "monthly",
+        source: "upgrade_dialog",
+        triggerSurface: "result_quota",
+        checkoutFlow: "direct",
+        stripeCustomerId: "cus_recovered",
+        stripeCheckoutSessionId: "cs_test_recovered",
+        errorCode: null
+      }
+    ]);
   });
 
   test("syncs subscription status from Stripe webhooks", async () => {
@@ -193,5 +292,19 @@ describe("billing routes", () => {
     const user = await client.db.select().from(users).where(eq(users.id, "user_123")).get();
     expect(user?.plan).toBe("plus");
     expect(user?.stripeSubscriptionId).toBe("sub_test_123");
+    const events = await client.db.select().from(billingEvents).all();
+    expect(events).toMatchObject([
+      {
+        userId: "user_123",
+        eventType: "webhook_subscription_updated",
+        plan: "plus",
+        stripeCustomerId: "cus_test_123",
+        stripeSubscriptionId: "sub_test_123",
+        source: null,
+        triggerSurface: null,
+        checkoutFlow: null,
+        errorCode: null
+      }
+    ]);
   });
 });

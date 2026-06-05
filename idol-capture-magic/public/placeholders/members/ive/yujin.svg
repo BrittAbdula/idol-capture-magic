@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#241a31;--shade:#090b12">
+  <title>Yujin original silhouette</title>
+  <defs>
+    <linearGradient id="bg-ive-yujin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7e6ff"/>
+      <stop offset="1" stop-color="#fff6df"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-ive-yujin)"/>
+  <ellipse cx="512" cy="462" rx="235" ry="267" fill="#ffffff" opacity=".2"/>
+  <circle cx="546" cy="394" r="10" fill="#d8a5ec" opacity=".14"/><circle cx="684" cy="540" r="13" fill="#d8a5ec" opacity=".14"/><circle cx="376" cy="601" r="8" fill="#d8a5ec" opacity=".14"/><circle cx="337" cy="369" r="11" fill="#d8a5ec" opacity=".14"/><circle cx="527" cy="459" r="13" fill="#d8a5ec" opacity=".14"/>
+  <g transform="rotate(1.8 512 512)">
+    <path d="M314 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H314Z" fill="#241a31"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#241a31"/>
+    <path d="M353 407c17-102 79-163 185-181 76 6 129 46 160 119-81-2-153 24-216 78-44 38-87 53-129 45 0-21 0-41 0-61Z" fill="var(--hair)"/><path d="M496 251c64 89 130 136 198 141" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".3"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.17"/>
+    <path d="M692 620c36 20 61 52 74 96" fill="none" stroke="#d8a5ec" stroke-width="15" stroke-linecap="round" opacity=".72"/><circle cx="684" cy="612" r="15" fill="#d8a5ec" opacity=".82"/>
+  </g>
+</svg>

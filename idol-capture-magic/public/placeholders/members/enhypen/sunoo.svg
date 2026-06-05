@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#161b25;--shade:#090b12">
+  <title>Sunoo original silhouette</title>
+  <defs>
+    <linearGradient id="bg-enhypen-sunoo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e5eeff"/>
+      <stop offset="1" stop-color="#f8f4e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-enhypen-sunoo)"/>
+  <ellipse cx="512" cy="462" rx="230" ry="261" fill="#ffffff" opacity=".2"/>
+  <circle cx="228" cy="164" r="-5" fill="#8da4d6" opacity=".14"/><circle cx="59" cy="-78" r="-1" fill="#8da4d6" opacity=".14"/><circle cx="38" cy="38" r="-4" fill="#8da4d6" opacity=".14"/><circle cx="-30" cy="-112" r="-5" fill="#8da4d6" opacity=".14"/><circle cx="-38" cy="-17" r="2" fill="#8da4d6" opacity=".14"/>
+  <g transform="rotate(-5.4 512 512)">
+    <path d="M224 1024c24-172 81-287 169-346 35-24 76-36 121-36 93 0 164 48 213 143 32 63 53 143 63 239H224Z" fill="#161b25"/>
+    <path d="M521 260c88 0 151 57 169 151 15 77-2 148-51 212-33 43-78 64-136 64-57 0-103-22-137-66-46-60-58-133-36-220 24-94 88-141 191-141Z" fill="#161b25"/>
+    <path d="M352 390c16-105 80-166 192-183 93 18 149 85 168 201 18 107 6 223-36 350H518c-61-71-107-164-139-278-13 96-2 188 33 278H312c-1-137 12-260 40-368Z" fill="var(--hair)"/><path d="M545 214c-14 120 16 223 90 310" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".3"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.09"/>
+    <path d="M409 698c75 41 151 41 228 0" fill="none" stroke="#8da4d6" stroke-width="16" stroke-linecap="round" opacity=".55"/>
+  </g>
+</svg>

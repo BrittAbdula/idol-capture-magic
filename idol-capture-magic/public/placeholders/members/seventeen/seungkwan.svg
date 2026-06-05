@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1d2230;--shade:#090b12">
+  <title>Seungkwan original silhouette</title>
+  <defs>
+    <linearGradient id="bg-seventeen-seungkwan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf2ff"/>
+      <stop offset="1" stop-color="#fff1f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-seventeen-seungkwan)"/>
+  <ellipse cx="512" cy="462" rx="258" ry="293" fill="#ffffff" opacity=".2"/>
+  <circle cx="-249" cy="-45" r="0" fill="#9db4f2" opacity=".14"/><circle cx="64" cy="-118" r="4" fill="#9db4f2" opacity=".14"/><circle cx="-222" cy="-148" r="0" fill="#9db4f2" opacity=".14"/><circle cx="198" cy="165" r="-3" fill="#9db4f2" opacity=".14"/><circle cx="-10" cy="105" r="-3" fill="#9db4f2" opacity=".14"/>
+  <g transform="rotate(3.6 512 512)">
+    <path d="M314 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H314Z" fill="#1d2230"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#1d2230"/>
+    <path d="M353 407c17-102 79-163 185-181 76 6 129 46 160 119-81-2-153 24-216 78-44 38-87 53-129 45 0-21 0-41 0-61Z" fill="var(--hair)"/><path d="M496 251c64 89 130 136 198 141" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".3"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.20"/>
+    <circle cx="405" cy="360" r="20" fill="#9db4f2" opacity=".78"/><path d="M392 359h26" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+  </g>
+</svg>

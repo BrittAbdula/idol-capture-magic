@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#241a31;--shade:#090b12">
+  <title>Liz original silhouette</title>
+  <defs>
+    <linearGradient id="bg-ive-liz" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7e6ff"/>
+      <stop offset="1" stop-color="#fff6df"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-ive-liz)"/>
+  <ellipse cx="512" cy="462" rx="227" ry="258" fill="#ffffff" opacity=".2"/>
+  <circle cx="726" cy="629" r="7" fill="#d8a5ec" opacity=".14"/><circle cx="641" cy="449" r="10" fill="#d8a5ec" opacity=".14"/><circle cx="565" cy="386" r="7" fill="#d8a5ec" opacity=".14"/><circle cx="426" cy="303" r="9" fill="#d8a5ec" opacity=".14"/><circle cx="344" cy="377" r="13" fill="#d8a5ec" opacity=".14"/>
+  <g transform="rotate(0 512 512)">
+    <path d="M268 1024c22-176 68-291 139-345 31-23 68-34 111-32 80 4 141 45 183 122 34 63 56 149 65 255H268Z" fill="#241a31"/>
+    <path d="M503 278c74-3 131 40 154 112 20 65 10 130-30 195-31 50-75 79-130 86-59 7-106-12-140-57-25-33-34-74-27-123-31-8-51-23-58-45-7-23 5-42 35-57 14-67 80-108 196-111Z" fill="#241a31"/>
+    <path d="M356 397c16-85 70-139 162-162 82 5 142 45 181 120-54 18-111 20-171 6-55 39-112 51-172 36Z" fill="var(--hair)"/><path d="M411 279c48 58 112 95 193 110" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".32"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.13"/>
+    <path d="M692 620c36 20 61 52 74 96" fill="none" stroke="#d8a5ec" stroke-width="15" stroke-linecap="round" opacity=".72"/><circle cx="684" cy="612" r="15" fill="#d8a5ec" opacity=".82"/>
+  </g>
+</svg>

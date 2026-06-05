@@ -1,25 +1,12 @@
-
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /me
+Disallow: /api
+Disallow: /auth
+Disallow: /webhooks
 
 Sitemap: https://idolbooth.com/sitemap.xml
-
-# Priority paths for crawlers
-User-agent: Googlebot
-Allow: /
-Disallow: /admin/
-
-User-agent: Bingbot
-Allow: /
-Disallow: /admin/
-
-User-agent: Slurp
-Allow: /
-Disallow: /admin/
-
-User-agent: DuckDuckBot
-Allow: /
-Disallow: /admin/
 
 # Block unwanted bots
 User-agent: Baiduspider
@@ -27,5 +14,3 @@ Disallow: /
 
 User-agent: YandexBot
 Disallow: /
-
-Sitemap: https://idolbooth.com/sitemap.xml

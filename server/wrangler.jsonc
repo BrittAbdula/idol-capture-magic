@@ -7,6 +7,9 @@
   "observability": {
     "enabled": true
   },
+  "triggers": {
+    "crons": ["*/30 * * * *"]
+  },
   "vars": {
     "NODE_ENV": "production",
     "PUBLIC_APP_ORIGIN": "https://idolbooth.com",

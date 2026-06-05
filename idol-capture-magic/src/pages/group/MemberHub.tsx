@@ -7,6 +7,7 @@ import { api, type ApiConcept, type ApiMember } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 import { ImageFrame } from "@/components/media/ImageFrame";
+import { getMemberSilhouetteImage } from "@/data/memberSilhouettes";
 import { ratioFromFormat } from "@/lib/imageRatios";
 
 const FILTERS = ["All", "Comeback", "Daily", "Birthday", "Concert", "Polaroid"];
@@ -55,6 +56,7 @@ export default function MemberHub() {
 
   const member = data?.member;
   const group = data?.group;
+  const memberSilhouette = getMemberSilhouetteImage(groupSlug, memberSlug, member?.silhouetteImage);
   const filteredConcepts = useMemo(() => {
     const visible = (concepts.data ?? []).filter((concept) => concept.format !== "fancall");
     if (filter === "All") {
@@ -67,9 +69,13 @@ export default function MemberHub() {
 
   return (
     <AppPageShell
-      title={member && group ? `Take an AI Selca with ${member.name} (${group.name}) - Free` : "Member Hub"}
+      title={
+        member && group
+          ? `Take an AI Selca with ${member.name} (${group.name}) - Free`
+          : "Member Hub"
+      }
       description="Choose a format, upload your photo, and generate a watermarked fan-safe image."
-      image={member?.silhouetteImage ?? "/placeholders/silhouette_1.png"}
+      image={memberSilhouette}
     >
       {isLoading && <LoadingSkeleton rows={3} />}
 
@@ -92,15 +98,24 @@ export default function MemberHub() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
-        <Link className="idol-button-square flex items-center justify-center gap-2 text-center" to={`/selca?memberId=${member?.id ?? ""}`}>
+        <Link
+          className="idol-button-square flex items-center justify-center gap-2 text-center"
+          to={`/selca?memberId=${member?.id ?? ""}`}
+        >
           <Sparkles className="h-4 w-4" />
           Selca
         </Link>
-        <Link className="idol-button-square flex items-center justify-center gap-2 text-center" to={`/photocard?memberId=${member?.id ?? ""}`}>
+        <Link
+          className="idol-button-square flex items-center justify-center gap-2 text-center"
+          to={`/photocard?memberId=${member?.id ?? ""}`}
+        >
           <Sparkles className="h-4 w-4" />
           Photocard
         </Link>
-        <Link className="idol-button-square flex items-center justify-center gap-2 text-center" to={`/strip?memberId=${member?.id ?? ""}`}>
+        <Link
+          className="idol-button-square flex items-center justify-center gap-2 text-center"
+          to={`/strip?memberId=${member?.id ?? ""}`}
+        >
           <Sparkles className="h-4 w-4" />
           Strip
         </Link>
@@ -117,14 +132,17 @@ export default function MemberHub() {
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-semibold">Concept gallery</h2>
-            <p className="mt-2 text-sm text-gray-600">Fan-safe presets use stylized companion prompts and watermarking.</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Fan-safe presets use stylized companion prompts and watermarking.
+            </p>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {FILTERS.map((item) => (
               <button
                 key={item}
+                type="button"
                 onClick={() => setFilter(item)}
-                className={`shrink-0 border px-3 py-2 text-sm ${
+                className={`min-h-11 shrink-0 border px-3 py-2 text-sm ${
                   filter === item ? "border-idol-gold text-idol-gold" : "border-black/10"
                 }`}
               >
@@ -150,10 +168,14 @@ export default function MemberHub() {
         <h2 className="text-2xl font-semibold">Recent generations</h2>
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           {filteredConcepts.slice(0, 4).map((concept) => (
-            <Link key={concept.id} to={`/selca?memberId=${member?.id ?? ""}&conceptId=${concept.id}`} className="border border-black/10">
+            <Link
+              key={concept.id}
+              to={`/selca?memberId=${member?.id ?? ""}&conceptId=${concept.id}`}
+              className="border border-black/10"
+            >
               <ImageFrame
                 src={concept.sampleOutputUrl}
-                alt=""
+                alt={`Sample output for ${concept.name}`}
                 ratio={ratioFromFormat(concept.format)}
                 interactive
                 className="rounded-none border-0 shadow-none"
@@ -167,7 +189,10 @@ export default function MemberHub() {
       </section>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white p-3 md:hidden">
-        <Link className="idol-button-square flex items-center justify-center gap-2 text-center" to={`/selca?memberId=${member?.id ?? ""}`}>
+        <Link
+          className="idol-button-square flex items-center justify-center gap-2 text-center"
+          to={`/selca?memberId=${member?.id ?? ""}`}
+        >
           Upload your photo <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
@@ -181,7 +206,7 @@ function ConceptCard({ concept, memberId }: { concept: ApiConcept; memberId: str
     <Link to={href} className="group border border-black/10">
       <ImageFrame
         src={concept.sampleOutputUrl}
-        alt=""
+        alt={`Sample output for ${concept.name}`}
         ratio={ratioFromFormat(concept.format)}
         interactive
         className="rounded-none border-0 shadow-none"

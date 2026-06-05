@@ -1,5 +1,4 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -95,8 +94,42 @@
     @apply bg-background text-foreground font-open-sans overflow-x-hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  a[href],
+  button:not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  a[href],
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"]) {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-idol-gold/70 focus-visible:ring-offset-2;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-montserrat font-semibold;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -104,53 +137,53 @@
   .glass-panel {
     @apply bg-white/80 backdrop-blur-md shadow-glass border border-white/20 rounded-lg;
   }
-  
+
   .glass-panel-square {
     @apply bg-white/80 backdrop-blur-md shadow-glass border border-white/20;
   }
-  
+
   .idol-button {
     @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
            hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50
            inline-block text-center no-underline;
   }
-  
+
   .idol-button-square {
     @apply bg-idol-gold text-black font-montserrat font-semibold py-3 px-6 transition-all duration-300 
            hover:bg-opacity-90 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
-  
+
   .idol-button-outline {
     @apply border-2 border-idol-gold text-idol-gold font-montserrat font-semibold py-3 px-6 rounded-lg transition-all duration-300 
            hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
-  
+
   .idol-button-outline-square {
     @apply border-2 border-idol-gold text-idol-gold font-montserrat font-semibold py-3 px-6 transition-all duration-300 
            hover:bg-idol-gold/10 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-idol-gold/50;
   }
-  
+
   .neo-panel {
     @apply bg-idol-gray rounded-xl shadow-neo p-6;
   }
-  
+
   .neo-panel-square {
     @apply bg-idol-gray shadow-neo p-6;
   }
-  
+
   .animate-on-scroll {
     @apply opacity-0 translate-y-8 transition-all duration-700 ease-out;
   }
-  
+
   .animate-on-scroll.show {
     @apply opacity-100 translate-y-0;
   }
-  
+
   /* Ensure buttons don't have unexpected transforms */
   .idol-button.animate-on-scroll {
     @apply opacity-0 translate-y-8;
   }
-  
+
   .idol-button.animate-on-scroll.show {
     @apply opacity-100 translate-y-0;
   }

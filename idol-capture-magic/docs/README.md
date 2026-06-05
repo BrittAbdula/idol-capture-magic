@@ -1,4 +1,3 @@
-
 # IdolBooth Documentation
 
 This directory contains comprehensive documentation for the IdolBooth photo booth application. These documents serve as a reference for development and provide an overview of the project's requirements, architecture, and design guidelines.
@@ -9,6 +8,8 @@ This directory contains comprehensive documentation for the IdolBooth photo boot
 - [User Flows](./user-flows.md)
 - [Technical Stack](./tech-stack.md)
 - [UI Design Guidelines](./ui-design-guidelines.md)
+- [Optimization Plan - 2026-06-05](./optimization-plan-2026-06-05.md)
+- [Post-Deploy Measurement Runbook - 2026-06-05](./post-deploy-measurement-runbook-2026-06-05.md)
 
 ## Purpose
 

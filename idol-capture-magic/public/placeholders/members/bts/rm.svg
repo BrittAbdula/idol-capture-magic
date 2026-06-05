@@ -1,0 +1,20 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>RM stylized silhouette</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d7f2d0"/>
+      <stop offset="1" stop-color="#edf8e8"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e2430"/>
+      <stop offset="1" stop-color="#11151d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <ellipse cx="486" cy="420" rx="244" ry="272" fill="#ffffff" opacity=".2"/>
+  <path d="M512 629c91 47 151 170 170 395H312c19-196 66-319 139-369 18-12 38-21 61-26Z" fill="url(#ink)"/>
+  <path d="M493 237c74 6 121 47 141 106 16 49 7 96-29 135-14 15-24 31-29 48-22 76-82 122-151 114-54-6-88-37-99-92-4-18-26-17-32-31-6-15 14-22 17-39 2-14-19-15-23-31-3-15 9-28 32-39 2-86 61-178 173-171Z" fill="url(#ink)"/>
+  <path d="M316 381c21-90 101-143 192-140 83 2 142 40 161 95 10 30 6 60-12 88-57-17-100-43-131-77-58 39-122 51-210 34Z" fill="#171b24"/>
+  <path d="M334 387c53 11 111 1 176-29 40 42 82 70 126 84" fill="none" stroke="#2b3040" stroke-width="3" opacity=".42"/>
+  <path d="M341 326c34-54 89-82 165-84 59-1 105 17 139 54" fill="none" stroke="#2f3444" stroke-width="2" opacity=".35"/>
+</svg>

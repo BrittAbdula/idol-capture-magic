@@ -26,7 +26,11 @@ const billing = new StripeBillingService({
   webhookSecret: env.STRIPE_WEBHOOK_SECRET,
   appOrigin: env.PUBLIC_APP_ORIGIN,
   plusPriceId: env.STRIPE_PLUS_PRICE_ID,
-  proPriceId: env.STRIPE_PRO_PRICE_ID
+  proPriceId: env.STRIPE_PRO_PRICE_ID,
+  plusMonthlyPriceId: env.STRIPE_PLUS_MONTHLY_PRICE_ID,
+  plusAnnualPriceId: env.STRIPE_PLUS_ANNUAL_PRICE_ID,
+  proMonthlyPriceId: env.STRIPE_PRO_MONTHLY_PRICE_ID,
+  proAnnualPriceId: env.STRIPE_PRO_ANNUAL_PRICE_ID
 });
 const generationProvider = new KieImageProvider({
   apiKey: env.KIE_API_KEY

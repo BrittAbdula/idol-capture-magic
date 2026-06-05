@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#1d2230;--shade:#090b12">
+  <title>Mingyu original silhouette</title>
+  <defs>
+    <linearGradient id="bg-seventeen-mingyu" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf2ff"/>
+      <stop offset="1" stop-color="#fff1f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-seventeen-mingyu)"/>
+  <ellipse cx="512" cy="462" rx="238" ry="270" fill="#ffffff" opacity=".2"/>
+  <circle cx="769" cy="589" r="7" fill="#9db4f2" opacity=".14"/><circle cx="711" cy="473" r="6" fill="#9db4f2" opacity=".14"/><circle cx="509" cy="650" r="12" fill="#9db4f2" opacity=".14"/><circle cx="354" cy="346" r="8" fill="#9db4f2" opacity=".14"/><circle cx="595" cy="406" r="4" fill="#9db4f2" opacity=".14"/>
+  <g transform="rotate(-5.4 512 512)">
+    <path d="M253 1024c25-171 86-284 182-337 31-18 67-27 108-27 96 0 169 46 219 138 35 65 58 141 69 226H253Z" fill="#1d2230"/>
+    <path d="M512 252c92 0 158 60 178 158 17 83-2 157-55 223-33 41-75 61-126 61-54 0-98-22-132-66-48-63-61-138-37-226 26-100 83-150 172-150Z" fill="#1d2230"/>
+    <path d="M352 402c15-95 75-153 180-174 84 6 144 48 181 125-56 23-121 29-195 18-55 36-110 47-166 31Z" fill="var(--hair)"/><path d="M402 284c43 60 107 97 192 111" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".32"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.19"/>
+    
+  </g>
+</svg>

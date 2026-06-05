@@ -6,6 +6,10 @@ node_modules
 dist
 dist-ssr
 .cursor/
+.seo-cache/
 .wrangler/
 
 server/storage/
+
+google-search-console/
+goole-search-console-data/

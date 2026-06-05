@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>SUGA stylized silhouette</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ead8ff"/>
+      <stop offset="1" stop-color="#fff2f7"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#312a44"/>
+      <stop offset="1" stop-color="#191724"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <ellipse cx="516" cy="466" rx="260" ry="284" fill="#ffffff" opacity=".18"/>
+  <path d="M305 1024c20-172 70-292 149-358 36-30 76-45 120-45 105 0 179 65 221 196 19 61 32 130 39 207H305Z" fill="url(#ink)"/>
+  <path d="M423 620c-34-55-51-113-51-173 0-88 54-164 139-179 89-15 161 39 174 126 8 53-4 116-36 188-24 53-60 86-110 96-50 10-88-10-116-58Z" fill="url(#ink)"/>
+  <path d="M351 353c19-75 84-126 170-134 87-8 154 25 193 100-55 24-118 34-190 29-66-4-124-2-173 5Z" fill="#211d30"/>
+  <path d="M335 369c51-27 120-38 207-32 78 5 146-4 203-27 8 23 7 44-3 64-114 31-247 29-407-5Z" fill="#171521"/>
+  <path d="M425 351c40 50 95 79 164 87" fill="none" stroke="#3d3550" stroke-width="4" opacity=".45"/>
+  <path d="M646 684c53 33 88 82 104 148" fill="none" stroke="#0f1118" stroke-width="22" stroke-linecap="round" opacity=".48"/>
+</svg>

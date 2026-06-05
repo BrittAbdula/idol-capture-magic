@@ -17,12 +17,13 @@ interface GroupSeed {
 
 interface MemberSeedGroup {
   groupSlug: string;
-  members: Array<{
-    slug: string;
-    name: string;
-    position: string;
-    birthday: string;
-  }>;
+    members: Array<{
+      slug: string;
+      name: string;
+      position: string;
+      birthday: string;
+      silhouetteImage?: string;
+    }>;
 }
 
 interface ConceptSeed {
@@ -53,6 +54,10 @@ async function readJson<T>(fileName: string): Promise<T> {
 
 function id(prefix: string): string {
   return `${prefix}_${generateIdFromEntropySize(12)}`;
+}
+
+function memberSilhouettePath(groupSlug: string, memberSlug: string): string {
+  return `/placeholders/members/${groupSlug}/${memberSlug}.webp`;
 }
 
 async function main() {
@@ -90,7 +95,6 @@ async function main() {
       .run();
   }
 
-  let silhouetteIndex = 0;
   for (const memberGroup of memberSeeds) {
     const groupId = groupIds.get(memberGroup.groupSlug);
     if (!groupId) {
@@ -98,8 +102,6 @@ async function main() {
     }
 
     for (const member of memberGroup.members) {
-      silhouetteIndex += 1;
-      const silhouetteNumber = ((silhouetteIndex - 1) % 6) + 1;
       await client.db
         .insert(members)
         .values({
@@ -109,7 +111,8 @@ async function main() {
           name: member.name,
           position: member.position,
           birthday: member.birthday,
-          silhouetteImage: `/placeholders/silhouette_${silhouetteNumber}.png`,
+          silhouetteImage:
+            member.silhouetteImage ?? memberSilhouettePath(memberGroup.groupSlug, member.slug),
           todoLicensedAsset: true,
           facts: JSON.stringify({
             position: member.position,

@@ -27,12 +27,12 @@ const TemplateCategoryPage: React.FC = () => {
   const { category, idol } = useParams<{ category: string; idol?: string }>();
   // 动态生成标题和描述
   const pageTitle = idol 
-    ? `${idol.charAt(0).toUpperCase() + idol.slice(1)} Photo Templates | IdolBooth.com` 
-    : `${category?.charAt(0).toUpperCase() + category?.slice(1)} Photo Templates | IdolBooth.com`;
+    ? `${idol.charAt(0).toUpperCase() + idol.slice(1)} Photo Templates | IdolBooth`
+    : `${category?.charAt(0).toUpperCase() + category?.slice(1)} K-pop Photobooth Templates | IdolBooth`;
   
   const pageDescription = idol
     ? `Take photos with ${idol} using our free online photo booth. Choose from multiple templates and create stunning memories.`
-    : `Browse our ${category} photo templates collection. Find the perfect template for your virtual photo experience.`;
+    : `Browse free ${category} K-pop photobooth templates for online photo strips, idol-style layouts, and downloadable photo booth sessions.`;
   
     
   if (!category) {
@@ -59,7 +59,7 @@ const TemplateCategoryPage: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <Link 
-              to={idol ? `/template/${category}` : "/template"} 
+              to={idol ? `/templates/${category}` : "/templates"}
               className="flex items-center text-gray-600 hover:text-idol-gold mb-4"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
@@ -82,7 +82,7 @@ const TemplateCategoryPage: React.FC = () => {
                 {idols.map((idolName, index) => (
                   <Link 
                     key={index}
-                    to={`/template/${category}/${idolName}`}
+                    to={`/templates/${category}/${idolName}`}
                     className="glass-panel p-4 transition-all hover:shadow-lg hover:-translate-y-1 text-center"
                   >
                     <ImageFrame
@@ -144,7 +144,7 @@ const TemplateCategoryPage: React.FC = () => {
                     </div>
                     
                     <Link 
-                      to={`/photo-booth?template=${template.templateId}`} 
+                      to={`/strip?template=${encodeURIComponent(template.templateId)}`}
                       className="idol-button w-full text-center py-2"
                     >
                       Use This Template

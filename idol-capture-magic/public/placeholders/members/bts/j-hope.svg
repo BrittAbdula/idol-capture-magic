@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>j-hope stylized silhouette</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe0ed"/>
+      <stop offset="1" stop-color="#fff6db"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b3140"/>
+      <stop offset="1" stop-color="#221720"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <ellipse cx="510" cy="502" rx="278" ry="306" fill="#ffffff" opacity=".2"/>
+  <path d="M382 1024c18-184 65-300 140-349 29-20 65-29 106-27 77 3 138 41 184 113 38 60 65 148 80 263H382Z" fill="url(#ink)"/>
+  <path d="M566 245c83 8 139 58 155 131 13 61 6 123-20 188-20 51-57 82-112 94-55 12-99-1-132-39-25-29-36-69-32-121-29-8-48-21-56-39-9-20-3-37 17-51 2-94 82-173 180-163Z" fill="url(#ink)"/>
+  <path d="M386 402c10-79 47-130 109-152 54-19 112-14 175 15 46 21 74 55 83 102-84-11-148-38-193-82-45 49-103 88-174 117Z" fill="#5b3a49" opacity=".92"/>
+  <path d="M389 419c-35-58-41-110-18-156 12 39 37 66 74 80-25 22-44 47-56 76Z" fill="#5b3a49"/>
+  <path d="M729 552c49 5 84 27 106 67 21 38 25 83 12 134-5 19-19 31-42 35 4-68-22-119-76-153v-83Z" fill="#251821"/>
+  <path d="M735 633c20 7 36 26 48 57" fill="none" stroke="#100d13" stroke-width="20" stroke-linecap="round" opacity=".38"/>
+  <path d="M481 306c39 47 101 78 186 94" fill="none" stroke="#7b5260" stroke-width="4" opacity=".36"/>
+</svg>

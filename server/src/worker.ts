@@ -7,6 +7,8 @@ import { createDatabaseClientFromD1Binding } from "./db/client.js";
 import type { D1DatabaseBinding } from "./db/d1-binding.js";
 import { StripeBillingService } from "./services/billing.js";
 import { KieImageProvider } from "./services/generation/kie.js";
+import { reconcileRunningGenerations } from "./services/generation/reconcile.js";
+import { cleanupStaleGenerations } from "./services/generation/stale.js";
 import { createR2StorageService } from "./services/storage.js";
 
 export interface WorkerBindings {
@@ -23,6 +25,10 @@ export interface WorkerBindings {
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PLUS_PRICE_ID?: string;
   STRIPE_PRO_PRICE_ID?: string;
+  STRIPE_PLUS_MONTHLY_PRICE_ID?: string;
+  STRIPE_PLUS_ANNUAL_PRICE_ID?: string;
+  STRIPE_PRO_MONTHLY_PRICE_ID?: string;
+  STRIPE_PRO_ANNUAL_PRICE_ID?: string;
 }
 
 export default {
@@ -48,7 +54,11 @@ export default {
       webhookSecret: config.STRIPE_WEBHOOK_SECRET,
       appOrigin: config.PUBLIC_APP_ORIGIN,
       plusPriceId: config.STRIPE_PLUS_PRICE_ID,
-      proPriceId: config.STRIPE_PRO_PRICE_ID
+      proPriceId: config.STRIPE_PRO_PRICE_ID,
+      plusMonthlyPriceId: config.STRIPE_PLUS_MONTHLY_PRICE_ID,
+      plusAnnualPriceId: config.STRIPE_PLUS_ANNUAL_PRICE_ID,
+      proMonthlyPriceId: config.STRIPE_PRO_MONTHLY_PRICE_ID,
+      proAnnualPriceId: config.STRIPE_PRO_ANNUAL_PRICE_ID
     });
     const generationProvider = new KieImageProvider({
       apiKey: config.KIE_API_KEY
@@ -65,5 +75,34 @@ export default {
     });
 
     return app.fetch(request, env, executionContext);
+  },
+
+  async scheduled(_event: ScheduledController, env: WorkerBindings) {
+    const config = parseWorkerEnv(env as unknown as Record<string, unknown>);
+    const client = createDatabaseClientFromD1Binding(env.DB as unknown as D1DatabaseBinding);
+    const storage = createR2StorageService({
+      bucket: env.STORAGE,
+      publicBasePath: config.PUBLIC_STORAGE_ORIGIN
+    });
+    const generationProvider = new KieImageProvider({
+      apiKey: config.KIE_API_KEY
+    });
+    const reconcileResult = await reconcileRunningGenerations({
+      client,
+      provider: generationProvider,
+      storage
+    });
+    if (
+      reconcileResult.succeeded > 0 ||
+      reconcileResult.failed > 0 ||
+      reconcileResult.errors > 0
+    ) {
+      console.warn("Reconciled running generations", reconcileResult);
+    }
+
+    const result = await cleanupStaleGenerations(client);
+    if (result.staleGenerations > 0) {
+      console.warn("Cleaned up stale generations", result);
+    }
   }
 };

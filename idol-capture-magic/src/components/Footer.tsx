@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, Camera, Star, Instagram, Twitter, Github } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Heart, Camera, Star, Instagram, Twitter, Github } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -18,34 +17,42 @@ const Footer = () => {
                 IdolBooth<span className="text-idol-gold">.com</span>
               </span>
             </div>
-            <p className="text-gray-400 text-sm">
-              Capture the Moment, Cherish the Star
-            </p>
-            <p className="text-gray-400 text-sm mt-4">
-              Idol Concert
-            </p>
+            <p className="text-gray-400 text-sm">Capture the Moment, Cherish the Star</p>
+            <p className="text-gray-400 text-sm mt-4">Idol Concert</p>
           </div>
 
           <div>
             <h4 className="font-montserrat font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                <Link
+                  to="/"
+                  className="inline-flex min-h-11 items-center px-2 text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm"
+                >
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/strip" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                <Link
+                  to="/strip"
+                  className="inline-flex min-h-11 items-center px-2 text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm"
+                >
                   Photo Strip
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                <Link
+                  to="/pricing"
+                  className="inline-flex min-h-11 items-center px-2 text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm"
+                >
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link to="/calendar" className="text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm">
+                <Link
+                  to="/calendar"
+                  className="inline-flex min-h-11 items-center px-2 text-gray-400 hover:text-idol-gold transition-colors duration-300 text-sm"
+                >
                   Calendar
                 </Link>
               </li>
@@ -77,13 +84,31 @@ const Footer = () => {
           <div>
             <h4 className="font-montserrat font-semibold text-lg mb-4">Connect</h4>
             <div className="flex gap-4">
-              <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
+              <a
+                href="https://instagram.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open IdolBooth on Instagram"
+                className="inline-flex h-11 w-11 items-center justify-center text-gray-400 hover:text-idol-gold transition-colors"
+              >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="https://x.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
+              <a
+                href="https://x.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open IdolBooth on X"
+                className="inline-flex h-11 w-11 items-center justify-center text-gray-400 hover:text-idol-gold transition-colors"
+              >
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="https://github.com/BrittAbdula/idol-capture-magic" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-idol-gold transition-colors">
+              <a
+                href="https://github.com/BrittAbdula/idol-capture-magic"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open IdolBooth on GitHub"
+                className="inline-flex h-11 w-11 items-center justify-center text-gray-400 hover:text-idol-gold transition-colors"
+              >
                 <Github className="w-5 h-5" />
               </a>
             </div>
@@ -95,16 +120,28 @@ const Footer = () => {
             © {new Date().getFullYear()} IdolBooth.com. All rights reserved.
           </p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <Link to="/privacy" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+            <Link
+              to="/privacy"
+              className="inline-flex min-h-11 items-center px-2 text-gray-500 hover:text-idol-gold transition-colors text-xs"
+            >
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+            <Link
+              to="/terms"
+              className="inline-flex min-h-11 items-center px-2 text-gray-500 hover:text-idol-gold transition-colors text-xs"
+            >
               Terms of Service
             </Link>
-            <Link to="/legal/safety" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+            <Link
+              to="/legal/safety"
+              className="inline-flex min-h-11 items-center px-2 text-gray-500 hover:text-idol-gold transition-colors text-xs"
+            >
               Safety
             </Link>
-            <Link to="/legal/takedown" className="text-gray-500 hover:text-idol-gold transition-colors text-xs">
+            <Link
+              to="/legal/takedown"
+              className="inline-flex min-h-11 items-center px-2 text-gray-500 hover:text-idol-gold transition-colors text-xs"
+            >
               Takedown
             </Link>
           </div>

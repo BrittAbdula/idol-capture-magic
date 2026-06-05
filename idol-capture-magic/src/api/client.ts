@@ -90,6 +90,13 @@ export interface AuthUser {
   plan: "free" | "plus" | "pro";
 }
 
+export interface AuthQuota {
+  limit: number;
+  used: number;
+  remaining: number;
+  resetAt: number;
+}
+
 export interface ApiGenerationHistoryItem {
   id: string;
   status: "queued" | "running" | "succeeded" | "failed";
@@ -103,6 +110,102 @@ export interface ApiGenerationHistoryItem {
   createdAt: number;
   creditsUsed: number;
   costUsd: number | null;
+}
+
+export interface ApiGenerationStatus {
+  id: string;
+  status: "queued" | "running" | "succeeded" | "failed";
+  outputUrl: string | null;
+  watermarkLevel: string;
+  errorMessage: string | null;
+}
+
+export interface ApiGenerateResult extends ApiGenerationStatus {
+  quotaRemaining: number;
+}
+
+export interface ApiAdminOverview {
+  stats: {
+    registeredLast24h: number;
+    registeredLast7d: number;
+    registeredTotal: number;
+    paidUsersTotal: number;
+    generationsLast24h: number;
+    generationsLast7d: number;
+    generationsTotal: number;
+    succeededLast7d: number;
+    failedLast7d: number;
+    publicGenerationsLast7d: number;
+    costUsdLast7d: number;
+    runningGenerationsTotal: number;
+    stalePendingGenerationsTotal: number;
+    checkoutCreatedLast7d: number;
+    checkoutFailedLast7d: number;
+    checkoutRecoveredLast7d: number;
+    checkoutUpgradeDialogLast7d: number;
+    checkoutPricingPageLast7d: number;
+    checkoutResumedAfterSignInLast7d: number;
+    checkoutWatermarkLast7d: number;
+    checkoutHdDownloadLast7d: number;
+    checkoutQuotaLast7d: number;
+    subscriptionUpdatedLast7d: number;
+    subscriptionDeletedLast7d: number;
+    billingWebhookIgnoredLast7d: number;
+  };
+  activeUsers: ApiAdminActiveUser[];
+}
+
+export interface ApiAdminCleanupStaleGenerations {
+  cutoffUnix: number;
+  staleGenerations: number;
+  refundedCredits: number;
+  refundedUsers: number;
+}
+
+export interface ApiAdminActiveUser {
+  id: string;
+  email: string;
+  handle: string;
+  plan: "free" | "plus" | "pro";
+  createdAt: number;
+  lastActiveAt: number;
+  generationCount: number;
+  succeededCount: number;
+  failedCount: number;
+  recentOutputUrl: string | null;
+}
+
+export interface ApiAdminUserAssets {
+  user: {
+    id: string;
+    email: string;
+    handle: string;
+    plan: "free" | "plus" | "pro";
+    createdAt: number;
+  };
+  items: ApiAdminUserAsset[];
+}
+
+export interface ApiAdminUserAsset {
+  id: string;
+  status: "queued" | "running" | "succeeded" | "failed";
+  format: string;
+  createdAt: number;
+  inputUrl: string | null;
+  inputUrls: string[];
+  outputUrl: string | null;
+  costUsd: number | null;
+  watermarkLevel: string;
+  isPublic: boolean;
+  conceptName: string;
+  memberName: string;
+}
+
+export type BillingCycle = "monthly" | "annual";
+export interface BillingCheckoutTelemetry {
+  source?: string | null;
+  triggerSurface?: string | null;
+  checkoutFlow?: "direct" | "resumed_after_sign_in" | null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -141,7 +244,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  me: () => requestJson<{ user: AuthUser | null }>("/auth/me"),
+  me: () => requestJson<{ user: AuthUser | null; quota: AuthQuota | null }>("/auth/me"),
   groups: () => requestJson<ApiGroup[]>("/api/groups"),
   group: (slug: string) =>
     requestJson<{ group: ApiGroup; members: ApiMember[]; campaigns: ApiCampaign[] }>(
@@ -201,6 +304,15 @@ export const api = {
     requestJson<{
       items: ApiGenerationHistoryItem[];
     }>("/api/generations"),
+  generationStatus: (id: string) => requestJson<ApiGenerationStatus>(`/api/generations/${id}`),
+  adminOverview: () => requestJson<ApiAdminOverview>("/api/admin/overview"),
+  adminCleanupStaleGenerations: () =>
+    requestJson<ApiAdminCleanupStaleGenerations>(
+      "/api/admin/maintenance/cleanup-stale-generations",
+      { method: "POST" }
+    ),
+  adminUserAssets: (userId: string) =>
+    requestJson<ApiAdminUserAssets>(`/api/admin/users/${userId}/assets`),
   saveBinderItem: (generationId: string, customCaption?: string) =>
     requestJson<{ item: { id: string } }>("/api/binder/items", {
       method: "POST",
@@ -208,17 +320,15 @@ export const api = {
     }),
   deleteBinderItem: (id: string) =>
     requestJson<{ ok: true }>(`/api/binder/items/${id}`, { method: "DELETE" }),
-  billingCheckout: (plan: "plus" | "pro") =>
+  billingCheckout: (
+    plan: "plus" | "pro",
+    billingCycle: BillingCycle = "monthly",
+    telemetry: BillingCheckoutTelemetry = {}
+  ) =>
     requestJson<{ id: string; url: string }>("/api/billing/checkout", {
       method: "POST",
-      body: JSON.stringify({ plan })
+      body: JSON.stringify({ plan, billingCycle, ...telemetry })
     }),
   generate: (form: FormData) =>
-    requestJson<{
-      id: string;
-      status: string;
-      outputUrl: string;
-      watermarkLevel: string;
-      quotaRemaining: number;
-    }>("/api/generate", { method: "POST", body: form })
+    requestJson<ApiGenerateResult>("/api/generate", { method: "POST", body: form })
 };

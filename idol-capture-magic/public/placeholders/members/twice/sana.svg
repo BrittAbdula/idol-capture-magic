@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title" style="--hair:#2a1d2a;--shade:#090b12">
+  <title>Sana original silhouette</title>
+  <defs>
+    <linearGradient id="bg-twice-sana" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe8f1"/>
+      <stop offset="1" stop-color="#e9f7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg-twice-sana)"/>
+  <ellipse cx="512" cy="462" rx="245" ry="278" fill="#ffffff" opacity=".2"/>
+  <circle cx="128" cy="199" r="2" fill="#f5a8c8" opacity=".14"/><circle cx="-84" cy="-76" r="-1" fill="#f5a8c8" opacity=".14"/><circle cx="-240" cy="-120" r="3" fill="#f5a8c8" opacity=".14"/><circle cx="-65" cy="-44" r="-2" fill="#f5a8c8" opacity=".14"/><circle cx="-43" cy="-144" r="3" fill="#f5a8c8" opacity=".14"/>
+  <g transform="rotate(5.4 512 512)">
+    <path d="M244 1024c25-171 86-284 182-337 31-18 67-27 108-27 96 0 169 46 219 138 35 65 58 141 69 226H244Z" fill="#2a1d2a"/>
+    <path d="M512 252c92 0 158 60 178 158 17 83-2 157-55 223-33 41-75 61-126 61-54 0-98-22-132-66-48-63-61-138-37-226 26-100 83-150 172-150Z" fill="#2a1d2a"/>
+    <path d="M356 397c16-85 70-139 162-162 82 5 142 45 181 120-54 18-111 20-171 6-55 39-112 51-172 36Z" fill="var(--hair)"/><path d="M411 279c48 58 112 95 193 110" fill="none" stroke="var(--shade)" stroke-width="5" opacity=".32"/>
+    <path d="M414 368c42 48 100 78 174 91" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.18"/>
+    <path d="M692 620c36 20 61 52 74 96" fill="none" stroke="#f5a8c8" stroke-width="15" stroke-linecap="round" opacity=".72"/><circle cx="684" cy="612" r="15" fill="#f5a8c8" opacity=".82"/>
+  </g>
+</svg>

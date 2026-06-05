@@ -31,6 +31,23 @@ describe("parseEnv", () => {
     });
   });
 
+  test("parses monthly and annual Stripe price ids", () => {
+    expect(
+      parseEnv({
+        ...validEnv,
+        STRIPE_PLUS_MONTHLY_PRICE_ID: "price_plus_monthly",
+        STRIPE_PLUS_ANNUAL_PRICE_ID: "price_plus_annual",
+        STRIPE_PRO_MONTHLY_PRICE_ID: "price_pro_monthly",
+        STRIPE_PRO_ANNUAL_PRICE_ID: "price_pro_annual"
+      })
+    ).toMatchObject({
+      STRIPE_PLUS_MONTHLY_PRICE_ID: "price_plus_monthly",
+      STRIPE_PLUS_ANNUAL_PRICE_ID: "price_plus_annual",
+      STRIPE_PRO_MONTHLY_PRICE_ID: "price_pro_monthly",
+      STRIPE_PRO_ANNUAL_PRICE_ID: "price_pro_annual"
+    });
+  });
+
   test("fails loudly when required credentials are missing", () => {
     const { KIE_API_KEY: _kieApiKey, ...envWithoutKie } = validEnv;
 

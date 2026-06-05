@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "preview": "vite preview",
-    "generate-sitemap": "node scripts/generate-sitemap.js"
+    "generate-sitemap": "node scripts/generate-sitemap.js",
+    "analyze:gsc": "node scripts/analyze-gsc-export.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

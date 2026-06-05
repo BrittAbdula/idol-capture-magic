@@ -11,6 +11,7 @@ import { createLucia } from "../auth/lucia.js";
 import { concepts, generations, groups, members, users } from "../db/schema.js";
 import { createTestD1DatabaseClient, type TestDatabaseClient } from "../db/test-d1.js";
 import type {
+  GenerationPollResult,
   GenerationProvider,
   GenerationRequest,
   GenerationResult
@@ -56,6 +57,33 @@ class FailingGenerationProvider implements GenerationProvider {
 
   estimateCost(_request: GenerationRequest): number {
     return 0;
+  }
+}
+
+class AsyncGenerationProviderStub implements GenerationProvider {
+  name = "async-stub";
+  lastRequest: GenerationRequest | null = null;
+  pollResult: GenerationPollResult = { status: "running" };
+  pollCalls: string[] = [];
+  syncGenerateCalled = false;
+
+  async generate(_request: GenerationRequest): Promise<GenerationResult> {
+    this.syncGenerateCalled = true;
+    throw new Error("sync generate should not be called");
+  }
+
+  async start(request: GenerationRequest): Promise<{ providerJobId: string; costUsd: number }> {
+    this.lastRequest = request;
+    return { providerJobId: "async-job-1", costUsd: 0.04 };
+  }
+
+  async poll(providerJobId: string): Promise<GenerationPollResult> {
+    this.pollCalls.push(providerJobId);
+    return this.pollResult;
+  }
+
+  estimateCost(_request: GenerationRequest): number {
+    return 0.04;
   }
 }
 
@@ -165,6 +193,214 @@ describe("generation routes", () => {
     expect(metadata.height).toBe(256);
   });
 
+  test("starts an async provider generation and returns a running job", async () => {
+    const storageDir = path.join(tempDir, "storage");
+    const provider = new AsyncGenerationProviderStub();
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      generationProvider: provider,
+      storage: createLocalStorageService({ rootDir: storageDir })
+    });
+    const inputImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#ffffff"
+      }
+    })
+      .png()
+      .toBuffer();
+    const form = new FormData();
+    form.set("conceptId", "concept_polaroid");
+    form.set("memberId", "member_haerin");
+    form.set("photo", new File([inputImage], "fan.png", { type: "image/png" }));
+
+    const response = await app.request("/api/generate", {
+      method: "POST",
+      headers: {
+        "x-forwarded-for": "203.0.113.12"
+      },
+      body: form
+    });
+    const json = (await response.json()) as {
+      id: string;
+      status: string;
+      outputUrl: string | null;
+      watermarkLevel: string;
+      quotaRemaining: number;
+    };
+
+    expect(response.status).toBe(202);
+    expect(json).toMatchObject({
+      status: "running",
+      outputUrl: null,
+      watermarkLevel: "visible",
+      quotaRemaining: 0
+    });
+    expect(provider.lastRequest?.inputImages).toHaveLength(1);
+    expect(provider.syncGenerateCalled).toBe(false);
+
+    const generation = await client.d1.get<{ status: string; providerJobId: string | null }>(
+      "SELECT status, provider_job_id AS providerJobId FROM generations WHERE id = ?",
+      [json.id]
+    );
+    expect(generation).toMatchObject({
+      status: "running",
+      providerJobId: "async-job-1"
+    });
+  });
+
+  test("finalizes an async generation when status is polled after provider success", async () => {
+    const storageDir = path.join(tempDir, "storage");
+    const provider = new AsyncGenerationProviderStub();
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      generationProvider: provider,
+      storage: createLocalStorageService({ rootDir: storageDir })
+    });
+    const inputImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#ffffff"
+      }
+    })
+      .png()
+      .toBuffer();
+    const form = new FormData();
+    form.set("conceptId", "concept_polaroid");
+    form.set("memberId", "member_haerin");
+    form.set("photo", new File([inputImage], "fan.png", { type: "image/png" }));
+    const createResponse = await app.request("/api/generate", {
+      method: "POST",
+      headers: {
+        "x-forwarded-for": "203.0.113.13"
+      },
+      body: form
+    });
+    const created = (await createResponse.json()) as { id: string };
+    provider.pollResult = {
+      status: "succeeded",
+      image: await sharp({
+        create: {
+          width: 256,
+          height: 256,
+          channels: 4,
+          background: "#ffc0cb"
+        }
+      })
+        .png()
+        .toBuffer(),
+      contentType: "image/png",
+      costUsd: 0.04
+    };
+
+    const statusResponse = await app.request(`/api/generations/${created.id}`);
+    const status = (await statusResponse.json()) as {
+      status: string;
+      outputUrl: string | null;
+      errorMessage: string | null;
+    };
+
+    expect(statusResponse.status).toBe(200);
+    expect(status).toMatchObject({
+      status: "succeeded",
+      errorMessage: null
+    });
+    expect(status.outputUrl).toMatch(/^\/storage\//);
+    expect(provider.pollCalls).toEqual(["async-job-1"]);
+
+    const generation = await client.db
+      .select()
+      .from(generations)
+      .where(eq(generations.id, created.id))
+      .get();
+    expect(generation).toMatchObject({
+      status: "succeeded",
+      providerJobId: "async-job-1",
+      cost: 0.04
+    });
+    expect(generation?.outputImageRef).toBeTruthy();
+  });
+
+  test("refunds an authenticated user's quota when async provider polling fails", async () => {
+    await client.db
+      .insert(users)
+      .values({
+        id: "user_async_fail",
+        email: "async-fan@example.com",
+        handle: "async-fan",
+        locale: "en",
+        plan: "free",
+        dailyQuotaUsed: 0,
+        dailyQuotaResetAt: 1_800_000_000,
+        createdAt: 1_700_000_000
+      })
+      .run();
+    const auth = createLucia(client, false);
+    const session = await auth.createSession("user_async_fail", {});
+    const storageDir = path.join(tempDir, "storage");
+    const provider = new AsyncGenerationProviderStub();
+    const app = createApp({
+      publicAppOrigin: "http://localhost:8080",
+      client,
+      auth,
+      generationProvider: provider,
+      storage: createLocalStorageService({ rootDir: storageDir })
+    });
+    const inputImage = await sharp({
+      create: {
+        width: 128,
+        height: 128,
+        channels: 4,
+        background: "#ffffff"
+      }
+    })
+      .png()
+      .toBuffer();
+    const form = new FormData();
+    form.set("conceptId", "concept_polaroid");
+    form.set("memberId", "member_haerin");
+    form.set("photo", new File([inputImage], "fan.png", { type: "image/png" }));
+    const createResponse = await app.request("/api/generate", {
+      method: "POST",
+      headers: {
+        Cookie: auth.createSessionCookie(session.id).serialize()
+      },
+      body: form
+    });
+    const created = (await createResponse.json()) as { id: string };
+    provider.pollResult = {
+      status: "failed",
+      errorMessage: "Kie task failed: provider overloaded"
+    };
+
+    const statusResponse = await app.request(`/api/generations/${created.id}`);
+    const status = (await statusResponse.json()) as {
+      status: string;
+      outputUrl: string | null;
+      errorMessage: string | null;
+    };
+
+    expect(statusResponse.status).toBe(200);
+    expect(status).toMatchObject({
+      status: "failed",
+      outputUrl: null,
+      errorMessage: "Kie task failed: provider overloaded"
+    });
+
+    const user = await client.db
+      .select()
+      .from(users)
+      .where(eq(users.id, "user_async_fail"))
+      .get();
+    expect(user?.dailyQuotaUsed).toBe(0);
+  });
+
   test("passes up to two uploaded photos to the generation provider", async () => {
     const storageDir = path.join(tempDir, "storage");
     const provider = new StubGenerationProvider();
@@ -209,6 +445,11 @@ describe("generation routes", () => {
     expect(provider.lastRequest?.inputImages).toHaveLength(2);
     expect(provider.lastRequest?.inputImages[0]?.mimeType).toBe("image/png");
     expect(provider.lastRequest?.inputImages[1]?.mimeType).toBe("image/png");
+
+    const generation = await client.db.select().from(generations).get();
+    const refs = JSON.parse(generation?.inputImageRefs ?? "[]") as string[];
+    expect(refs).toHaveLength(2);
+    expect(generation?.inputImageRef).toBe(refs[0]);
   });
 
   test("rejects more than two uploaded photos", async () => {

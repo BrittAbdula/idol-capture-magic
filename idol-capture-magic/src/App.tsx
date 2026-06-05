@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { PhotoStripProvider } from "./contexts/PhotoStripContext";
 import { ErrorBoundary } from "@/components/app/ErrorBoundary";
+import { trackLandingView, trackPageView } from "@/lib/analytics";
 
 // Import the new component
 import ScrollToTop from "@/components/ScrollToTop";
@@ -33,6 +34,7 @@ import ShareById from "./pages/share/ShareById";
 import Pricing from "./pages/pricing/Pricing";
 import SafetyPage from "./pages/legal/SafetyPage";
 import TakedownPage from "./pages/legal/TakedownPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +67,12 @@ const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> =
     description: "Upload a photo and create a watermarked AI selca."
   },
   {
+    match: /^\/photo-with-idol$/,
+    title: "Photo with Idol Online | IdolBooth",
+    description:
+      "Create a photo with idol online from your selfie. Fan-safe K-pop AI selca maker with free daily generations."
+  },
+  {
     match: /^\/photocard$/,
     title: "AI Photocard Maker | IdolBooth",
     description: "Generate collectible photocard-style fan images."
@@ -73,6 +81,11 @@ const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> =
     match: /^\/strip$/,
     title: "4-cut AI Photo Strip | IdolBooth",
     description: "Create a K-pop inspired four-cut photo strip."
+  },
+  {
+    match: /^\/photo-strip$/,
+    title: "Free K-pop Photo Strip Maker Online | IdolBooth",
+    description: "Upload selfies and make a free K-pop style photo strip online."
   },
   {
     match: /^\/c\/[^/]+$/,
@@ -108,6 +121,11 @@ const ROUTE_META: Array<{ match: RegExp; title: string; description: string }> =
     match: /^\/pricing$/,
     title: "Pricing | IdolBooth",
     description: "Compare Free, Plus, and Pro generation plans."
+  },
+  {
+    match: /^\/admin$/,
+    title: "Admin | IdolBooth",
+    description: "Private IdolBooth operations dashboard."
   },
   {
     match: /^\/legal\/safety$/,
@@ -147,6 +165,34 @@ const TitleUpdater = () => {
   return null;
 };
 
+const RouteAnalytics = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      trackPageView(location.pathname, location.search, document.title);
+      trackLandingView(location.pathname, location.search);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, location.search]);
+
+  return null;
+};
+
+const LegacyTemplateRedirect = () => {
+  const location = useLocation();
+  const targetPath = location.pathname.replace(/^\/template/, "/templates");
+
+  return <Navigate to={`${targetPath}${location.search}`} replace />;
+};
+
+const LegacyPhotoBoothRedirect = () => {
+  const location = useLocation();
+
+  return <Navigate to={`/strip${location.search}`} replace />;
+};
+
 const App = () => {
   return (
     <React.StrictMode>
@@ -158,6 +204,7 @@ const App = () => {
             <BrowserRouter>
               <ScrollToTop />
               <TitleUpdater />
+              <RouteAnalytics />
               <ErrorBoundary>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -172,18 +219,36 @@ const App = () => {
                   <Route path="/templates" element={<TemplateGallery />} />
                   <Route path="/templates/:category" element={<TemplateCategoryPage />} />
                   <Route path="/templates/:category/:idol" element={<TemplateCategoryPage />} />
-                  <Route path="/template" element={<Navigate to="/templates" replace />} />
-                  <Route path="/template/:category" element={<TemplateCategoryPage />} />
+                  <Route path="/template" element={<LegacyTemplateRedirect />} />
+                  <Route path="/template/:category" element={<LegacyTemplateRedirect />} />
+                  <Route path="/template/:category/:idol" element={<LegacyTemplateRedirect />} />
                   <Route path="/me" element={<Dashboard />} />
                   <Route path="/me/binder" element={<MyBinder />} />
                   <Route path="/me/settings" element={<Settings />} />
                   <Route path="/binder/:handle" element={<PublicBinder />} />
                   <Route path="/share/:id" element={<ShareById />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/legal/safety" element={<SafetyPage />} />
                   <Route path="/legal/takedown" element={<TakedownPage />} />
-                  <Route path="/photo-booth" element={<Navigate to="/strip" replace />} />
-                  <Route path="/photo-with-idol" element={<Navigate to="/selca" replace />} />
+                  <Route path="/photo-booth" element={<LegacyPhotoBoothRedirect />} />
+                  <Route
+                    path="/photo-with-idol"
+                    element={
+                      <SelcaPage
+                        title="Photo with Idol Online"
+                        description="Create a photo with idol online from your selfie. Fan-safe K-pop AI selca maker with free daily generations."
+                        image="/samples/polaroid-selca.png"
+                        preferredConceptSlug="polaroid-selca"
+                        landingProofItems={[
+                          "Free online in your browser",
+                          "No app download",
+                          "Watermarked result included"
+                        ]}
+                        showSearchIntentLinks
+                      />
+                    }
+                  />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/share" element={<SharePage />} />

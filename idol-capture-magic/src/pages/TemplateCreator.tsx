@@ -227,7 +227,7 @@ const TemplateCreator: React.FC = () => {
     
     toast.success('Template saved successfully!');
     
-    navigate(`/photo-booth?template=${templateName}`);
+    navigate(`/strip?template=${encodeURIComponent(templateName)}`);
   };
   
   const exportTemplateJSON = () => {

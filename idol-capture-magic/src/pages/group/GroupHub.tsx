@@ -6,6 +6,7 @@ import { api } from "@/api/client";
 import { AppPageShell } from "@/components/app/AppPageShell";
 import { LoadingSkeleton } from "@/components/app/LoadingSkeleton";
 import { ImageFrame } from "@/components/media/ImageFrame";
+import { getMemberSilhouetteImage } from "@/data/memberSilhouettes";
 import { ratioFromImagePath } from "@/lib/imageRatios";
 
 const recentSamples = [
@@ -75,7 +76,10 @@ export default function GroupHub() {
       <section>
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-2xl font-semibold">Members</h2>
-          <Link to="/selca" className="text-sm font-semibold text-idol-gold">
+          <Link
+            to="/selca"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-idol-gold"
+          >
             Start with default bias
           </Link>
         </div>
@@ -87,8 +91,8 @@ export default function GroupHub() {
               className="group overflow-hidden border border-black/10 bg-white"
             >
               <ImageFrame
-                src={member.silhouetteImage}
-                alt=""
+                src={getMemberSilhouetteImage(groupSlug, member.slug, member.silhouetteImage)}
+                alt={`${member.name} silhouette`}
                 ratio="square"
                 tone="cool"
                 interactive
@@ -108,7 +112,12 @@ export default function GroupHub() {
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           {recentSamples.map((sample) => (
             <Link key={sample} to="/selca" className="group block">
-              <ImageFrame src={sample} alt="" ratio={ratioFromImagePath(sample)} interactive />
+              <ImageFrame
+                src={sample}
+                alt="Recent IdolBooth generation sample"
+                ratio={ratioFromImagePath(sample)}
+                interactive
+              />
               <div className="flex items-center justify-between p-3 text-sm font-semibold">
                 Make yours <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </div>
@@ -121,9 +130,7 @@ export default function GroupHub() {
         <h2 className="text-2xl font-semibold">Group dates</h2>
         <div className="mt-5 flex items-center gap-3 border border-black/10 p-5">
           <CalendarDays className="h-5 w-5 text-idol-gold" />
-          <p className="text-sm text-gray-600">
-            Debut anniversary: {group?.debutDate ?? "TBA"}
-          </p>
+          <p className="text-sm text-gray-600">Debut anniversary: {group?.debutDate ?? "TBA"}</p>
         </div>
       </section>
     </AppPageShell>
